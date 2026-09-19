@@ -42,7 +42,15 @@ class DashboardController extends Controller
         }
 
         if (!$student) {
-            abort(404, 'No cadet student record found.');
+            $student = Student::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'student_id_code' => 'IDA-CADET-' . str_pad((string)$user->id, 4, '0', STR_PAD_LEFT),
+                    'admission_date' => now()->toDateString(),
+                    'status' => 'active',
+                    'target_wing' => 'General',
+                ]
+            );
         }
 
         $todayClasses = Routine::with(['instructor.user'])

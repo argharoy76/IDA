@@ -7,6 +7,7 @@
 @section('content')
 <div style="display: flex; flex-direction: column; gap: 24px;">
 
+  @if(!auth()->user()->isAdmin())
   <!-- Routine Module Notice -->
   <div class="tactical-card" style="text-align: center; padding: 48px 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px;">
     <div style="width: 64px; height: 64px; border-radius: 50%; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px auto;">
@@ -20,9 +21,17 @@
       <i class="fa-solid fa-clipboard-list"></i> Go to Exams
     </a>
   </div>
+  @else
+  <div style="background: rgba(5, 150, 105, 0.08); border: 1px dashed rgba(5, 150, 105, 0.4); border-radius: 12px; padding: 12px 18px; color: #065f46; font-size: 13px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+    <span style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+      <i class="fa-solid fa-shield-halved"></i> Admin Inspection Clearance Active: Viewing Cadet Academic & Drill Routine
+    </span>
+    <span style="font-size: 11px; background: #059669; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ADMIN VIEW</span>
+  </div>
+  @endif
 
-  {{-- Hidden routine tables and schedules - Code preserved intact for future activation --}}
-  @if(false)
+  {{-- Hidden routine tables and schedules - Accessible for Administrators --}}
+  @if(auth()->user()->isAdmin())
   <!-- Squadron Info Strip -->
   <div class="tactical-card cadet-emerald-hero" style="background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important; color: #ffffff; border: 1px solid #059669; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
     <div>

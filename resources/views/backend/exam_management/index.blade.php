@@ -552,7 +552,7 @@
       alert('Please select an assessment module to edit.');
       return;
     }
-    window.location.href = "{{ url('/admin/exam-management') }}/" + examId + "/edit";
+    window.location.href = "{{ route('admin.exam_management.index') }}/" + examId + "/edit";
   }
 
   document.querySelectorAll('.ida-modal-overlay').forEach(function(overlay) {

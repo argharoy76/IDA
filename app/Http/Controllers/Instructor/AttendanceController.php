@@ -52,6 +52,11 @@ class AttendanceController extends Controller
             'attendance.*.remarks' => 'nullable|string',
         ]);
 
+        $instructor = Instructor::where('user_id', auth()->id())->firstOrFail();
+        if (!$instructor->batches->pluck('id')->contains($validated['batch_id'])) {
+            abort(403, 'Unauthorized. Batch is not assigned to your instructor command.');
+        }
+
         $routineId = $validated['routine_id'] ?? null;
         if (!$routineId) {
             $batch = Batch::findOrFail($validated['batch_id']);

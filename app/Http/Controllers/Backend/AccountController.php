@@ -50,6 +50,10 @@ class AccountController extends Controller
     {
         $user = User::findOrFail($id);
 
+        if ($user->role === 'super_admin' && auth()->user()->role !== 'super_admin') {
+            abort(403, 'Only Super Administrators can modify Super Administrator accounts.');
+        }
+
         $validated = $request->validate([
             'account_id' => 'required|string|max:50|unique:users,account_id,' . $user->id,
         ]);
@@ -91,6 +95,10 @@ class AccountController extends Controller
         ]);
 
         $role = $validated['role'];
+        if ($role === 'super_admin' && auth()->user()->role !== 'super_admin') {
+            abort(403, 'Only Super Administrators can create or provision Super Administrator accounts.');
+        }
+
         $accountId = !empty($validated['account_id']) ? strtoupper(trim($validated['account_id'])) : null;
 
         if (empty($accountId)) {
@@ -159,6 +167,10 @@ class AccountController extends Controller
     public function updatePassword(Request $request, $id)
     {
         $user = User::findOrFail($id);
+
+        if ($user->role === 'super_admin' && auth()->user()->role !== 'super_admin') {
+            abort(403, 'Only Super Administrators can reset passwords for Super Administrator accounts.');
+        }
 
         $validated = $request->validate([
             'password' => 'required|string|min:6|confirmed',

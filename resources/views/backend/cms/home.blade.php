@@ -88,14 +88,14 @@
         Current Background Image(s):
       </label>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
         @foreach($activeSlides as $idx => $slide)
           @php
             $slideUrl = str_starts_with($slide, 'http') ? $slide : asset($slide);
             $isPrimary = ($idx === 0);
           @endphp
           <div style="background: #141722; border: 1.5px solid {{ $isPrimary ? 'var(--accent-gold)' : 'rgba(255, 255, 255, 0.08)' }}; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 4px 14px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
-            <div style="height: 125px; overflow: hidden; position: relative; background: #0b1329;">
+            <div style="height: 190px; overflow: hidden; position: relative; background: #0b1329;">
               <img src="{{ $slideUrl }}" alt="Slide {{ $idx + 1 }}" style="width: 100%; height: 100%; object-fit: cover;">
               @if($isPrimary)
                 <span class="badge" style="position: absolute; top: 6px; left: 6px; font-size: 10px; background: rgba(5, 11, 20, 0.9); color: var(--accent-gold); border: 1px solid var(--accent-gold); font-weight: 800;">
@@ -403,19 +403,11 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-          <div style="width: 170px; flex-shrink: 0;">
-            <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">
-              Ticker Label
-            </label>
-            <input type="text" name="marquee_label" value="{{ cms('marquee_label', 'BULLETIN:') }}" class="form-tactical" placeholder="e.g. BULLETIN:">
-          </div>
-          <div style="flex: 1; min-width: 260px;">
-            <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">
-              Ticker Announcement Text
-            </label>
-            <input type="text" name="marquee_text" value="{{ cms('marquee_text', 'BMA 95th Long Course & Navy 2026-B Batches Enrolling Now ★ Free Dossier Screening Every Friday at Khulna HQ ★') }}" class="form-tactical" placeholder="e.g. BMA 95th Long Course & Navy 2026-B Batches Enrolling Now ★ Free Dossier Screening Every Friday at Khulna HQ ★">
-          </div>
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">
+            Moving Announcement Text (Scrolling Marquee)
+          </label>
+          <input type="text" name="marquee_text" value="{{ cms('marquee_text', 'BMA 95th Long Course & Navy 2026-B Batches Enrolling Now ★ Free Dossier Screening Every Friday at Khulna HQ ★') }}" class="form-tactical" placeholder="e.g. BMA 95th Long Course & Navy 2026-B Batches Enrolling Now ★ Free Dossier Screening Every Friday at Khulna HQ ★">
         </div>
       </div>
     </div>
@@ -435,11 +427,11 @@
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px;">
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Section Tag</label>
-            <input type="text" name="pillars_tag" value="{{ cms('pillars_tag', 'Comprehensive Cadet Curriculum') }}" class="form-tactical" placeholder="Tag text">
+            <input type="text" name="pillars_tag" value="{{ cms('pillars_tag', 'Comprehensive Cadet Curriculum') }}" class="form-tactical" placeholder="e.g. Comprehensive Cadet Curriculum">
           </div>
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Section Heading</label>
-            <input type="text" name="pillars_heading" value="{{ cms('pillars_heading', 'The Four Pillars of IDA Preparation') }}" class="form-tactical" placeholder="Section heading">
+            <input type="text" name="pillars_heading" value="{{ cms('pillars_heading', 'The Four Pillars of IDA Preparation') }}" class="form-tactical" placeholder="e.g. The Four Pillars of IDA Preparation">
           </div>
         </div>
 
@@ -448,29 +440,29 @@
           <!-- Pillar 1 -->
           <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
             <label style="display: block; font-size: 11px; font-weight: 700; color: #38bdf8; margin-bottom: 6px; text-transform: uppercase;">Pillar 1</label>
-            <input type="text" name="pillar1_title" value="{{ cms('pillar1_title', 'Verbal & Non-Verbal IQ') }}" class="form-tactical" style="margin-bottom: 8px;" placeholder="Title">
-            <textarea name="pillar1_desc" rows="3" class="form-tactical" placeholder="Description...">{{ cms('pillar1_desc', 'Fast-paced computerized intelligence screening, matrix pattern puzzles, spatial reasoning, and negative marking calibration.') }}</textarea>
+            <input type="text" name="pillar1_title" value="{{ cms('pillar1_title', 'Verbal & Non-Verbal IQ') }}" class="form-tactical" style="margin-bottom: 8px;" placeholder="e.g. Verbal & Non-Verbal IQ">
+            <textarea name="pillar1_desc" rows="3" class="form-tactical" placeholder="e.g. Fast-paced computerized intelligence screening, matrix pattern puzzles, spatial reasoning...">{{ cms('pillar1_desc', 'Fast-paced computerized intelligence screening, matrix pattern puzzles, spatial reasoning, and negative marking calibration.') }}</textarea>
           </div>
 
           <!-- Pillar 2 -->
           <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
             <label style="display: block; font-size: 11px; font-weight: 700; color: var(--accent-gold); margin-bottom: 6px; text-transform: uppercase;">Pillar 2</label>
-            <input type="text" name="pillar2_title" value="{{ cms('pillar2_title', 'Psychological Battery') }}" class="form-tactical" style="margin-bottom: 8px;" placeholder="Title">
-            <textarea name="pillar2_desc" rows="3" class="form-tactical" placeholder="Description...">{{ cms('pillar2_desc', 'Timed Word Association Test (WAT), Picture Perception (PPDT), Thematic Apperception (TAT), and Situation Reaction Tests.') }}</textarea>
+            <input type="text" name="pillar2_title" value="{{ cms('pillar2_title', 'Psychological Battery') }}" class="form-tactical" style="margin-bottom: 8px;" placeholder="e.g. Psychological Battery">
+            <textarea name="pillar2_desc" rows="3" class="form-tactical" placeholder="e.g. Timed Word Association Test (WAT), Picture Perception (PPDT), Thematic Apperception (TAT)...">{{ cms('pillar2_desc', 'Timed Word Association Test (WAT), Picture Perception (PPDT), Thematic Apperception (TAT), and Situation Reaction Tests.') }}</textarea>
           </div>
 
           <!-- Pillar 3 -->
           <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
             <label style="display: block; font-size: 11px; font-weight: 700; color: var(--brand-mint); margin-bottom: 6px; text-transform: uppercase;">Pillar 3</label>
-            <input type="text" name="pillar3_title" value="{{ cms('pillar3_title', 'Ground Tasks (GTO)') }}" class="form-tactical" style="margin-bottom: 8px;" placeholder="Title">
-            <textarea name="pillar3_desc" rows="3" class="form-tactical" placeholder="Description...">{{ cms('pillar3_desc', 'Full-scale Progressive Group Tasks (PGT), Half Group Tasks (HGT), Command Tasks, and individual obstacle courses in Boyra.') }}</textarea>
+            <input type="text" name="pillar3_title" value="{{ cms('pillar3_title', 'Ground Tasks (GTO)') }}" class="form-tactical" style="margin-bottom: 8px;" placeholder="e.g. Ground Tasks (GTO)">
+            <textarea name="pillar3_desc" rows="3" class="form-tactical" placeholder="e.g. Full-scale Progressive Group Tasks (PGT), Half Group Tasks (HGT), Command Tasks...">{{ cms('pillar3_desc', 'Full-scale Progressive Group Tasks (PGT), Half Group Tasks (HGT), Command Tasks, and individual obstacle courses in Boyra.') }}</textarea>
           </div>
 
           <!-- Pillar 4 -->
           <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
             <label style="display: block; font-size: 11px; font-weight: 700; color: #f43f5e; margin-bottom: 6px; text-transform: uppercase;">Pillar 4</label>
-            <input type="text" name="pillar4_title" value="{{ cms('pillar4_title', 'Interview & Viva Voce') }}" class="form-tactical" style="margin-bottom: 8px;" placeholder="Title">
-            <textarea name="pillar4_desc" rows="3" class="form-tactical" placeholder="Description...">{{ cms('pillar4_desc', '1-on-1 mock interviews conducted by retired senior defense officers focusing on Officer-Like Qualities (OLQ) and composure.') }}</textarea>
+            <input type="text" name="pillar4_title" value="{{ cms('pillar4_title', 'Interview & Viva Voce') }}" class="form-tactical" style="margin-bottom: 8px;" placeholder="e.g. Interview & Viva Voce">
+            <textarea name="pillar4_desc" rows="3" class="form-tactical" placeholder="e.g. 1-on-1 mock interviews conducted by retired senior defense officers focusing on OLQ...">{{ cms('pillar4_desc', '1-on-1 mock interviews conducted by retired senior defense officers focusing on Officer-Like Qualities (OLQ) and composure.') }}</textarea>
           </div>
         </div>
 
@@ -492,11 +484,11 @@
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px;">
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Section Tag</label>
-            <input type="text" name="olq_tag" value="{{ cms('olq_tag', 'Core Military Evaluation Standards') }}" class="form-tactical" placeholder="Tag text">
+            <input type="text" name="olq_tag" value="{{ cms('olq_tag', 'Core Military Evaluation Standards') }}" class="form-tactical" placeholder="e.g. Core Military Evaluation Standards">
           </div>
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Section Heading</label>
-            <input type="text" name="olq_heading" value="{{ cms('olq_heading', '15 Officer-Like Qualities (OLQ) Matrix') }}" class="form-tactical" placeholder="Section heading">
+            <input type="text" name="olq_heading" value="{{ cms('olq_heading', '15 Officer-Like Qualities (OLQ) Matrix') }}" class="form-tactical" placeholder="e.g. 15 Officer-Like Qualities (OLQ) Matrix">
           </div>
         </div>
 
@@ -505,29 +497,29 @@
           <!-- Factor I -->
           <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
             <label style="display: block; font-size: 11px; font-weight: 700; color: var(--accent-gold); margin-bottom: 4px;">Factor I</label>
-            <input type="text" name="olq_factor1_title" value="{{ cms('olq_factor1_title', 'FACTOR I: PLANNING & INTELLECT') }}" class="form-tactical" style="margin-bottom: 6px;" placeholder="Title">
-            <textarea name="olq_factor1_items" rows="4" class="form-tactical" placeholder="List items (one per line)">{{ cms('olq_factor1_items', "1. Effective Intelligence\n2. Reasoning Ability\n3. Organizing Ability\n4. Power of Expression") }}</textarea>
+            <input type="text" name="olq_factor1_title" value="{{ cms('olq_factor1_title', 'FACTOR I: PLANNING & INTELLECT') }}" class="form-tactical" style="margin-bottom: 6px;" placeholder="e.g. FACTOR I: PLANNING & INTELLECT">
+            <textarea name="olq_factor1_items" rows="4" class="form-tactical" placeholder="e.g. 1. Effective Intelligence&#10;2. Reasoning Ability&#10;3. Organizing Ability&#10;4. Power of Expression">{{ cms('olq_factor1_items', "1. Effective Intelligence\n2. Reasoning Ability\n3. Organizing Ability\n4. Power of Expression") }}</textarea>
           </div>
 
           <!-- Factor II -->
           <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
             <label style="display: block; font-size: 11px; font-weight: 700; color: var(--accent-gold); margin-bottom: 4px;">Factor II</label>
-            <input type="text" name="olq_factor2_title" value="{{ cms('olq_factor2_title', 'FACTOR II: SOCIAL ADAPTABILITY') }}" class="form-tactical" style="margin-bottom: 6px;" placeholder="Title">
-            <textarea name="olq_factor2_items" rows="4" class="form-tactical" placeholder="List items (one per line)">{{ cms('olq_factor2_items', "5. Social Adaptability\n6. Cooperation & Camraderie\n7. Sense of Responsibility") }}</textarea>
+            <input type="text" name="olq_factor2_title" value="{{ cms('olq_factor2_title', 'FACTOR II: SOCIAL ADAPTABILITY') }}" class="form-tactical" style="margin-bottom: 6px;" placeholder="e.g. FACTOR II: SOCIAL ADAPTABILITY">
+            <textarea name="olq_factor2_items" rows="4" class="form-tactical" placeholder="e.g. 5. Social Adaptability&#10;6. Cooperation & Camaraderie&#10;7. Sense of Responsibility">{{ cms('olq_factor2_items', "5. Social Adaptability\n6. Cooperation & Camraderie\n7. Sense of Responsibility") }}</textarea>
           </div>
 
           <!-- Factor III -->
           <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
             <label style="display: block; font-size: 11px; font-weight: 700; color: var(--accent-gold); margin-bottom: 4px;">Factor III</label>
-            <input type="text" name="olq_factor3_title" value="{{ cms('olq_factor3_title', 'FACTOR III: SOCIAL EFFECTIVENESS') }}" class="form-tactical" style="margin-bottom: 6px;" placeholder="Title">
-            <textarea name="olq_factor3_items" rows="4" class="form-tactical" placeholder="List items (one per line)">{{ cms('olq_factor3_items', "8. Initiative & Boldness\n9. Self-Confidence\n10. Speed of Decision\n11. Ability to Influence\n12. Liveliness & Morale") }}</textarea>
+            <input type="text" name="olq_factor3_title" value="{{ cms('olq_factor3_title', 'FACTOR III: SOCIAL EFFECTIVENESS') }}" class="form-tactical" style="margin-bottom: 6px;" placeholder="e.g. FACTOR III: SOCIAL EFFECTIVENESS">
+            <textarea name="olq_factor3_items" rows="4" class="form-tactical" placeholder="e.g. 8. Initiative & Boldness&#10;9. Self-Confidence&#10;10. Speed of Decision&#10;11. Ability to Influence&#10;12. Liveliness & Morale">{{ cms('olq_factor3_items', "8. Initiative & Boldness\n9. Self-Confidence\n10. Speed of Decision\n11. Ability to Influence\n12. Liveliness & Morale") }}</textarea>
           </div>
 
           <!-- Factor IV -->
           <div style="background: rgba(255, 255, 255, 0.03); padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08);">
             <label style="display: block; font-size: 11px; font-weight: 700; color: var(--accent-gold); margin-bottom: 4px;">Factor IV</label>
-            <input type="text" name="olq_factor4_title" value="{{ cms('olq_factor4_title', 'FACTOR IV: DYNAMIC COURAGE') }}" class="form-tactical" style="margin-bottom: 6px;" placeholder="Title">
-            <textarea name="olq_factor4_items" rows="4" class="form-tactical" placeholder="List items (one per line)">{{ cms('olq_factor4_items', "13. Determination\n14. Courage & Moral Stature\n15. Physical Stamina") }}</textarea>
+            <input type="text" name="olq_factor4_title" value="{{ cms('olq_factor4_title', 'FACTOR IV: DYNAMIC COURAGE') }}" class="form-tactical" style="margin-bottom: 6px;" placeholder="e.g. FACTOR IV: DYNAMIC COURAGE">
+            <textarea name="olq_factor4_items" rows="4" class="form-tactical" placeholder="e.g. 13. Determination&#10;14. Courage & Moral Stature&#10;15. Physical Stamina">{{ cms('olq_factor4_items', "13. Determination\n14. Courage & Moral Stature\n15. Physical Stamina") }}</textarea>
           </div>
         </div>
 
@@ -550,11 +542,11 @@
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px;">
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Section Tag</label>
-            <input type="text" name="courses_section_tag" value="{{ cms('courses_section_tag', 'Admissions Open') }}" class="form-tactical" placeholder="Tag text">
+            <input type="text" name="courses_section_tag" value="{{ cms('courses_section_tag', 'Admissions Open') }}" class="form-tactical" placeholder="e.g. Admissions Open">
           </div>
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Section Heading</label>
-            <input type="text" name="courses_section_heading" value="{{ cms('courses_section_heading', 'Featured Preparatory Programs') }}" class="form-tactical" placeholder="Section heading">
+            <input type="text" name="courses_section_heading" value="{{ cms('courses_section_heading', 'Featured Preparatory Programs') }}" class="form-tactical" placeholder="e.g. Featured Preparatory Programs">
           </div>
         </div>
 
@@ -658,11 +650,11 @@
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px;">
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Section Tag</label>
-            <input type="text" name="home_gallery_tag" value="{{ cms('home_gallery_tag', 'Life at IDA') }}" class="form-tactical" placeholder="Tag text">
+            <input type="text" name="home_gallery_tag" value="{{ cms('home_gallery_tag', 'Life at IDA') }}" class="form-tactical" placeholder="e.g. Life at IDA">
           </div>
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Section Heading</label>
-            <input type="text" name="home_gallery_title" value="{{ cms('home_gallery_title', 'Rigorous Ground & Academic Training') }}" class="form-tactical" placeholder="Section heading">
+            <input type="text" name="home_gallery_title" value="{{ cms('home_gallery_title', 'Rigorous Ground & Academic Training') }}" class="form-tactical" placeholder="e.g. Rigorous Ground & Academic Training">
           </div>
         </div>
       </div>
@@ -681,36 +673,129 @@
       <div style="display: flex; flex-direction: column; gap: 14px;">
         <div>
           <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Heading</label>
-          <input type="text" name="cta_heading" value="{{ cms('cta_heading', 'Ready to Wear the Prestigious Officer Uniform?') }}" class="form-tactical" placeholder="Banner heading">
+          <input type="text" name="cta_heading" value="{{ cms('cta_heading', 'Ready to Wear the Prestigious Officer Uniform?') }}" class="form-tactical" placeholder="e.g. Ready to Wear the Prestigious Officer Uniform?">
         </div>
 
         <div>
           <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Subheading</label>
-          <textarea name="cta_subheading" rows="2" class="form-tactical" placeholder="Subheading text...">{{ cms('cta_subheading', "Join Khulna's premier defence preparatory academy. Meet our retired military faculty, experience the obstacle fields in Boyra, and commence your journey toward commissioning.") }}</textarea>
+          <textarea name="cta_subheading" rows="2" class="form-tactical" placeholder="e.g. Join Khulna's premier defence preparatory academy. Meet our retired military faculty, experience the obstacle fields in Boyra, and commence your journey toward commissioning.">{{ cms('cta_subheading', "Join Khulna's premier defence preparatory academy. Meet our retired military faculty, experience the obstacle fields in Boyra, and commence your journey toward commissioning.") }}</textarea>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 4px;">Primary Button</label>
             <div style="display: flex; gap: 8px;">
-              <input type="text" name="cta_btn1_text" value="{{ cms('cta_btn1_text', 'Apply for Direct Admission') }}" class="form-tactical" placeholder="Label">
-              <input type="text" name="cta_btn1_url" value="{{ cms('cta_btn1_url', route('register')) }}" class="form-tactical" placeholder="URL">
+              <input type="text" name="cta_btn1_text" value="{{ cms('cta_btn1_text', 'Apply for Direct Admission') }}" class="form-tactical" placeholder="e.g. Apply for Direct Admission">
+              <input type="text" name="cta_btn1_url" value="{{ cms('cta_btn1_url', route('register')) }}" class="form-tactical" placeholder="e.g. {{ route('register') }}">
             </div>
           </div>
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 4px;">Secondary Button</label>
             <div style="display: flex; gap: 8px;">
-              <input type="text" name="cta_btn2_text" value="{{ cms('cta_btn2_text', 'Visit Khulna Campus') }}" class="form-tactical" placeholder="Label">
-              <input type="text" name="cta_btn2_url" value="{{ cms('cta_btn2_url', route('contact')) }}" class="form-tactical" placeholder="URL">
+              <input type="text" name="cta_btn2_text" value="{{ cms('cta_btn2_text', 'Visit Khulna Campus') }}" class="form-tactical" placeholder="e.g. Visit Khulna Campus">
+              <input type="text" name="cta_btn2_url" value="{{ cms('cta_btn2_url', route('contact')) }}" class="form-tactical" placeholder="e.g. {{ route('contact') }}">
             </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- ========================================================================= -->
+    <!-- 10. KHULNA CAMPUS & SITEWIDE FOOTER (BOTTOM OF LIVE WEBSITE) -->
+    <!-- ========================================================================= -->
+    <div class="tactical-card" style="margin-bottom: 24px; border-left: 4px solid var(--brand-mint);">
+      <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-building-shield" style="color: var(--brand-mint);"></i> Khulna Campus & Sitewide Footer
+          </h3>
+          <span style="font-size: 12px; color: #94a3b8; display: block; margin-top: 4px;">
+            Displayed at the bottom of the homepage and across all public pages. Emptying any field completely removes it from the website.
+          </span>
+        </div>
+        <span class="badge badge-emerald" style="font-size: 11px; padding: 4px 10px;">
+          <i class="fa-solid fa-location-dot"></i> Live Footer Section
+        </span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Khulna Campus Details (Right Column of Footer) -->
+        <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 18px;">
+          <h4 style="font-size: 13.5px; font-weight: 800; color: var(--accent-gold); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-map-location-dot"></i> Khulna Campus Headquarters
+          </h4>
+
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px;">
+              <div>
+                <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Campus Column Title</label>
+                <input type="text" name="footer_campus_heading" value="{{ cms('footer_campus_heading', 'KHULNA CAMPUS') }}" class="form-tactical" placeholder="e.g. KHULNA CAMPUS">
+              </div>
+              <div>
+                <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Campus Address</label>
+                <input type="text" name="academy_location" value="{{ cms('academy_location', 'Boyra Main Road (Near Medical College), Khulna - 9000') }}" class="form-tactical" placeholder="e.g. Boyra Main Road (Near Medical College), Khulna - 9000">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div>
+                <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">
+                  <i class="fa-solid fa-phone" style="color: var(--brand-mint); margin-right: 4px;"></i> Hotlines & WhatsApp
+                </label>
+                <input type="text" name="academy_phone" value="{{ cms('academy_phone', '+880 1712-345678, +880 1911-987654') }}" class="form-tactical" placeholder="e.g. +880 1712-345678, +880 1911-987654">
+              </div>
+              <div>
+                <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">
+                  <i class="fa-solid fa-envelope" style="color: var(--brand-mint); margin-right: 4px;"></i> Email Addresses
+                </label>
+                <input type="text" name="academy_email" value="{{ cms('academy_email', 'info@ida.com.bd, admissions@ida.com.bd') }}" class="form-tactical" placeholder="e.g. info@ida.com.bd, admissions@ida.com.bd">
+              </div>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">
+                <i class="fa-regular fa-clock" style="color: var(--brand-mint); margin-right: 4px;"></i> Campus Office & Visiting Hours
+              </label>
+              <input type="text" name="office_hours" value="{{ cms('office_hours', 'Saturday - Thursday: 08:00 AM - 08:00 PM (Friday: 03:00 PM - 08:00 PM)') }}" class="form-tactical" placeholder="e.g. Saturday - Thursday: 08:00 AM - 08:00 PM (Friday: 03:00 PM - 08:00 PM)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Bio, Values & Copyright (Left Column & Bottom Bar) -->
+        <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 18px;">
+          <h4 style="font-size: 13.5px; font-weight: 800; color: var(--accent-gold); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-circle-info"></i> Academy Bio & Footer Details
+          </h4>
+
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Academy Bio / Description</label>
+              <textarea name="footer_bio" rows="2" class="form-tactical" placeholder="e.g. Khulna's premier defense preparatory academy, providing structured grooming for Bangladesh Army (BMA Long Course), Navy, Air Force (BAFA), and complete 4-day simulated ISSB screening mentored by experienced defense officers.">{{ cms('footer_bio', "Khulna's premier defense preparatory academy, providing structured grooming for Bangladesh Army (BMA Long Course), Navy, Air Force (BAFA), and complete 4-day simulated ISSB screening mentored by experienced defense officers.") }}</textarea>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Core Values Badges</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <input type="text" name="footer_tag1" value="{{ cms('footer_tag1', 'Discipline') }}" class="form-tactical" placeholder="e.g. Discipline">
+                <input type="text" name="footer_tag2" value="{{ cms('footer_tag2', 'Leadership') }}" class="form-tactical" placeholder="e.g. Leadership">
+                <input type="text" name="footer_tag3" value="{{ cms('footer_tag3', 'Character') }}" class="form-tactical" placeholder="e.g. Character">
+              </div>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 6px;">Copyright & Motto</label>
+              <input type="text" name="footer_copyright" value="{{ cms('footer_copyright', 'Imperial Defence Academy (IDA), Khulna. All rights reserved. Precision • Character • Commission.') }}" class="form-tactical" placeholder="e.g. Imperial Defence Academy (IDA), Khulna. All rights reserved. Precision • Character • Commission.">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Sticky Save Bar -->
     <div style="display: flex; justify-content: flex-end; gap: 12px; position: sticky; bottom: 20px; z-index: 10; background: rgba(17, 20, 29, 0.96); padding: 14px 20px; border-radius: var(--radius-sm); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 8px 32px rgba(0,0,0,0.6); backdrop-filter: blur(8px);">
-      <a href="{{ url('/') }}" target="_blank" class="btn-tactical btn-tactical-outline">
+      <a href="{{ route('home') }}" target="_blank" class="btn-tactical btn-tactical-outline">
         <i class="fa-solid fa-eye"></i> View Live Site
       </a>
       <button type="submit" class="btn-tactical btn-tactical-primary" style="padding: 10px 24px; font-size: 13.5px;">

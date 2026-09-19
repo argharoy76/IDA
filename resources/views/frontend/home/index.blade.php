@@ -5,21 +5,12 @@
 @section('content')
 <style>
   .hero-animate-in {
-    animation: heroFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  @keyframes heroFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 </style>
 <!-- Hero Section (Atmospheric Dark Command with Ken Burns background slider) -->
-<section class="hero-section relative min-h-[640px] md:min-h-[740px] flex items-center justify-center overflow-hidden border-b border-navy-border" style="position: relative; overflow: hidden; padding: 80px 24px 90px; background-color: #050b14;">
+<section class="hero-section relative flex items-center justify-center overflow-hidden border-b border-navy-border" style="position: relative; overflow: hidden; min-height: 88vh; display: flex; align-items: center; justify-content: center; padding: 90px 24px 100px; background-color: #050b14;">
   
   <!-- Dynamic Multi-Image Sliding & Zooming Background Layer from Reference Website -->
   @php
@@ -165,7 +156,7 @@
         
         <!-- Animated Floating 3D Crest -->
         <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-          @include('frontend.partials.logo_crest', ['size' => 74])
+          @include('frontend.partials.logo_crest', ['size' => 88])
         </div>
 
         @if(filled($showcaseTitle))
@@ -233,29 +224,54 @@
   @endif
 </section>
 
-<!-- Animated Marquee Dispatch (From Reference) -->
+<!-- Attractive Tactical Command Dispatch Ribbon / Floating Marquee (Only Moving Text) -->
 @php
   $marqueeIsLive = cms('marquee_is_live', '1') == '1';
-  $marqueeLabel = cms('marquee_label', 'BULLETIN:');
   $marqueeText = cms('marquee_text', 'BMA 95th Long Course & Navy 2026-B Batches Enrolling Now ★ Free Dossier Screening Every Friday at Khulna HQ ★');
-  $showMarquee = $marqueeIsLive && (filled($marqueeText) || ($notices->isNotEmpty() && filled($marqueeLabel)));
+  $showMarquee = $marqueeIsLive && filled($marqueeText);
 @endphp
 @if($showMarquee)
-<div style="background: #02060d; border-bottom: 1px solid rgba(255, 255, 255, 0.08); max-width: 100vw; width: 100%; overflow: hidden; position: relative; display: flex; align-items: center; padding: 10px 0;">
-  @if(filled($marqueeLabel))
-  <div style="background: #02060d; padding: 0 14px; font-weight: 800; color: var(--accent-gold); border-right: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; gap: 8px; z-index: 10; flex-shrink: 0;">
-    <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--accent-gold); animation: pulseGlow 1.5s infinite;"></span>
-    <span style="font-size: 11.5px; letter-spacing: 0.5px;">{{ $marqueeLabel }}</span>
-  </div>
-  @endif
-  <div style="flex: 1 1 0%; min-width: 0; overflow: hidden; padding-left: 10px;">
-    <div class="animate-marquee" style="color: #e2e8f0; font-size: 13px; font-weight: 500;">
-      @if($notices->isNotEmpty())
-        ★ {{ $notices->first()->title }} ({{ $notices->first()->publish_date->format('d M, Y') }})
-      @endif
-      @if(filled($marqueeText))
-        ★ {{ $marqueeText }}
-      @endif
+<style>
+  .ida-bulletin-container {
+    position: relative;
+    z-index: 35;
+    max-width: 1240px;
+    margin: -26px auto 28px;
+    padding: 0 20px;
+  }
+  .ida-bulletin-card {
+    background: linear-gradient(135deg, #071522 0%, #072a1e 50%, #071522 100%);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    border-top: 2px solid var(--accent-gold);
+    border-radius: 50px;
+    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.65), 0 0 24px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    padding: 9px 24px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  @media (max-width: 768px) {
+    .ida-bulletin-container {
+      margin: -14px auto 18px !important;
+      padding: 0 12px !important;
+    }
+    .ida-bulletin-card {
+      border-radius: 12px !important;
+      padding: 8px 14px !important;
+    }
+  }
+</style>
+<div class="ida-bulletin-container">
+  <div class="ida-bulletin-card">
+    <!-- Smoothly Masked Marquee Track: Only Moving Text -->
+    <div style="flex: 1 1 0%; min-width: 0; overflow: hidden; mask-image: linear-gradient(to right, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 24px, black calc(100% - 24px), transparent 100%);">
+      <div class="animate-marquee" style="color: #ffffff; font-size: 13.5px; font-weight: 600; letter-spacing: 0.3px; display: inline-flex; align-items: center;">
+        <span style="display: inline-flex; align-items: center; gap: 8px;">
+          <span style="color: var(--accent-gold); font-size: 14px;">★</span>
+          <span style="color: #f8fafc;">{{ $marqueeText }}</span>
+        </span>
+      </div>
     </div>
   </div>
 </div>
@@ -551,7 +567,7 @@
   <div class="grid-cols-4-responsive">
     @foreach($gallery as $idx => $item)
       <div class="classical-card" data-aos="fade-up" data-aos-delay="{{ ($idx + 1) * 100 }}" style="background: var(--surface); border: 1px solid var(--border-soft); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-card);">
-        <div style="height: 155px; background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%); display: grid; place-items: center; color: rgba(255,255,255,0.7); font-size: 32px; overflow: hidden; position: relative;">
+        <div style="height: 220px; background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%); display: grid; place-items: center; color: rgba(255,255,255,0.7); font-size: 32px; overflow: hidden; position: relative;">
           @if($item->image_path)
             <img src="{{ str_starts_with($item->image_path, 'http') ? $item->image_path : asset($item->image_path) }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover;">
           @else

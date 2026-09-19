@@ -118,8 +118,11 @@ class Student extends Model
     /**
      * Check whether student is enrolled in a specific branch sector.
      */
-    public function isEnrolledInBranch(string $branch): bool
+    public function isEnrolledInBranch(?string $branch): bool
     {
+        if (empty($branch) || $branch === 'general' || $branch === 'all') {
+            return true;
+        }
         return in_array($branch, $this->getEnrolledBranches(), true);
     }
 

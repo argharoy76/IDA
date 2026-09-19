@@ -225,7 +225,7 @@
 
     <!-- Sticky Save Bar -->
     <div style="display: flex; justify-content: flex-end; gap: 12px; position: sticky; bottom: 20px; z-index: 10; background: rgba(255,255,255,0.95); padding: 14px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border-soft); box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-      <a href="{{ url('/') }}" target="_blank" class="btn-tactical btn-tactical-outline">
+      <a href="{{ route('home') }}" target="_blank" class="btn-tactical btn-tactical-outline">
         <i class="fa-solid fa-eye"></i> View Live Site
       </a>
       <button type="submit" class="btn-tactical btn-tactical-primary" style="padding: 10px 24px; font-size: 13.5px; font-weight: 700;">

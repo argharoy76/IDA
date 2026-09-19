@@ -260,30 +260,7 @@
       box-shadow: 0 6px 20px rgba(255, 87, 87, 0.45);
     }
 
-    /* 1-Click Super Admin Bypass Button */
-    .btn-bypass {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      color: #cbd5e1;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 10px;
-      border: 1px dashed rgba(255, 255, 255, 0.18);
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      text-decoration: none;
-      transition: all 0.2s;
-      margin-top: 14px;
-    }
-    .btn-bypass:hover {
-      background: rgba(255, 87, 87, 0.1);
-      border-color: rgba(255, 87, 87, 0.35);
-      color: #ff8585;
-    }
+
 
     /* Alert Banner */
     .alert-danger {
@@ -364,7 +341,7 @@
         </div>
       @endif
 
-      <form method="POST" action="{{ url('/admin/login') }}">
+      <form method="POST" action="{{ route('admin.login.post') }}">
         @csrf
 
         <!-- Account ID or Email -->
@@ -375,7 +352,19 @@
             <input type="text" name="login_id" required autofocus
                    value="{{ old('login_id', old('email')) }}"
                    class="input-control"
-                   placeholder="e.g. Argharoy, ADM-001 or admin@ida.com">
+                   placeholder="e.g. ArghaRoy, ADM-001 or admin@ida.com">
+          </div>
+        </div>
+
+        <!-- Registered Phone Number -->
+        <div class="form-group">
+          <label class="form-label">Registered Phone Number</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-phone input-icon"></i>
+            <input type="text" name="phone" required
+                   value="{{ old('phone') }}"
+                   class="input-control"
+                   placeholder="e.g. 01711001122 or +880 1711-001122">
           </div>
         </div>
 
@@ -404,15 +393,9 @@
         </div>
 
         <button type="submit" class="btn-submit">
-          <i class="fa-solid fa-right-to-bracket"></i>
-          <span>Authenticate & Access Command</span>
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Authenticate Command Clearance</span>
         </button>
-
-        <!-- 1-Click Super Admin Access -->
-        <a href="{{ route('quick_admin') }}" class="btn-bypass">
-          <i class="fa-solid fa-bolt" style="color: #ff5757;"></i>
-          <span>1-Click Super Admin Access</span>
-        </a>
 
         <!-- Candidate / Student redirect hint -->
         <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #64748b;">

@@ -94,6 +94,14 @@ class CmsController extends Controller
 
     public function updateSettings(Request $request)
     {
+        $request->validate([
+            'site_logo' => 'nullable|file|mimes:jpeg,png,jpg,webp,svg|max:5120',
+            'site_crest' => 'nullable|file|mimes:jpeg,png,jpg,webp,svg|max:5120',
+            'hero_bg_image' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:10240',
+            'about_image' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:10240',
+            'cta_bg_image' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:10240',
+        ]);
+
         $data = $request->except(['_token', '_method']);
 
         // Ensure upload destination folder exists
@@ -103,11 +111,14 @@ class CmsController extends Controller
         }
 
         // Handle File Uploads
+        $allowedExtensions = ['jpeg', 'jpg', 'png', 'webp', 'svg'];
         $fileFields = ['site_logo', 'site_crest', 'hero_bg_image', 'about_image', 'cta_bg_image'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
                 $file = $request->file($field);
-                $filename = $field . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $rawExt = strtolower($file->getClientOriginalExtension());
+                $ext = in_array($rawExt, $allowedExtensions) ? $rawExt : 'jpg';
+                $filename = $field . '_' . time() . '_' . Str::random(8) . '.' . $ext;
                 $file->move($uploadPath, $filename);
                 $data[$field] = 'uploads/cms/' . $filename;
 
@@ -209,7 +220,10 @@ class CmsController extends Controller
                 File::makeDirectory($uploadPath, 0755, true, true);
             }
             $file = $request->file('image_file');
-            $filename = 'gallery_' . time() . '_' . Str::random(5) . '.' . $file->getClientOriginalExtension();
+            $allowedExtensions = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
+            $rawExt = strtolower($file->getClientOriginalExtension());
+            $ext = in_array($rawExt, $allowedExtensions) ? $rawExt : 'jpg';
+            $filename = 'gallery_' . time() . '_' . Str::random(8) . '.' . $ext;
             $file->move($uploadPath, $filename);
             $imagePath = 'uploads/cms/' . $filename;
         }
@@ -254,7 +268,14 @@ class CmsController extends Controller
 
     public function addHeroSlide(Request $request)
     {
+        $request->validate([
+            'slide_images.*' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:10240',
+            'slide_image' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:10240',
+            'slide_url' => 'nullable|url|max:500',
+        ]);
+
         $currentSlides = cms_hero_slides();
+        $allowedExtensions = ['jpeg', 'jpg', 'png', 'webp'];
 
         $uploadPath = public_path('uploads/cms');
         if (!File::isDirectory($uploadPath)) {
@@ -267,8 +288,9 @@ class CmsController extends Controller
         if ($request->hasFile('slide_images')) {
             foreach ($request->file('slide_images') as $file) {
                 if ($file && $file->isValid()) {
-                    $ext = strtolower($file->getClientOriginalExtension());
-                    $filename = 'hero_slide_' . time() . '_' . Str::random(6) . '.' . $ext;
+                    $rawExt = strtolower($file->getClientOriginalExtension());
+                    $ext = in_array($rawExt, $allowedExtensions) ? $rawExt : 'jpg';
+                    $filename = 'hero_slide_' . time() . '_' . Str::random(8) . '.' . $ext;
                     $file->move($uploadPath, $filename);
                     $currentSlides[] = 'uploads/cms/' . $filename;
                     $addedCount++;
@@ -280,8 +302,9 @@ class CmsController extends Controller
         if ($request->hasFile('slide_image')) {
             $file = $request->file('slide_image');
             if ($file && $file->isValid()) {
-                $ext = strtolower($file->getClientOriginalExtension());
-                $filename = 'hero_slide_' . time() . '_' . Str::random(6) . '.' . $ext;
+                $rawExt = strtolower($file->getClientOriginalExtension());
+                $ext = in_array($rawExt, $allowedExtensions) ? $rawExt : 'jpg';
+                $filename = 'hero_slide_' . time() . '_' . Str::random(8) . '.' . $ext;
                 $file->move($uploadPath, $filename);
                 $currentSlides[] = 'uploads/cms/' . $filename;
                 $addedCount++;

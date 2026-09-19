@@ -1,4 +1,4 @@
-﻿@extends('layouts.public')
+@extends('layouts.public')
 
 @section('title', 'Administrative Access Required | Imperial Defence Academy')
 
@@ -22,37 +22,36 @@
         This section is reserved for Super Administrators and Finance Officers.
       </p>
 
-      <div style="background: #f8fafc; border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px; text-align: left;">
-        <span style="font-size: 11.5px; font-weight: 800; color: var(--brand-deep); text-transform: uppercase; display: block; margin-bottom: 6px;">
-          <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-gold);"></i> Instant Solution:
+      <div style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px; text-align: left;">
+        <span style="font-size: 11.5px; font-weight: 800; color: #991b1b; text-transform: uppercase; display: block; margin-bottom: 6px;">
+          <i class="fa-solid fa-shield-halved"></i> Access Restricted:
         </span>
-        <p style="font-size: 12.5px; color: var(--text-body); margin: 0;">
-          Click the button below to instantly switch to the <strong>Super Admin</strong> account and gain full access to the Executive Dashboard and Website CMS.
+        <p style="font-size: 12.5px; color: #7f1d1d; margin: 0;">
+          Your current security clearance level does not permit access to this section. If you require higher administrative privileges, please contact the Academy Command Authority.
         </p>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <a href="{{ route('quick_admin') }}" class="btn-primary" style="justify-content: center; padding: 12px 20px; font-size: 14px;">
-          <i class="fa-solid fa-crown" style="color: #fef3c7;"></i> Switch to Super Admin Account (1-Click) &rarr;
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <a href="{{ route('dashboard') }}" class="btn-primary" style="flex: 1; justify-content: center; font-size: 13px;">
+          <i class="fa-solid fa-table-cells-large"></i> Go to My Portal
         </a>
-        
-        <div style="display: flex; gap: 10px; justify-content: center;">
-          <a href="{{ route('dashboard') }}" class="btn-secondary" style="flex: 1; justify-content: center; font-size: 13px;">
-            <i class="fa-solid fa-table-cells-large"></i> Go to My Portal
-          </a>
-          <a href="{{ route('logout.get') }}" class="btn-tactical btn-tactical-outline" style="flex: 1; justify-content: center; font-size: 13px; color: #ef4444; border-color: #fecaca;">
-            <i class="fa-solid fa-right-from-bracket"></i> Sign Out
-          </a>
-        </div>
+        <a href="{{ route('logout.get') }}" class="btn-tactical btn-tactical-outline" style="flex: 1; justify-content: center; font-size: 13px; color: #ef4444; border-color: #fecaca;">
+          <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+        </a>
       </div>
     @else
       <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
-        Please authenticate with an authorized Academy Administrator account to access this page.
+        Please authenticate with an authorized Academy Administrator account to access this command page.
       </p>
 
-      <a href="{{ route('quick_admin') }}" class="btn-primary" style="justify-content: center; padding: 12px 20px; font-size: 14px;">
-        <i class="fa-solid fa-crown"></i> 1-Click Super Admin Sign In
-      </a>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <a href="{{ route('admin.login') }}" class="btn-primary" style="flex: 1; justify-content: center; font-size: 13.5px; padding: 12px 20px;">
+          <i class="fa-solid fa-lock"></i> Officer Command Sign In
+        </a>
+        <a href="{{ route('home') }}" class="btn-secondary" style="flex: 1; justify-content: center; font-size: 13.5px; padding: 12px 20px;">
+          <i class="fa-solid fa-house"></i> Public Homepage
+        </a>
+      </div>
     @endauth
 
   </div>

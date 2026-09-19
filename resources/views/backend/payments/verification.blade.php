@@ -192,7 +192,7 @@
   function openRejectModal(id, number, amount) {
     const modal = document.getElementById('rejectModal');
     const form = document.getElementById('rejectForm');
-    form.action = "{{ url('/admin/payments') }}/" + id + "/reject";
+    form.action = "{{ route('admin.payments.reject', ['id' => ':id']) }}".replace(':id', id);
     document.getElementById('rejectPaymentNum').innerText = number;
     document.getElementById('rejectAmount').innerText = parseFloat(amount).toFixed(2);
     modal.style.display = 'flex';

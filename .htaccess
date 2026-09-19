@@ -1,18 +1,26 @@
 <IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
     RewriteEngine On
 
-    # Serve static assets from public/ directory
-    RewriteCond %{REQUEST_URI} ^/ida/css/ [NC,OR]
-    RewriteCond %{REQUEST_URI} ^/ida/js/ [NC,OR]
-    RewriteCond %{REQUEST_URI} ^/ida/images/ [NC,OR]
-    RewriteCond %{REQUEST_URI} ^/ida/uploads/ [NC,OR]
-    RewriteCond %{REQUEST_URI} ^/ida/storage/ [NC,OR]
-    RewriteCond %{REQUEST_URI} ^/ida/favicon\.ico$ [NC]
-    RewriteRule ^(.*)$ public/$1 [L]
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Skip requests already going to public/
-    RewriteCond %{REQUEST_URI} ^/ida/public/ [NC]
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # If the request is already going to public/, do not rewrite
+    RewriteCond %{REQUEST_URI} (^|/)public/ [NC]
     RewriteRule ^ - [L]
+
+    # Serve static assets and files directly from public/
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ public/$1 [L]
 
     # Forward all other requests to root index.php (Laravel proxy)
     RewriteCond %{REQUEST_FILENAME} !-f

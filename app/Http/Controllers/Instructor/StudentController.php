@@ -28,7 +28,7 @@ class StudentController extends Controller
 
     public function show($id)
     {
-        $instructor = Instructor::where('user_id', auth()->id())->first();
+        $instructor = Instructor::where('user_id', auth()->id())->firstOrFail();
 
         $student = Student::with([
             'user',
@@ -50,6 +50,10 @@ class StudentController extends Controller
             'examAttempts.exam'
         ])->findOrFail($id);
 
+        if (!$instructor->batches->pluck('id')->contains($student->current_batch_id)) {
+            abort(403, 'Unauthorized access to cadet dossier. Cadet does not belong to your assigned batches.');
+        }
+
         return view('instructor.students.show', compact('student', 'instructor'));
     }
 
@@ -66,6 +70,11 @@ class StudentController extends Controller
             'follow_up_date' => 'nullable|date',
             'visibility' => 'required|in:student_visible,instructor_only,admin_only',
         ]);
+
+        $student = Student::findOrFail($validated['student_id']);
+        if (!$instructor->batches->pluck('id')->contains($student->current_batch_id)) {
+            abort(403, 'Unauthorized. Cadet does not belong to your assigned batches.');
+        }
 
         $obs = InstructorObservation::create([
             'student_id' => $validated['student_id'],
@@ -108,6 +117,11 @@ class StudentController extends Controller
             'follow_up_date' => 'nullable|date',
         ]);
 
+        $student = Student::findOrFail($validated['student_id']);
+        if (!$instructor->batches->pluck('id')->contains($student->current_batch_id)) {
+            abort(403, 'Unauthorized. Cadet does not belong to your assigned batches.');
+        }
+
         StudentStrengthWeakness::create(array_merge($validated, [
             'identified_date' => Carbon::today(),
             'instructor_id' => $instructor->id,
@@ -130,6 +144,11 @@ class StudentController extends Controller
             'progress_percentage' => 'nullable|integer|min:0|max:100',
             'status' => 'required|in:pending,in_progress,completed,deferred',
         ]);
+
+        $student = Student::findOrFail($validated['student_id']);
+        if (!$instructor->batches->pluck('id')->contains($student->current_batch_id)) {
+            abort(403, 'Unauthorized. Cadet does not belong to your assigned batches.');
+        }
 
         ImprovementPlan::create(array_merge($validated, [
             'responsible_instructor_id' => $instructor->id,

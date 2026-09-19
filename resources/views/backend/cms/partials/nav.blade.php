@@ -2,20 +2,20 @@
   $currentRoute = request()->route()->getName();
   
   $liveLinks = [
-    'admin.cms.home' => url('/'),
-    'admin.cms.courses' => url('/courses'),
-    'admin.cms.online_tests' => url('/online-tests'),
-    'admin.cms.about' => url('/about'),
-    'admin.cms.classes' => url('/classes'),
-    'admin.cms.gallery' => url('/gallery'),
-    'admin.cms.notices' => url('/notices'),
-    'admin.cms.contact' => url('/contact'),
-    'admin.cms.branding' => url('/'),
-    'admin.cms.inquiries' => url('/contact'),
-    'admin.cms.index' => url('/'),
+    'admin.cms.home' => route('home'),
+    'admin.cms.courses' => route('courses'),
+    'admin.cms.online_tests' => route('online_tests'),
+    'admin.cms.about' => route('about'),
+    'admin.cms.classes' => route('classes'),
+    'admin.cms.gallery' => route('gallery'),
+    'admin.cms.notices' => route('notices'),
+    'admin.cms.contact' => route('contact'),
+    'admin.cms.branding' => route('home'),
+    'admin.cms.inquiries' => route('contact'),
+    'admin.cms.index' => route('home'),
   ];
   
-  $currentLiveUrl = $liveLinks[$currentRoute] ?? url('/');
+  $currentLiveUrl = $liveLinks[$currentRoute] ?? route('home');
 
   $navItems = [
     ['route' => 'admin.cms.index', 'icon' => 'fa-solid fa-gauge-high', 'label' => 'Overview Hub'],

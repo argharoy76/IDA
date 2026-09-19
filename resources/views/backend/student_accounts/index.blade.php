@@ -873,7 +873,7 @@
     document.getElementById('delRequiredCode').textContent = activeDeleteIdCode;
     
     // Set form action dynamically
-    document.getElementById('deleteStudentForm').action = "{{ url('/admin/student-accounts') }}/" + studentId;
+    document.getElementById('deleteStudentForm').action = "{{ route('admin.student_accounts.index') }}/" + studentId;
     
     // Reset inputs
     const input = document.getElementById('delConfirmInput');

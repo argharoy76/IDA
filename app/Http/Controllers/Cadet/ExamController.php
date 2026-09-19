@@ -30,8 +30,14 @@ class ExamController extends Controller
             abort(404, 'No cadet student record found.');
         }
 
-        // Determine cadet's enrolled branches
-        $enrolledBranches = $student->getEnrolledBranches();
+        $user = auth()->user();
+
+        // Determine cadet's enrolled branches (Admins get all branches unlocked)
+        if ($user->isAdmin() || in_array($user->role, ['super_admin', 'admin', 'instructor'])) {
+            $enrolledBranches = ['army', 'navy', 'air_force', 'police'];
+        } else {
+            $enrolledBranches = $student->getEnrolledBranches();
+        }
 
         // Selected branch tab (e.g. null for 'All Branches', or 'army', 'navy', 'air_force', 'police')
         $selectedBranch = $request->query('branch');
@@ -40,7 +46,7 @@ class ExamController extends Controller
 
         if ($selectedBranch) {
             // Cadet selected a specific branch
-            if (!in_array($selectedBranch, $enrolledBranches)) {
+            if (!in_array($selectedBranch, $enrolledBranches) && !$user->isAdmin()) {
                 // Not enrolled in this sector: show ongoing courses for this sector
                 $isEnrolledInSelectedBranch = false;
                 $ongoingCourses = Course::forBranch($selectedBranch)
@@ -60,12 +66,16 @@ class ExamController extends Controller
             }
         } else {
             // "All Branches" or "All Exams"
-            // Shows ONLY exams for the sectors the cadet is enrolled in (e.g. Army only if enrolled in Army)
             $query = Exam::where('is_paid_for_external', true)
                 ->whereIn('status', ['open', 'scheduled', 'closed']);
 
-            if (!empty($enrolledBranches)) {
-                $query->whereIn('branch', $enrolledBranches);
+            if (!$user->isAdmin() && !empty($enrolledBranches)) {
+                $query->where(function ($q) use ($enrolledBranches) {
+                    $q->whereIn('branch', $enrolledBranches)
+                      ->orWhereNull('branch')
+                      ->orWhere('branch', '')
+                      ->orWhere('branch', 'general');
+                });
             }
 
             $exams = $query->orderBy('schedule_start', 'asc')->get();
@@ -105,7 +115,11 @@ class ExamController extends Controller
             abort(404, 'No cadet student record found.');
         }
 
-        $enrolledBranches = $student->getEnrolledBranches();
+        if ($user->isAdmin() || in_array($user->role, ['super_admin', 'admin', 'instructor'])) {
+            $enrolledBranches = ['army', 'navy', 'air_force', 'police'];
+        } else {
+            $enrolledBranches = $student->getEnrolledBranches();
+        }
         $selectedBranch = $request->query('branch');
         $isEnrolledInSelectedBranch = true;
         $ongoingCourses = collect();
@@ -214,7 +228,7 @@ class ExamController extends Controller
         $student = Student::with(['courses', 'currentCourse'])->where('user_id', $user->id)->first();
 
         // Enrolled branch enforcement: if cadet is not enrolled in this sector, redirect to branch ongoing courses
-        if ($student && !$user->isAdmin() && !in_array($user->role, ['super_admin', 'admin', 'instructor']) && !$student->isEnrolledInBranch($exam->branch)) {
+        if ($student && !empty($exam->branch) && !$user->isAdmin() && !in_array($user->role, ['super_admin', 'admin', 'instructor']) && !$student->isEnrolledInBranch($exam->branch)) {
             return redirect()->route('cadet.exams.index', ['branch' => $exam->branch])
                 ->with('error', "You are not enrolled in the {$exam->branchLabel()} sector. Please explore the ongoing courses below.");
         }

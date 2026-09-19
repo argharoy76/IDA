@@ -15,6 +15,10 @@ class FreshExamDataSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new \RuntimeException('Destructive operation blocked: FreshExamDataSeeder truncates exam tables and is strictly prohibited in production.');
+        }
+
         // 1. Wipe all existing exam tables cleanly
         Schema::disableForeignKeyConstraints();
         DB::table('exam_attempt_answers')->truncate();

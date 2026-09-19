@@ -46,6 +46,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Enforce HTTPS when deployed in production or behind SSL terminating proxies (Hostinger / Cloudflare)
+        if (config('app.env') === 'production' || 
+            (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') || 
+            (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] == 1))) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         // Share CMS settings across all views
         View::composer('*', function ($view) {
             try {

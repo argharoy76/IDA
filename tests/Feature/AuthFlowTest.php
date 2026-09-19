@@ -52,7 +52,8 @@ class AuthFlowTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Admin Command Access');
         $response->assertSee('Officer / Account ID or Email');
-        $response->assertSee('1-Click Super Admin Access');
+        $response->assertDontSee('1-Click Super Admin Access');
+        $response->assertSee('Registered Phone Number');
         $response->assertSee('Student Login');
     }
 
@@ -178,6 +179,7 @@ class AuthFlowTest extends TestCase
 
         $response = $this->post('/admin/login', [
             'login_id' => $studentUser->account_id,
+            'phone' => '01711998877',
             'password' => 'password123',
         ]);
 
@@ -194,7 +196,8 @@ class AuthFlowTest extends TestCase
 
         $response = $this->post('/admin/login', [
             'login_id' => $admin->account_id,
-            'password' => 'password',
+            'phone' => $admin->phone,
+            'password' => 'ArghaArghaGTA6',
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));
@@ -319,17 +322,18 @@ class AuthFlowTest extends TestCase
     }
 
     /**
-     * Test 12: Admin can log in using the name 'Argharoy' and password 'password'
+     * Test 12: Admin can log in using the name 'ArghaRoy', phone and password 'ArghaArghaGTA6'
      */
     public function test_admin_can_login_with_name_argharoy_and_password(): void
     {
         $admin = User::where('role', 'super_admin')->first();
         $this->assertNotNull($admin);
-        $this->assertEquals('Argharoy', $admin->name);
+        $this->assertEquals('ArghaRoy', $admin->name);
 
         $response = $this->post('/admin/login', [
-            'login_id' => 'Argharoy',
-            'password' => 'password',
+            'login_id' => 'ArghaRoy',
+            'phone' => $admin->phone,
+            'password' => 'ArghaArghaGTA6',
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));
@@ -345,7 +349,8 @@ class AuthFlowTest extends TestCase
 
         $response = $this->post('/admin/login', [
             'login_id' => 'argharoy',
-            'password' => 'password',
+            'phone' => $admin->phone,
+            'password' => 'ArghaArghaGTA6',
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));

@@ -475,8 +475,8 @@
         <h3 class="cadet-tile-title">Exam History</h3>
       </a>
 
-      {{-- Hidden from Cadet Dashboard - Code preserved intact for future activation --}}
-      @if(false)
+      {{-- Hidden from Regular Cadets, Fully Accessible for Administrators --}}
+      @if(auth()->user()->isAdmin())
       <!-- Box 3 (Cyan / Sky Blue): Routine -->
       <a href="{{ route('cadet.routine') }}" class="cadet-tile-card tile-sky" title="Routine">
         <div class="cadet-construction-ribbon">

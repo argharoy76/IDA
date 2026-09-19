@@ -16,6 +16,7 @@ class User extends Authenticatable
         'account_id',
         'password',
         'role',
+        'permissions',
         'phone',
         'status',
         'avatar',
@@ -31,7 +32,30 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'permissions' => 'array',
         ];
+    }
+
+    public function isDeveloperAdmin(): bool
+    {
+        if ($this->role !== 'super_admin') {
+            return false;
+        }
+        $acc = strtolower(trim($this->account_id ?? ''));
+        $name = strtolower(trim($this->name ?? ''));
+        return in_array($acc, ['argharoy', 'adm-001']) 
+            || in_array($name, ['argharoy', 'argha roy']) 
+            || $this->email === 'admin@ida.com'
+            || $this->id === 1;
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+        $perms = $this->permissions ?? [];
+        return in_array($permission, $perms);
     }
 
     public function isSuperAdmin(): bool

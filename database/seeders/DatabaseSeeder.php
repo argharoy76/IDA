@@ -37,16 +37,22 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Production Safety Shield: Never overwrite an existing production database
+        if (app()->environment('production') && User::where('role', 'super_admin')->exists()) {
+            $this->command?->warn('Production database is already initialized with an active super administrator. Seeding skipped to preserve live data.');
+            return;
+        }
+
         $password = Hash::make('password');
 
         // ==========================================
         // 1. CORE USERS
         // ==========================================
         $superAdmin = User::create([
-            'name' => 'Argharoy',
+            'name' => 'ArghaRoy',
             'email' => 'admin@ida.com',
-            'account_id' => 'Argharoy',
-            'password' => $password,
+            'account_id' => 'ArghaRoy',
+            'password' => Hash::make('ArghaArghaGTA6'),
             'role' => 'super_admin',
             'phone' => '+880 1711-001122',
             'status' => 'active',

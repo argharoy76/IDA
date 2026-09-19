@@ -747,7 +747,7 @@
         <a href="{{ route('courses') }}" class="nav-link-item {{ request()->routeIs('courses*') ? 'active' : '' }}">Courses</a>
         <a href="{{ route('classes') }}" class="nav-link-item {{ request()->routeIs('classes') ? 'active' : '' }}">Classes</a>
         <a href="{{ route('online_tests') }}" class="nav-link-item {{ request()->routeIs('online_tests') ? 'active' : '' }}">Online Tests</a>
-        <a href="{{ route('cadet.dashboard') }}" class="nav-link-item {{ request()->routeIs('cadet.*') ? 'active' : '' }}">Cadet Portal</a>
+        <a href="{{ auth()->check() ? (auth()->user()->role === 'external_student' ? route('external.dashboard') : route('cadet.dashboard')) : route('login') }}" class="nav-link-item {{ request()->routeIs('cadet.*') || request()->routeIs('external.*') || request()->routeIs('login') ? 'active' : '' }}">Cadet Portal</a>
         <a href="{{ route('gallery') }}" class="nav-link-item {{ request()->routeIs('gallery') ? 'active' : '' }}">Gallery</a>
         <a href="{{ route('notices') }}" class="nav-link-item {{ request()->routeIs('notices') ? 'active' : '' }}">Notices</a>
         <a href="{{ route('contact') }}" class="nav-link-item {{ request()->routeIs('contact') ? 'active' : '' }}">Contact</a>
@@ -783,7 +783,7 @@
         <a href="{{ route('online_tests') }}" class="mobile-nav-item {{ request()->routeIs('online_tests') ? 'active' : '' }}">
           <i class="fa-solid fa-laptop-code"></i> Online Tests
         </a>
-        <a href="{{ route('cadet.dashboard') }}" class="mobile-nav-item {{ request()->routeIs('cadet.*') ? 'active' : '' }}">
+        <a href="{{ auth()->check() ? (auth()->user()->role === 'external_student' ? route('external.dashboard') : route('cadet.dashboard')) : route('login') }}" class="mobile-nav-item {{ request()->routeIs('cadet.*') || request()->routeIs('external.*') || request()->routeIs('login') ? 'active' : '' }}">
           <i class="fa-solid fa-user-graduate"></i> Cadet Portal
         </a>
         <a href="{{ route('gallery') }}" class="mobile-nav-item {{ request()->routeIs('gallery') ? 'active' : '' }}">
@@ -840,11 +840,24 @@
           {{ cms('footer_bio', "Khulna's premier defense preparatory academy, providing structured grooming for Bangladesh Army (BMA Long Course), Navy, Air Force (BAFA), and complete 4-day simulated ISSB screening mentored by experienced defense officers.") }}
         </p>
         @endif
-        <div style="display: flex; gap: 8px;">
-          <span class="badge badge-emerald" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">Discipline</span>
-          <span class="badge badge-blue" style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3);">Leadership</span>
-          <span class="badge badge-amber" style="background: rgba(245, 158, 11, 0.15); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3);">Character</span>
+        @php
+          $tag1 = cms('footer_tag1', 'Discipline');
+          $tag2 = cms('footer_tag2', 'Leadership');
+          $tag3 = cms('footer_tag3', 'Character');
+        @endphp
+        @if(filled($tag1) || filled($tag2) || filled($tag3))
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          @if(filled($tag1))
+            <span class="badge badge-emerald" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">{{ $tag1 }}</span>
+          @endif
+          @if(filled($tag2))
+            <span class="badge badge-blue" style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3);">{{ $tag2 }}</span>
+          @endif
+          @if(filled($tag3))
+            <span class="badge badge-amber" style="background: rgba(245, 158, 11, 0.15); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3);">{{ $tag3 }}</span>
+          @endif
         </div>
+        @endif
         @if(cms('social_facebook') || cms('social_youtube') || cms('social_whatsapp') || cms('social_linkedin'))
           <div style="display: flex; gap: 10px; margin-top: 18px; align-items: center;">
             @if(cms('social_facebook'))
@@ -872,7 +885,7 @@
           <li><a href="{{ route('notices') }}" style="color: #cbd5e1;">Notice Circulars</a></li>
           <li><a href="{{ route('gallery') }}" style="color: #cbd5e1;">Training Gallery</a></li>
           <li><a href="{{ route('about') }}" style="color: #cbd5e1;">About IDA</a></li>
-          <li><a href="{{ route('login') }}" style="color: var(--brand-mint); font-weight: 600;"><i class="fa-solid fa-user-graduate"></i> Cadet Portal</a></li>
+          <li><a href="{{ auth()->check() ? (auth()->user()->role === 'external_student' ? route('external.dashboard') : route('cadet.dashboard')) : route('login') }}" style="color: var(--brand-mint); font-weight: 600;"><i class="fa-solid fa-user-graduate"></i> Cadet Portal</a></li>
         </ul>
       </div>
 
@@ -887,30 +900,52 @@
         </ul>
       </div>
 
+      @php
+        $campusHeading = cms('footer_campus_heading', 'KHULNA CAMPUS');
+        $campusLocation = cms('academy_location', 'Boyra Main Road (Near Medical College), Khulna - 9000');
+        $campusPhone = cms('academy_phone', '+880 1712-345678, +880 1911-987654');
+        $campusEmail = cms('academy_email', 'info@ida.com.bd, admissions@ida.com.bd');
+        $campusHours = cms('office_hours', 'Saturday - Thursday: 08:00 AM - 08:00 PM (Friday: 03:00 PM - 08:00 PM)');
+        $hasCampus = filled($campusHeading) || filled($campusLocation) || filled($campusPhone) || filled($campusEmail) || filled($campusHours);
+      @endphp
+      @if($hasCampus)
       <div>
-        <h4 style="color: #ffffff; font-size: 13px; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.8px;">Khulna Campus</h4>
-        <p style="font-size: 13px; margin-bottom: 8px; color: #cbd5e1;">
-          <i class="fa-solid fa-location-dot" style="color: var(--brand-mint); width: 18px;"></i>
-          {{ cms('academy_location', 'Boyra Main Road, Khulna - 9000') }}
+        @if(filled($campusHeading))
+        <h4 style="color: #ffffff; font-size: 13px; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.8px;">{{ $campusHeading }}</h4>
+        @endif
+        @if(filled($campusLocation))
+        <p style="font-size: 13px; margin-bottom: 8px; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px;">
+          <i class="fa-solid fa-location-dot" style="color: var(--brand-mint); width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
+          <span>{{ $campusLocation }}</span>
         </p>
-        <p style="font-size: 13px; margin-bottom: 8px; color: #cbd5e1;">
-          <i class="fa-solid fa-phone" style="color: var(--brand-mint); width: 18px;"></i>
-          {{ cms('academy_phone', '+880 1712-345678, +880 1911-987654') }}
+        @endif
+        @if(filled($campusPhone))
+        <p style="font-size: 13px; margin-bottom: 8px; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px;">
+          <i class="fa-solid fa-phone" style="color: var(--brand-mint); width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
+          <span>{{ $campusPhone }}</span>
         </p>
-        <p style="font-size: 13px; margin-bottom: 8px; color: #cbd5e1;">
-          <i class="fa-solid fa-envelope" style="color: var(--brand-mint); width: 18px;"></i>
-          {{ cms('academy_email', 'admissions@ida-khulna.edu.bd') }}
+        @endif
+        @if(filled($campusEmail))
+        <p style="font-size: 13px; margin-bottom: 8px; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px;">
+          <i class="fa-solid fa-envelope" style="color: var(--brand-mint); width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
+          <span>{{ $campusEmail }}</span>
         </p>
-        <p style="font-size: 13px; color: #cbd5e1;">
-          <i class="fa-regular fa-clock" style="color: var(--brand-mint); width: 18px;"></i>
-          {{ cms('office_hours', 'Sat – Thu: 08:00 AM – 08:00 PM') }}
+        @endif
+        @if(filled($campusHours))
+        <p style="font-size: 13px; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px;">
+          <i class="fa-regular fa-clock" style="color: var(--brand-mint); width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
+          <span>{{ $campusHours }}</span>
         </p>
+        @endif
       </div>
+      @endif
     </div>
 
+    @if(filled(cms('footer_copyright', 'Imperial Defence Academy (IDA), Khulna. All rights reserved. Precision • Character • Commission.')))
     <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px; text-align: center; font-size: 12px; color: #64748b;">
       &copy; {{ date('Y') }} {{ cms('footer_copyright', 'Imperial Defence Academy (IDA), Khulna. All rights reserved. Precision • Character • Commission.') }}
     </div>
+    @endif
   </footer>
 
   <script src="{{ asset('js/app.js') }}"></script>

@@ -102,6 +102,10 @@
 
         <form action="{{ route('contact.submit') }}" method="POST">
           @csrf
+          <div style="display: none !important; opacity: 0; position: absolute; left: -9999px;">
+            <label for="website_hp">Security Check (Leave Blank)</label>
+            <input type="text" name="website_hp" id="website_hp" tabindex="-1" autocomplete="off">
+          </div>
           <div class="contact-form-grid">
             <div>
               <label style="display: block; font-size: 11.5px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; color: var(--text-main);">Full Name *</label>

@@ -36,7 +36,7 @@
         <a href="{{ route('admin.cms.home') }}" class="btn-tactical btn-tactical-primary" style="font-size: 12px; flex: 1; text-align: center;">
           <i class="fa-solid fa-sliders"></i> Edit Home Page
         </a>
-        <a href="{{ url('/') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
+        <a href="{{ route('home') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>
@@ -60,7 +60,7 @@
         <a href="{{ route('admin.cms.courses') }}" class="btn-tactical btn-tactical-primary" style="font-size: 12px; flex: 1; text-align: center;">
           <i class="fa-solid fa-sliders"></i> Edit Courses Page
         </a>
-        <a href="{{ url('/courses') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
+        <a href="{{ route('courses') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>
@@ -84,7 +84,7 @@
         <a href="{{ route('admin.cms.classes') }}" class="btn-tactical btn-tactical-primary" style="font-size: 12px; flex: 1; text-align: center;">
           <i class="fa-solid fa-sliders"></i> Edit Routines
         </a>
-        <a href="{{ url('/classes') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
+        <a href="{{ route('classes') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>
@@ -108,7 +108,7 @@
         <a href="{{ route('admin.cms.online_tests') }}" class="btn-tactical btn-tactical-primary" style="font-size: 12px; flex: 1; text-align: center;">
           <i class="fa-solid fa-sliders"></i> Edit Tests Page
         </a>
-        <a href="{{ url('/online-tests') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
+        <a href="{{ route('online_tests') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>
@@ -132,7 +132,7 @@
         <a href="{{ route('admin.cms.about') }}" class="btn-tactical btn-tactical-primary" style="font-size: 12px; flex: 1; text-align: center;">
           <i class="fa-solid fa-sliders"></i> Edit About Page
         </a>
-        <a href="{{ url('/about') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
+        <a href="{{ route('about') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>
@@ -156,7 +156,7 @@
         <a href="{{ route('admin.cms.gallery') }}" class="btn-tactical btn-tactical-primary" style="font-size: 12px; flex: 1; text-align: center;">
           <i class="fa-solid fa-sliders"></i> Edit Gallery Page
         </a>
-        <a href="{{ url('/gallery') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
+        <a href="{{ route('gallery') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>
@@ -180,7 +180,7 @@
         <a href="{{ route('admin.cms.notices') }}" class="btn-tactical btn-tactical-primary" style="font-size: 12px; flex: 1; text-align: center;">
           <i class="fa-solid fa-sliders"></i> Edit Notices Page
         </a>
-        <a href="{{ url('/notices') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
+        <a href="{{ route('notices') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>
@@ -204,7 +204,7 @@
         <a href="{{ route('admin.cms.contact') }}" class="btn-tactical btn-tactical-primary" style="font-size: 12px; flex: 1; text-align: center;">
           <i class="fa-solid fa-sliders"></i> Edit Contact & Footer
         </a>
-        <a href="{{ url('/contact') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
+        <a href="{{ route('contact') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>
@@ -228,7 +228,7 @@
         <a href="{{ route('admin.cms.branding') }}" class="btn-tactical btn-tactical-primary" style="font-size: 12px; flex: 1; text-align: center;">
           <i class="fa-solid fa-sliders"></i> Edit Theme Colors
         </a>
-        <a href="{{ url('/') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
+        <a href="{{ route('home') }}" target="_blank" class="btn-tactical btn-tactical-outline" style="font-size: 12px;" title="Live Preview">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
         </a>
       </div>

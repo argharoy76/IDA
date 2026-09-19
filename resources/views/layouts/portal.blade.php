@@ -953,23 +953,26 @@
           <a href="{{ route('cadet.exams.history') }}" class="sidebar-item {{ (request()->routeIs('cadet.exams.history') || (request()->routeIs('cadet.exams*') && (request('view') === 'history' || request()->has('history')))) ? 'active' : '' }}">
             <i class="fa-solid fa-clock-rotate-left"></i> <span>Exam History</span>
           </a>
-          {{-- Hidden from Cadet Sidebar - Code preserved intact for future activation --}}
-          @if(false)
+          {{-- Hidden from Regular Cadets, Fully Unlocked & Accessible for Administrators --}}
+          @if(auth()->user()->isAdmin())
+          <div style="margin: 10px 0 4px; padding: 4px 10px; font-size: 10px; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-shield-halved"></i> <span>Admin Deck Access</span>
+          </div>
           <a href="{{ route('cadet.routine') }}" class="sidebar-item {{ request()->routeIs('cadet.routine') ? 'active' : '' }}">
             <i class="fa-regular fa-calendar-days"></i> <span>Routine</span>
-            <span class="cadet-under-construction-badge">Under Construction</span>
+            <span style="font-size: 10px; background: rgba(5, 150, 105, 0.12); color: #059669; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: auto;">Admin View</span>
           </a>
           <a href="{{ route('cadet.fees') }}" class="sidebar-item {{ request()->routeIs('cadet.fees') ? 'active' : '' }}">
             <i class="fa-solid fa-credit-card"></i> <span>Payment</span>
-            <span class="cadet-under-construction-badge">Under Construction</span>
+            <span style="font-size: 10px; background: rgba(5, 150, 105, 0.12); color: #059669; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: auto;">Admin View</span>
           </a>
           <a href="{{ route('cadet.dashboard') }}#question-bank" onclick="if(typeof openPreviousQuestionsModal === 'function'){ openPreviousQuestionsModal(); return false; }" class="sidebar-item">
             <i class="fa-solid fa-book-open"></i> <span>Question Bank</span>
-            <span class="cadet-under-construction-badge">Under Construction</span>
+            <span style="font-size: 10px; background: rgba(5, 150, 105, 0.12); color: #059669; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: auto;">Admin View</span>
           </a>
           <a href="{{ route('courses') }}" target="_blank" class="sidebar-item">
             <i class="fa-solid fa-graduation-cap"></i> <span>Other Courses</span>
-            <span class="cadet-under-construction-badge">Under Construction</span>
+            <span style="font-size: 10px; background: rgba(5, 150, 105, 0.12); color: #059669; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: auto;">Admin View</span>
           </a>
           @endif
 
@@ -1072,6 +1075,19 @@
           <a href="{{ route('admin.accounts.index') }}" class="sidebar-item {{ request()->routeIs('admin.accounts*') ? 'active' : '' }}">
             <i class="fa-solid fa-id-card"></i> <span>Account & ID Control</span>
           </a>
+
+          {{-- EXCLUSIVE TO DEVELOPER ADMIN (ArghaRoy) ONLY --}}
+          @if(auth()->user()->isDeveloperAdmin())
+          <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div style="padding: 4px 12px; font-size: 10px; font-weight: 800; color: #ef4444; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-crown"></i> <span>Highest Authority</span>
+            </div>
+            <a href="{{ route('admin.admin_control.index') }}" class="sidebar-item {{ request()->routeIs('admin.admin_control*') ? 'active' : '' }}" style="background: linear-gradient(90deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.04)); border-left: 3px solid #ef4444; color: #ffffff;">
+              <i class="fa-solid fa-user-shield" style="color: #ef4444;"></i> <span>Admin Control</span>
+              <span style="font-size: 9.5px; background: #ef4444; color: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: auto; letter-spacing: 0.5px;">DEV ADMIN</span>
+            </a>
+          </div>
+          @endif
 
         {{-- ================= INSTRUCTOR NAVIGATION ================= --}}
         @elseif(auth()->user()->isInstructor())
@@ -1201,10 +1217,15 @@
 
         <div class="portal-topbar cadet-pure-topbar" style="background: #ffffff; border-bottom: 1px solid #f1f5f9; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 100;">
           <!-- Top Left Corner: 3D Section Badge (Inside that slim box) -->
-          <div style="display: flex; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <div class="cadet-3d-page-title" id="cadetTopSectionBadge" title="{{ $cadetSectionTitle }}">
               {{ $cadetSectionTitle }}
             </div>
+            @if(auth()->user()->isAdmin())
+              <span style="font-size: 11px; font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-shield-halved"></i> Admin Clearance Mode
+              </span>
+            @endif
           </div>
 
           <!-- Top Right Corner: Candidate Name (Account Sign with Dropdown Menu) -->

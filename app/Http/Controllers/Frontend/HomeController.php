@@ -107,6 +107,11 @@ class HomeController extends Controller
 
     public function submitInquiry(Request $request)
     {
+        // Honeypot check: silently discard bot spam
+        if ($request->filled('website_hp')) {
+            return back()->with('success', 'Thank you for reaching out to Imperial Defence Academy! Our admissions officer will get in touch with you shortly.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email',

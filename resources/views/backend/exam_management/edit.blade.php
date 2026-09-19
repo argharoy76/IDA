@@ -557,7 +557,7 @@
     }
 
     try {
-      const res = await fetch("{{ url('/admin/exams/' . $exam->id . '/questions') }}/" + qId, {
+      const res = await fetch("{{ route('admin.exams.delete_exam_question', ['examId' => $exam->id, 'questionId' => ':qId']) }}".replace(':qId', qId), {
         method: 'DELETE',
         headers: {
           'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -631,7 +631,7 @@
     }
 
     try {
-      const res = await fetch("{{ url('/admin/exams/' . $exam->id . '/questions') }}/" + qId, {
+      const res = await fetch("{{ route('admin.exams.update_exam_question', ['examId' => $exam->id, 'questionId' => ':qId']) }}".replace(':qId', qId), {
         method: 'PUT',
         headers: {
           'X-CSRF-TOKEN': '{{ csrf_token() }}',

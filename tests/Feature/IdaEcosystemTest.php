@@ -548,7 +548,8 @@ class IdaEcosystemTest extends TestCase
         $cadetRes = $this->actingAs($cadetUser)->get('/admin/dashboard');
         $cadetRes->assertStatus(403);
         $cadetRes->assertSee('Administrative Privileges Required');
-        $cadetRes->assertSee('Switch to Super Admin Account');
+        $cadetRes->assertSee('Access Restricted');
+        $cadetRes->assertDontSee('quick_admin');
     }
 
     /**
@@ -690,4 +691,76 @@ class IdaEcosystemTest extends TestCase
             }
         }
     }
+
+    public function test_khulna_campus_footer_editing_from_homepage_and_attractive_bulletin(): void
+    {
+        $admin = User::firstOrCreate(
+            ['email' => 'admin_test_campus@ida.test'],
+            ['name' => 'Campus Admin', 'password' => bcrypt('password'), 'role' => 'admin', 'rank' => 'Wing Commander']
+        );
+
+        // 1. Check that backend home page editor includes the Khulna Campus & Footer section
+        $homeCmsRes = $this->actingAs($admin)->get('/admin/cms/home');
+        $homeCmsRes->assertStatus(200);
+        $homeCmsRes->assertSee('Khulna Campus & Sitewide Footer', false);
+        $homeCmsRes->assertSee('name="footer_campus_heading"', false);
+        $homeCmsRes->assertSee('name="academy_location"', false);
+        $homeCmsRes->assertSee('name="academy_phone"', false);
+        $homeCmsRes->assertSee('name="academy_email"', false);
+        $homeCmsRes->assertSee('name="office_hours"', false);
+        $homeCmsRes->assertSee('name="footer_bio"', false);
+        $homeCmsRes->assertSee('name="footer_tag1"', false);
+
+        // 2. Update Khulna Campus and footer information from homepage CMS
+        $updateRes = $this->actingAs($admin)->post('/admin/cms/settings', [
+            'footer_campus_heading' => 'KHULNA CAMPUS COMMAND',
+            'academy_location' => 'Boyra Main Road (Near Medical College), Khulna - 9000',
+            'academy_phone' => '+880 1712-345678, +880 1911-987654',
+            'academy_email' => 'info@ida.com.bd, admissions@ida.com.bd',
+            'office_hours' => 'Saturday - Thursday: 08:00 AM - 08:00 PM (Friday: 03:00 PM - 08:00 PM)',
+            'footer_tag1' => 'Valor',
+            'footer_tag2' => 'Leadership',
+            'footer_tag3' => 'Integrity',
+            'footer_copyright' => 'Imperial Defence Academy (IDA), Khulna. All rights reserved. Precision • Character • Commission.',
+            'marquee_is_live' => '1',
+            'marquee_label' => 'COMMAND BULLETIN:',
+            'marquee_text' => 'New BMA and Air Force Sessions Open',
+        ]);
+        $updateRes->assertSessionHas('success');
+
+        // 3. Verify on live frontend homepage
+        $homeRes = $this->get('/');
+        $homeRes->assertStatus(200);
+        $homeRes->assertSee('KHULNA CAMPUS COMMAND');
+        $homeRes->assertSee('Boyra Main Road (Near Medical College), Khulna - 9000');
+        $homeRes->assertSee('+880 1712-345678, +880 1911-987654');
+        $homeRes->assertSee('info@ida.com.bd, admissions@ida.com.bd');
+        $homeRes->assertSee('Saturday - Thursday: 08:00 AM - 08:00 PM (Friday: 03:00 PM - 08:00 PM)');
+        $homeRes->assertSee('Valor');
+        $homeRes->assertSee('Integrity');
+        $homeRes->assertSee('Precision • Character • Commission.');
+
+        // 4. Verify attractive bulletin styling classes exist
+        $homeRes->assertSee('ida-bulletin-container');
+        $homeRes->assertSee('ida-bulletin-card');
+        $homeRes->assertSee('New BMA and Air Force Sessions Open');
+
+        // 5. Test clean removal when cleared
+        $clearRes = $this->actingAs($admin)->post('/admin/cms/settings', [
+            'footer_campus_heading' => '',
+            'academy_location' => '',
+            'academy_phone' => '',
+            'academy_email' => '',
+            'office_hours' => '',
+            'footer_tag1' => '',
+            'footer_tag2' => '',
+            'footer_tag3' => '',
+        ]);
+        $clearRes->assertSessionHas('success');
+
+        $cleanHome = $this->get('/');
+        $cleanHome->assertDontSee('KHULNA CAMPUS COMMAND');
+        $cleanHome->assertDontSee('Boyra Main Road (Near Medical College)');
+    }
 }
+
