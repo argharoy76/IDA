@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Serve static assets from public/ directory
+    RewriteCond %{REQUEST_URI} ^/ida/css/ [NC,OR]
+    RewriteCond %{REQUEST_URI} ^/ida/js/ [NC,OR]
+    RewriteCond %{REQUEST_URI} ^/ida/images/ [NC,OR]
+    RewriteCond %{REQUEST_URI} ^/ida/uploads/ [NC,OR]
+    RewriteCond %{REQUEST_URI} ^/ida/storage/ [NC,OR]
+    RewriteCond %{REQUEST_URI} ^/ida/favicon\.ico$ [NC]
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # Skip requests already going to public/
+    RewriteCond %{REQUEST_URI} ^/ida/public/ [NC]
+    RewriteRule ^ - [L]
+
+    # Forward all other requests to root index.php (Laravel proxy)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>

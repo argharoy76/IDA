@@ -1,0 +1,13 @@
+<script>
+const btn = document.getElementById('mobile-nav-toggle');
+const rect = btn.getBoundingClientRect();
+const brand = document.querySelector('.brand-box').getBoundingClientRect();
+const container = document.querySelector('.public-nav-container').getBoundingClientRect();
+console.log(JSON.stringify({
+  btnRect: rect,
+  brandRect: brand,
+  containerRect: container,
+  btnComputedDisplay: window.getComputedStyle(btn).display,
+  btnComputedVisibility: window.getComputedStyle(btn).visibility
+}));
+</script>
