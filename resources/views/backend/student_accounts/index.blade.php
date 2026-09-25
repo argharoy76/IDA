@@ -1,7 +1,7 @@
 @extends('layouts.portal')
 
-@section('title', 'Student Management')
-@section('page_title', 'Student Management')
+@section('title', 'Cadet Management')
+@section('page_title', 'Cadet Management')
 
 @section('content')
 <div style="width: 100%; margin: 0 auto;">
@@ -62,7 +62,7 @@
             <i class="fa-solid fa-anchor"></i>
           </div>
           <h3 class="box-title">Navy</h3>
-          <p class="box-count">{{ $stats['navy'] }} {{ $stats['navy'] == 1 ? 'Student' : 'Students' }}</p>
+          <p class="box-count">{{ $stats['navy'] }} {{ $stats['navy'] == 1 ? 'Cadet' : 'Cadets' }}</p>
         </a>
 
         {{-- 2. POLICE --}}
@@ -71,7 +71,7 @@
             <i class="fa-solid fa-shield-halved"></i>
           </div>
           <h3 class="box-title">Police</h3>
-          <p class="box-count">{{ $stats['police'] }} {{ $stats['police'] == 1 ? 'Student' : 'Students' }}</p>
+          <p class="box-count">{{ $stats['police'] }} {{ $stats['police'] == 1 ? 'Cadet' : 'Cadets' }}</p>
         </a>
 
         {{-- 3. ARMY --}}
@@ -80,7 +80,7 @@
             <i class="fa-solid fa-person-military-rifle"></i>
           </div>
           <h3 class="box-title">Army</h3>
-          <p class="box-count">{{ $stats['army'] }} {{ $stats['army'] == 1 ? 'Student' : 'Students' }}</p>
+          <p class="box-count">{{ $stats['army'] }} {{ $stats['army'] == 1 ? 'Cadet' : 'Cadets' }}</p>
         </a>
 
         {{-- 4. AIR FORCE --}}
@@ -89,16 +89,16 @@
             <i class="fa-solid fa-jet-fighter"></i>
           </div>
           <h3 class="box-title">Air Force</h3>
-          <p class="box-count">{{ $stats['airforce'] }} {{ $stats['airforce'] == 1 ? 'Student' : 'Students' }}</p>
+          <p class="box-count">{{ $stats['airforce'] }} {{ $stats['airforce'] == 1 ? 'Cadet' : 'Cadets' }}</p>
         </a>
 
-        {{-- 5. ALL STUDENTS --}}
+        {{-- 5. ALL CADETS --}}
         <a href="{{ route('admin.student_accounts.index', ['wing' => 'all']) }}" class="dark-action-card simple-box card-all-students box-all-students">
           <div class="dark-action-icon-wrap box-icon-wrap">
             <i class="fa-solid fa-users"></i>
           </div>
-          <h3 class="box-title">All Students</h3>
-          <p class="box-count">{{ $stats['total'] }} {{ $stats['total'] == 1 ? 'Student' : 'Students' }}</p>
+          <h3 class="box-title">All Cadets</h3>
+          <p class="box-count">{{ $stats['total'] }} {{ $stats['total'] == 1 ? 'Cadet' : 'Cadets' }}</p>
         </a>
 
       </div>
@@ -109,9 +109,17 @@
     {{-- SUBPAGE VIEW: TOP NAV + SEGMENT CONTROL / FILTER SUITE + TABLE   --}}
     {{-- ================================================================ --}}
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px;">
-      <a href="{{ route('admin.student_accounts.index') }}" class="btn-tactical" style="background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); padding: 8px 14px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; border-radius: 8px;">
-        <i class="fa-solid fa-arrow-left"></i> Back to Student Management
-      </a>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <a href="{{ route('admin.student_accounts.index') }}" class="btn-tactical" style="background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); padding: 8px 14px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; border-radius: 8px;">
+          <i class="fa-solid fa-arrow-left"></i> Back to Cadet Management
+        </a>
+        <form method="POST" action="{{ route('admin.system.sync_database_tracks') }}" style="display: inline;" onsubmit="return confirm('Safely synchronize database tracks and missing columns on live server? No existing data will be modified.');">
+          @csrf
+          <button type="submit" class="btn-tactical" style="background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="Safely add missing schema columns and backfill tracks on Hostinger production without data loss">
+            <i class="fa-solid fa-database"></i> Sync DB Tracks
+          </button>
+        </form>
+      </div>
 
       {{-- Quick Wing Switcher Tabs --}}
       <div style="display: flex; gap: 5px; flex-wrap: wrap; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.06);">
@@ -128,7 +136,7 @@
           <i class="fa-solid fa-jet-fighter"></i> Air Force ({{ $stats['airforce'] }})
         </a>
         <a href="{{ route('admin.student_accounts.index', ['wing' => 'all']) }}" class="subnav-pill {{ $activeWing === 'all' ? 'active' : '' }}">
-          <i class="fa-solid fa-users"></i> All Students ({{ $stats['total'] }})
+          <i class="fa-solid fa-users"></i> All Cadets ({{ $stats['total'] }})
         </a>
       </div>
     </div>
@@ -140,22 +148,22 @@
     @php
       $wingConfig = [
         'Navy' => [
-          'title' => 'Navy Students',
+          'title' => 'Navy Cadets',
           'icon' => 'fa-anchor',
           'count' => $stats['navy'],
         ],
         'Police' => [
-          'title' => 'Police Students',
+          'title' => 'Police Cadets',
           'icon' => 'fa-shield-halved',
           'count' => $stats['police'],
         ],
         'Army' => [
-          'title' => 'Army Students',
+          'title' => 'Army Cadets',
           'icon' => 'fa-person-military-rifle',
           'count' => $stats['army'],
         ],
         'Air Force' => [
-          'title' => 'Air Force Students',
+          'title' => 'Air Force Cadets',
           'icon' => 'fa-jet-fighter',
           'count' => $stats['airforce'],
         ],
@@ -174,7 +182,7 @@
             <div style="display: flex; align-items: center; gap: 8px;">
               <h3 style="font-size: 15.5px; font-weight: 700; color: #fff; margin: 0;">{{ $wingConfig['title'] }}</h3>
               <span style="font-size: 10.5px; font-weight: 600; color: #cbd5e1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 2px 9px;">
-                {{ $wingConfig['count'] }} {{ $wingConfig['count'] === 1 ? 'Student' : 'Students' }}
+                {{ $wingConfig['count'] }} {{ $wingConfig['count'] === 1 ? 'Cadet' : 'Cadets' }}
               </span>
             </div>
           </div>
@@ -184,9 +192,12 @@
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
           <form method="GET" action="{{ route('admin.student_accounts.index') }}" style="display: flex; gap: 6px; align-items: center;">
             <input type="hidden" name="wing" value="{{ $activeWing }}">
+            @if(request('track'))
+              <input type="hidden" name="track" value="{{ request('track') }}">
+            @endif
             <div style="min-width: 180px; max-width: 260px;">
               <input type="text" name="search" value="{{ request('search') }}"
-                     placeholder="Search {{ $activeWing }} students..."
+                     placeholder="Search {{ $activeWing }} cadets..."
                      class="form-control"
                      style="font-size: 11.5px; height: 35px;">
             </div>
@@ -194,21 +205,108 @@
               <i class="fa-solid fa-magnifying-glass"></i>
             </button>
             @if(request('search'))
-              <a href="{{ route('admin.student_accounts.index', ['wing' => $activeWing]) }}" class="btn-tactical" style="background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.25); height: 35px; padding: 0 10px; font-size: 11.5px; display: inline-flex; align-items: center;" title="Clear search">
+              <a href="{{ route('admin.student_accounts.index', array_filter(['wing' => $activeWing, 'track' => request('track')])) }}" class="btn-tactical" style="background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.25); height: 35px; padding: 0 10px; font-size: 11.5px; display: inline-flex; align-items: center;" title="Clear search">
                 <i class="fa-solid fa-xmark"></i>
               </a>
             @endif
           </form>
 
           <button type="button" onclick="openModal('offlineModal', '{{ $activeWing }}')" class="btn-tactical" style="background: #ff5757; color: #fff; border: none; height: 35px; padding: 0 14px; font-size: 11.5px; font-weight: 600; white-space: nowrap; border-radius: 8px;">
-            <i class="fa-solid fa-user-plus" style="margin-right: 5px;"></i> Register New {{ $activeWing }} Student
+            <i class="fa-solid fa-user-plus" style="margin-right: 5px;"></i> Register New {{ $activeWing }} Cadet
           </button>
 
-          <a href="{{ route('admin.student_accounts.index', ['wing' => 'all']) }}" class="btn-tactical" style="background: rgba(255,255,255,0.06); color: #8c96a8; border: 1px solid rgba(255,255,255,0.1); height: 35px; padding: 0 12px; font-size: 11.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border-radius: 8px;" title="Switch to All Students view">
-            <i class="fa-solid fa-users"></i> All Students
+          <a href="{{ route('admin.student_accounts.index', ['wing' => 'all']) }}" class="btn-tactical" style="background: rgba(255,255,255,0.06); color: #8c96a8; border: 1px solid rgba(255,255,255,0.1); height: 35px; padding: 0 12px; font-size: 11.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border-radius: 8px;" title="Switch to All Cadets view">
+            <i class="fa-solid fa-users"></i> All Cadets
           </a>
         </div>
 
+      </div>
+
+      {{-- Branch Hierarchy & Program Tracks (Handwritten Diagram Implementation) --}}
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">
+            <i class="fa-solid fa-sitemap" style="color: #ff5757; margin-right: 4px;"></i> Programs / Tracks:
+          </span>
+
+          {{-- All in this Wing --}}
+          <a href="{{ route('admin.student_accounts.index', ['wing' => $activeWing]) }}" 
+             class="btn-tactical" 
+             style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ empty($selectedTrack) || $selectedTrack === 'all' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757;' : 'background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);' }}">
+            All {{ $activeWing }} ({{ $wingTrackStats[$activeWing]['all'] ?? $wingConfig['count'] }})
+          </a>
+
+          @if($activeWing === 'Army')
+            {{-- Army -> Preliminary --}}
+            <a href="{{ route('admin.student_accounts.index', ['wing' => 'Army', 'track' => 'preliminary']) }}" 
+               class="btn-tactical" 
+               style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ $selectedTrack === 'preliminary' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757;' : 'background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);' }}">
+              <i class="fa-solid fa-file-pen"></i> Preliminary ({{ $wingTrackStats['Army']['preliminary'] ?? 0 }})
+            </a>
+            {{-- Army -> ISSB (Circled in diagram) --}}
+            <a href="{{ route('admin.student_accounts.index', ['wing' => 'Army', 'track' => 'issb']) }}" 
+               class="btn-tactical" 
+               style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ $selectedTrack === 'issb' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757; box-shadow: 0 0 12px rgba(255,87,87,0.4);' : 'background: rgba(255,87,87,0.1); color: #ff8585; border: 1.5px solid rgba(255,87,87,0.35);' }}">
+              <i class="fa-solid fa-circle-dot" style="color: #ff5757;"></i> ISSB ({{ $wingTrackStats['Army']['issb'] ?? 0 }})
+              <span style="font-size: 9px; background: rgba(255,87,87,0.25); color: #fff; padding: 1px 5px; border-radius: 4px; text-transform: uppercase;">Featured</span>
+            </a>
+
+          @elseif($activeWing === 'Navy')
+            {{-- Navy -> Preliminary (P) --}}
+            <a href="{{ route('admin.student_accounts.index', ['wing' => 'Navy', 'track' => 'preliminary']) }}" 
+               class="btn-tactical" 
+               style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ $selectedTrack === 'preliminary' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757;' : 'background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);' }}">
+              <i class="fa-solid fa-compass"></i> P - Preliminary ({{ $wingTrackStats['Navy']['preliminary'] ?? 0 }})
+            </a>
+            {{-- Navy -> ISSB (I) --}}
+            <a href="{{ route('admin.student_accounts.index', ['wing' => 'Navy', 'track' => 'issb']) }}" 
+               class="btn-tactical" 
+               style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ $selectedTrack === 'issb' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757;' : 'background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);' }}">
+              <i class="fa-solid fa-circle-dot"></i> I - ISSB ({{ $wingTrackStats['Navy']['issb'] ?? 0 }})
+            </a>
+
+          @elseif($activeWing === 'Air Force')
+            {{-- Air Force -> Preliminary (P) --}}
+            <a href="{{ route('admin.student_accounts.index', ['wing' => 'Air Force', 'track' => 'preliminary']) }}" 
+               class="btn-tactical" 
+               style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ $selectedTrack === 'preliminary' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757;' : 'background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);' }}">
+              <i class="fa-solid fa-plane-departure"></i> P - Preliminary ({{ $wingTrackStats['Air Force']['preliminary'] ?? 0 }})
+            </a>
+            {{-- Air Force -> ISSB (ISS) (Circled in diagram) --}}
+            <a href="{{ route('admin.student_accounts.index', ['wing' => 'Air Force', 'track' => 'issb']) }}" 
+               class="btn-tactical" 
+               style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ $selectedTrack === 'issb' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757; box-shadow: 0 0 12px rgba(255,87,87,0.4);' : 'background: rgba(255,87,87,0.1); color: #ff8585; border: 1.5px solid rgba(255,87,87,0.35);' }}">
+              <i class="fa-solid fa-circle-dot" style="color: #ff5757;"></i> ISS - ISSB ({{ $wingTrackStats['Air Force']['issb'] ?? 0 }})
+              <span style="font-size: 9px; background: rgba(255,87,87,0.25); color: #fff; padding: 1px 5px; border-radius: 4px; text-transform: uppercase;">Featured</span>
+            </a>
+
+          @elseif($activeWing === 'Police')
+            {{-- Police -> Constable (Con) --}}
+            <a href="{{ route('admin.student_accounts.index', ['wing' => 'Police', 'track' => 'constable']) }}" 
+               class="btn-tactical" 
+               style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ $selectedTrack === 'constable' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757;' : 'background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);' }}">
+              <i class="fa-solid fa-user-shield"></i> Con - Constable ({{ $wingTrackStats['Police']['constable'] ?? 0 }})
+            </a>
+            {{-- Police -> Sub-Inspector (SI) --}}
+            <a href="{{ route('admin.student_accounts.index', ['wing' => 'Police', 'track' => 'si']) }}" 
+               class="btn-tactical" 
+               style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ $selectedTrack === 'si' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757;' : 'background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);' }}">
+              <i class="fa-solid fa-shield"></i> SI - Sub-Inspector ({{ $wingTrackStats['Police']['si'] ?? 0 }})
+            </a>
+            {{-- Police -> Assistant Sub-Inspector (ASI) --}}
+            <a href="{{ route('admin.student_accounts.index', ['wing' => 'Police', 'track' => 'asi']) }}" 
+               class="btn-tactical" 
+               style="height: 30px; padding: 0 12px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; {{ $selectedTrack === 'asi' ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757;' : 'background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);' }}">
+              <i class="fa-solid fa-id-badge"></i> ASI - Assistant Sub-Inspector ({{ $wingTrackStats['Police']['asi'] ?? 0 }})
+            </a>
+          @endif
+        </div>
+
+        @if($selectedTrack)
+          <a href="{{ route('admin.student_accounts.index', ['wing' => $activeWing]) }}" style="font-size: 11px; color: #94a3b8; text-decoration: underline;">
+            Clear Track Filter
+          </a>
+        @endif
       </div>
     </div>
 
@@ -431,6 +529,18 @@
                         <i class="fa-solid fa-check" style="font-size: 8px; color: #ff5757;"></i>
                         <span>{{ $assignedCourses->count() }} course{{ $assignedCourses->count() > 1 ? 's' : '' }}</span>
                       </div>
+                      <div style="font-size: 8.5px; margin-top: 3px; display: flex; flex-direction: column; gap: 2px;">
+                        @if($st->hasMilitaryCourse())
+                          <span style="color: #facc15; background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 3px; padding: 1px 4px; display: inline-flex; align-items: center; gap: 3px;" title="Full clearance for Army, Navy & Air Force ISSB Exams">
+                            <i class="fa-solid fa-star" style="font-size: 7px;"></i> Tri-Services ISSB
+                          </span>
+                        @endif
+                        @if($st->isEnrolledInBranch('police'))
+                          <span style="color: #c084fc; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 3px; padding: 1px 4px; display: inline-flex; align-items: center; gap: 3px;" title="Authorized for Police track exams">
+                            <i class="fa-solid fa-handcuffs" style="font-size: 7px;"></i> Police Cleared
+                          </span>
+                        @endif
+                      </div>
                     </div>
                   @else
                     <span style="font-size: 9.5px; color: #64748b; background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.12); padding: 2px 6px; border-radius: 4px; display: inline-block;">
@@ -492,12 +602,12 @@
 </div>
 
 {{-- ================================================================ --}}
-{{-- MODAL: REGISTER OFFLINE STUDENT (New Registration Only)           --}}
+{{-- MODAL: REGISTER OFFLINE CADET (New Registration Only)             --}}
 {{-- ================================================================ --}}
 <div id="offlineModal" class="ida-modal-overlay" style="display: none;">
   <div class="ida-modal-box" style="max-width: 580px;">
     <div class="ida-modal-header">
-      <h3 class="ida-modal-title"><i class="fa-solid fa-user-plus" style="color: #ff5757;"></i> Register Offline Student</h3>
+      <h3 class="ida-modal-title"><i class="fa-solid fa-user-plus" style="color: #ff5757;"></i> Register Offline Cadet</h3>
       <button type="button" onclick="closeModal('offlineModal')" class="ida-modal-close">&times;</button>
     </div>
     <form method="POST" action="{{ route('admin.student_accounts.store_offline') }}">
@@ -506,7 +616,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div style="grid-column: span 2;">
             <label class="ida-label">Full Name *</label>
-            <input type="text" name="name" required class="form-control" placeholder="Candidate's full name" value="{{ old('name') }}">
+            <input type="text" name="name" required class="form-control" placeholder="Cadet full name" value="{{ old('name') }}">
           </div>
 
           <div>
@@ -515,14 +625,21 @@
           </div>
 
           <div>
-            <label class="ida-label">Target Wing *</label>
-            <select name="target_wing" id="modalTargetWing" required class="form-control">
-              <option value="Navy" {{ old('target_wing') === 'Navy' ? 'selected' : '' }}>Bangladesh Navy</option>
-              <option value="Police" {{ old('target_wing') === 'Police' ? 'selected' : '' }}>Bangladesh Police</option>
+            <label class="ida-label">Target Defence Wing *</label>
+            <select name="target_wing" id="modalTargetWing" required class="form-control" onchange="syncProgramTracks()">
               <option value="Army" {{ (old('target_wing') === 'Army' || !old('target_wing')) ? 'selected' : '' }}>Bangladesh Army</option>
+              <option value="Navy" {{ old('target_wing') === 'Navy' ? 'selected' : '' }}>Bangladesh Navy</option>
               <option value="Air Force" {{ old('target_wing') === 'Air Force' ? 'selected' : '' }}>Bangladesh Air Force</option>
-              <option value="General" {{ old('target_wing') === 'General' ? 'selected' : '' }}>General / Other</option>
+              <option value="Police" {{ old('target_wing') === 'Police' ? 'selected' : '' }}>Bangladesh Police</option>
             </select>
+          </div>
+
+          <div style="grid-column: span 2;">
+            <label class="ida-label">Course Program / Track *</label>
+            <select name="target_program" id="modalTargetProgram" required class="form-control" onchange="filterCoursesByTrack()">
+              <!-- Dynamically populated via JS according to Wing -->
+            </select>
+            <small style="color: #64748b; font-size: 11px; margin-top: 3px; display: block;">Select the preparatory stream according to Academy syllabus.</small>
           </div>
 
           <div>
@@ -546,17 +663,17 @@
 
           <div>
             <label class="ida-label">Initial Course (Optional)</label>
-            <select name="course_id" class="form-control">
+            <select name="course_id" id="modalCourseSelect" class="form-control">
               <option value="">No Course (Assign Later)</option>
               @foreach($courses as $c)
-                <option value="{{ $c->id }}">{{ $c->title }}</option>
+                <option value="{{ $c->id }}" data-branch="{{ $c->branch_key }}" data-track="{{ $c->program_track }}">{{ $c->title }}</option>
               @endforeach
             </select>
           </div>
 
           <div style="grid-column: span 2;">
             <label class="ida-label">Email Address *</label>
-            <input type="email" name="email" required class="form-control" placeholder="student@example.com" value="{{ old('email') }}">
+            <input type="email" name="email" required class="form-control" placeholder="cadet@example.com" value="{{ old('email') }}">
           </div>
 
           <div style="grid-column: span 2;">
@@ -573,7 +690,7 @@
       <div style="display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.06);">
         <button type="button" onclick="closeModal('offlineModal')" class="btn-tactical" style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);">Cancel</button>
         <button type="submit" class="btn-tactical" style="background: #ff5757; color: #fff; border: none; font-weight: 700;">
-          <i class="fa-solid fa-check"></i> Register Student
+          <i class="fa-solid fa-check"></i> Register Cadet
         </button>
       </div>
     </form>
@@ -581,14 +698,14 @@
 </div>
 
 {{-- ================================================================ --}}
-{{-- MODAL: DELETE STUDENT ACCOUNT (CRITICAL WARNING & SECURITY GUARD) --}}
+{{-- MODAL: DELETE CADET ACCOUNT (CRITICAL WARNING & SECURITY GUARD)   --}}
 {{-- ================================================================ --}}
 <div id="deleteModal" class="ida-modal-overlay" style="display: none;">
   <div class="ida-modal-box" style="max-width: 500px; border-color: rgba(239,68,68,0.3);">
     <div class="ida-modal-header" style="background: rgba(239,68,68,0.06); border-bottom-color: rgba(239,68,68,0.15);">
       <h3 class="ida-modal-title" style="color: #f87171;">
         <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>
-        Security Warning: Delete Student Account
+        Security Warning: Delete Cadet Account
       </h3>
       <button type="button" onclick="closeModal('deleteModal')" class="ida-modal-close">&times;</button>
     </div>
@@ -616,7 +733,7 @@
         <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 14px; line-height: 1.5;">
           <div style="font-weight: 700; color: #e2e8f0; margin-bottom: 4px;">This deletion will permanently destroy:</div>
           <ul style="margin: 0; padding-left: 18px; color: #94a3b8; font-size: 11px;">
-            <li>Login credentials and student authentication access</li>
+            <li>Login credentials and cadet authentication access</li>
             <li>Demographics, address, and profile information</li>
             <li>All enrolled course access permissions</li>
             <li>Exam attempts, scores, and academic history</li>
@@ -626,7 +743,7 @@
         {{-- Type to Confirm Field --}}
         <div style="margin-bottom: 14px;">
           <label class="ida-label" style="color: #fca5a5; margin-bottom: 4px;">
-            To confirm, type student ID (<span id="delRequiredCode" style="color: #ff8585; font-family: monospace; font-weight: 800;"></span>) or <span style="color: #fff; font-weight: 800;">DELETE</span> below:
+            To confirm, type cadet ID (<span id="delRequiredCode" style="color: #ff8585; font-family: monospace; font-weight: 800;"></span>) or <span style="color: #fff; font-weight: 800;">DELETE</span> below:
           </label>
           <input type="text"
                  id="delConfirmInput"
@@ -833,18 +950,104 @@
     if (b) { b.style.transition = 'opacity 0.5s'; b.style.opacity = '0'; setTimeout(function(){ b.remove(); }, 500); }
   }, 5000);
 
+  // Wing and Program Track Taxonomy (from Academy Structure)
+  var wingProgramTaxonomy = {
+    'Army': [
+      { value: 'Preliminary', text: 'Preliminary (Written / Medical / Viva)' },
+      { value: 'ISSB', text: 'ISSB (Inter Services Selection Board)' }
+    ],
+    'Navy': [
+      { value: 'Preliminary', text: 'P - Preliminary Screening' },
+      { value: 'ISSB', text: 'I - ISSB Board Preparation' }
+    ],
+    'Air Force': [
+      { value: 'Preliminary', text: 'P - Preliminary (Pilot / Ground)' },
+      { value: 'ISSB', text: 'ISS - ISSB Aviation Masterclass' }
+    ],
+    'Police': [
+      { value: 'Constable', text: 'Con - Constable Recruitment' },
+      { value: 'Sub-Inspector', text: 'SI - Sub-Inspector & Sergeant' },
+      { value: 'Assistant Sub-Inspector', text: 'ASI - Assistant Sub-Inspector' }
+    ]
+  };
+
+  function syncProgramTracks() {
+    var wingSelect = document.getElementById('modalTargetWing');
+    var programSelect = document.getElementById('modalTargetProgram');
+    if (!wingSelect || !programSelect) return;
+    var selectedWing = wingSelect.value || 'Army';
+    var programs = wingProgramTaxonomy[selectedWing] || wingProgramTaxonomy['Army'];
+
+    programSelect.innerHTML = '';
+    programs.forEach(function(item) {
+      var opt = document.createElement('option');
+      opt.value = item.value;
+      opt.textContent = item.text;
+      programSelect.appendChild(opt);
+    });
+
+    filterCoursesByTrack();
+  }
+
+  function filterCoursesByTrack() {
+    var wingSelect = document.getElementById('modalTargetWing');
+    var programSelect = document.getElementById('modalTargetProgram');
+    var courseSelect = document.getElementById('modalCourseSelect');
+    if (!courseSelect) return;
+
+    var wing = (wingSelect ? wingSelect.value : '').toLowerCase();
+    var prog = (programSelect ? programSelect.value : '').toLowerCase();
+
+    for (var i = 0; i < courseSelect.options.length; i++) {
+      var opt = courseSelect.options[i];
+      if (!opt.value) continue;
+      var text = opt.textContent.toLowerCase();
+      var bKey = (opt.getAttribute('data-branch') || '').toLowerCase();
+      var tKey = (opt.getAttribute('data-track') || '').toLowerCase();
+
+      var match = false;
+      if (wing === 'air force' && (bKey === 'air_force' || text.includes('air') || text.includes('bafa'))) match = true;
+      else if (wing === 'army' && (bKey === 'army' || text.includes('army') || text.includes('bma'))) match = true;
+      else if (wing === 'navy' && (bKey === 'navy' || text.includes('navy') || text.includes('bna'))) match = true;
+      else if (wing === 'police' && (bKey === 'police' || text.includes('police'))) match = true;
+
+      if (match) {
+        opt.style.display = '';
+        if (prog.includes('issb') && (tKey === 'issb' || text.includes('issb'))) {
+          opt.style.color = '#ff5757';
+          opt.style.fontWeight = 'bold';
+        } else if (prog.includes('prelim') && (tKey === 'preliminary' || text.includes('prelim') || text.includes('regular'))) {
+          opt.style.color = '#34d399';
+          opt.style.fontWeight = 'bold';
+        } else {
+          opt.style.color = '';
+          opt.style.fontWeight = '';
+        }
+      } else {
+        opt.style.display = 'none';
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    syncProgramTracks();
+  });
+
   function openModal(id, wing) {
     document.getElementById(id).style.display = 'block';
-    if (id === 'offlineModal' && wing) {
-      var wingSelect = document.getElementById('modalTargetWing');
-      if (wingSelect) {
-        for (var i = 0; i < wingSelect.options.length; i++) {
-          if (wingSelect.options[i].value.toLowerCase() === wing.toLowerCase()) {
-            wingSelect.selectedIndex = i;
-            break;
+    if (id === 'offlineModal') {
+      if (wing) {
+        var wingSelect = document.getElementById('modalTargetWing');
+        if (wingSelect) {
+          for (var i = 0; i < wingSelect.options.length; i++) {
+            if (wingSelect.options[i].value.toLowerCase() === wing.toLowerCase()) {
+              wingSelect.selectedIndex = i;
+              break;
+            }
           }
         }
       }
+      syncProgramTracks();
     }
   }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }

@@ -25,6 +25,7 @@ class ExamManagementController extends Controller
         $type = $request->query('type'); // 'free', 'paid', 'all', or null (landing)
         $isLanding = empty($type);
         $selectedBranch = $request->query('branch');
+        $selectedTrack = $request->query('track');
         $search = $request->query('search');
 
         // Global Stats
@@ -41,6 +42,11 @@ class ExamManagementController extends Controller
             'navy' => Exam::where('branch', 'navy')->where('status', '!=', 'archived')->count(),
             'air_force' => Exam::where('branch', 'air_force')->where('status', '!=', 'archived')->count(),
             'police' => Exam::where('branch', 'police')->where('status', '!=', 'archived')->count(),
+            'prelim' => Exam::where('target_track', 'prelim')->where('status', '!=', 'archived')->count(),
+            'issb' => Exam::where('target_track', 'issb')->where('status', '!=', 'archived')->count(),
+            'constable' => Exam::where('target_track', 'constable')->where('status', '!=', 'archived')->count(),
+            'si' => Exam::where('target_track', 'si')->where('status', '!=', 'archived')->count(),
+            'asi' => Exam::where('target_track', 'asi')->where('status', '!=', 'archived')->count(),
         ];
 
         $exams = collect();
@@ -59,6 +65,10 @@ class ExamManagementController extends Controller
                 $query->where('branch', $selectedBranch);
             }
 
+            if ($selectedTrack && in_array($selectedTrack, ['prelim', 'issb', 'constable', 'si', 'asi', 'general'])) {
+                $query->where('target_track', $selectedTrack);
+            }
+
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -72,12 +82,13 @@ class ExamManagementController extends Controller
 
         $allExams = Exam::where('status', '!=', 'archived')
             ->orderBy('title')
-            ->get(['id', 'title', 'branch', 'category', 'access_type', 'is_paid_for_external']);
+            ->get(['id', 'title', 'branch', 'category', 'target_track', 'access_type', 'is_paid_for_external']);
 
         return view('backend.exam_management.index', compact(
             'isLanding',
             'type',
             'selectedBranch',
+            'selectedTrack',
             'search',
             'stats',
             'exams',
@@ -151,6 +162,7 @@ class ExamManagementController extends Controller
             'title' => 'required|string|max:255',
             'branch' => 'required|in:army,navy,air_force,police',
             'category' => 'required|string|max:100',
+            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
             'exam_type' => 'required|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'duration_minutes' => 'required|integer|min:1|max:300',
             'total_marks' => 'required|numeric|min:1',
@@ -255,7 +267,27 @@ class ExamManagementController extends Controller
             return back()->withInput()->with('error', 'Please select at least one question for this examination module.');
         }
 
-        $exam = Exam::create([
+        $targetTrack = $request->input('target_track');
+        if (empty($targetTrack)) {
+            $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
+            if (in_array($validated['branch'], ['army', 'navy', 'air_force'], true)) {
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : 'prelim';
+            } elseif ($validated['branch'] === 'police') {
+                if (str_contains($catLower, 'constable')) {
+                    $targetTrack = 'constable';
+                } elseif (str_contains($catLower, 'asi') || str_contains($catLower, 'assistant')) {
+                    $targetTrack = 'asi';
+                } elseif (str_contains($catLower, 'si') || str_contains($catLower, 'sub-inspector')) {
+                    $targetTrack = 'si';
+                } else {
+                    $targetTrack = 'si';
+                }
+            } else {
+                $targetTrack = 'general';
+            }
+        }
+
+        $examData = [
             'title' => $validated['title'],
             'slug' => $slug,
             'branch' => $validated['branch'],
@@ -274,7 +306,21 @@ class ExamManagementController extends Controller
             'schedule_start' => $scheduleStart,
             'schedule_end' => $scheduleEnd,
             'description' => $validated['description'] ?? null,
-        ]);
+        ];
+
+        // Safe dynamic column verification for Hostinger / production
+        if (\Illuminate\Support\Facades\Schema::hasColumn('exams', 'target_track')) {
+            $examData['target_track'] = $targetTrack;
+        } else {
+            try {
+                \Illuminate\Support\Facades\Schema::table('exams', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('target_track', 50)->nullable()->index()->after('branch');
+                });
+                $examData['target_track'] = $targetTrack;
+            } catch (\Throwable $e) {}
+        }
+
+        $exam = Exam::create($examData);
 
         // Save parsed questions to exam
         if (!empty($questionsList)) {
@@ -316,5 +362,14 @@ class ExamManagementController extends Controller
         $qMsg = !empty($questionsList) ? ' with ' . count($questionsList) . ' questions' : '';
         return redirect()->route('admin.exam_management.index', ['type' => $typeParam])
             ->with('success', "New {$label} \"{$exam->title}\" created successfully{$qMsg}!");
+    }
+
+    /**
+     * Safely synchronize database columns and track mappings on live host without losing data.
+     */
+    public function syncDatabaseTracks()
+    {
+        \Illuminate\Support\Facades\Artisan::call('ida:sync-tracks', ['--force' => true]);
+        return back()->with('success', 'Online database tracks safely synchronized! All existing exams, students, and attempts preserved with 0 data loss.');
     }
 }

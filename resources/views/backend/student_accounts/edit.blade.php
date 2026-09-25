@@ -1,7 +1,7 @@
 @extends('layouts.portal')
 
-@section('title', 'Edit Student: ' . $student->user->name)
-@section('page_title', 'Update Student Details')
+@section('title', 'Edit Cadet: ' . $student->user->name)
+@section('page_title', 'Update Cadet Details')
 
 @section('content')
 <div style="max-width: 1100px; margin: 0 auto;">
@@ -10,7 +10,7 @@
   <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
     <div style="display: flex; gap: 10px;">
       <a href="{{ route('admin.student_accounts.index') }}" class="btn-tactical" style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.12); padding: 8px 16px; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-        <i class="fa-solid fa-arrow-left"></i> Back to Student Management
+        <i class="fa-solid fa-arrow-left"></i> Back to Cadet Management
       </a>
       <a href="{{ route('admin.student_accounts.show', $student->id) }}" class="btn-tactical" style="background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); padding: 8px 16px; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
         <i class="fa-solid fa-eye"></i> View Details
@@ -53,6 +53,11 @@
     if (empty($enrolledCourseIds) && $student->current_course_id) {
       $enrolledCourseIds = [(int)$student->current_course_id];
     }
+    $activeWing = old('branch_wing', $currentWing ?? ($student->target_wing ? (str_contains(strtolower($student->target_wing), 'navy') ? 'Navy' : (str_contains(strtolower($student->target_wing), 'police') ? 'Police' : (str_contains(strtolower($student->target_wing), 'air') ? 'Air Force' : (str_contains(strtolower($student->target_wing), 'general') ? 'General' : 'Army')))) : 'Army'));
+    $activeTracks = old('category_tracks', $currentTracks ?? $student->getTargetTracks());
+    if (!is_array($activeTracks)) {
+      $activeTracks = [];
+    }
   @endphp
 
   <!-- Main Update Form -->
@@ -72,7 +77,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
         <div>
           <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
-            Student Login ID *
+            Cadet Login ID *
           </label>
           <input type="text" name="custom_id" required value="{{ $currentId }}"
                  class="form-control"
@@ -134,17 +139,6 @@
         </div>
 
         <div>
-          <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">Target Wing</label>
-          <select name="target_wing" class="form-control">
-            <option value="Army" {{ old('target_wing', $student->target_wing) === 'Army' ? 'selected' : '' }}>Bangladesh Army</option>
-            <option value="Navy" {{ old('target_wing', $student->target_wing) === 'Navy' ? 'selected' : '' }}>Bangladesh Navy</option>
-            <option value="Air Force" {{ old('target_wing', $student->target_wing) === 'Air Force' ? 'selected' : '' }}>Bangladesh Air Force</option>
-            <option value="Police" {{ old('target_wing', $student->target_wing) === 'Police' ? 'selected' : '' }}>Police Cadets</option>
-            <option value="General" {{ old('target_wing', $student->target_wing) === 'General' ? 'selected' : '' }}>General ISSB</option>
-          </select>
-        </div>
-
-        <div>
           <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">Educational Institution</label>
           <input type="text" name="institution" value="{{ old('institution', $student->institution) }}" class="form-control" placeholder="College / University">
         </div>
@@ -166,13 +160,249 @@
       </div>
     </div>
 
+    <!-- Service Wing & Examination Category Allocation Panel -->
+    <div class="content-panel" style="margin-bottom: 24px;">
+      <div class="panel-header" style="margin-bottom: 18px;">
+        <h3 style="font-size: 15px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-sitemap" style="color: #ff5757;"></i>
+          <span>Service Wing &amp; Category Track Allocation</span>
+        </h3>
+        <span style="font-size: 11px; color: #8c96a8;">Configure course branch and examination categories (Prelim, ISSB, Police sub-tracks)</span>
+      </div>
+
+      <!-- Step 1: Select Service Course / Branch -->
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 11.5px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px;">
+          Step 1: Select Course / Branch *
+        </label>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px;">
+          @foreach([
+            'Army' => ['label' => 'Bangladesh Army', 'icon' => 'fa-person-military-rifle', 'color' => '#f97316'],
+            'Navy' => ['label' => 'Bangladesh Navy', 'icon' => 'fa-anchor', 'color' => '#38bdf8'],
+            'Air Force' => ['label' => 'Bangladesh Air Force', 'icon' => 'fa-jet-fighter', 'color' => '#60a5fa'],
+            'Police' => ['label' => 'Bangladesh Police', 'icon' => 'fa-shield-halved', 'color' => '#c084fc'],
+            'General' => ['label' => 'General / Tri-Service', 'icon' => 'fa-globe', 'color' => '#34d399']
+          ] as $wingKey => $wingMeta)
+            @php $isSelectedWing = ($activeWing === $wingKey); @endphp
+            <label class="wing-radio-card" id="wing_card_{{ Str::slug($wingKey) }}"
+                   style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: all 0.2s; border: 1.5px solid {{ $isSelectedWing ? '#ff5757' : 'rgba(255,255,255,0.08)' }}; background: {{ $isSelectedWing ? 'rgba(255,87,87,0.1)' : 'rgba(255,255,255,0.02)' }};">
+              <input type="radio" name="branch_wing" value="{{ $wingKey }}"
+                     {{ $isSelectedWing ? 'checked' : '' }}
+                     onchange="onBranchWingChanged('{{ $wingKey }}')"
+                     style="accent-color: #ff5757; width: 16px; height: 16px;">
+              <div>
+                <strong style="display: block; font-size: 12.5px; color: {{ $isSelectedWing ? '#ffffff' : '#cbd5e1' }};">
+                  <i class="fa-solid {{ $wingMeta['icon'] }}" style="color: {{ $wingMeta['color'] }}; margin-right: 4px;"></i> {{ $wingMeta['label'] }}
+                </strong>
+              </div>
+            </label>
+          @endforeach
+        </div>
+        <input type="hidden" name="target_wing" id="composedTargetWingHidden" value="{{ $student->target_wing }}">
+      </div>
+
+      <!-- Step 2: Dynamic Category / Track Place Selection -->
+      <div id="categoryTracksContainer" style="padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.06);">
+        
+        <!-- A. Military Tracks Container (Army, Navy, Air Force, General) -->
+        <div id="militaryTracksSection" style="{{ $activeWing === 'Police' ? 'display: none;' : 'display: block;' }}">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <label style="display: block; font-size: 11.5px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px; margin: 0;">
+                Step 2: Select Examination Category / Track:
+              </label>
+              <span style="font-size: 11.5px; color: #94a3b8;">
+                Candidate can be placed in <strong style="color: #60a5fa;">Preliminary</strong>, <strong style="color: #facc15;">ISSB</strong>, or <strong style="color: #34d399;">both can be selected</strong>:
+              </span>
+            </div>
+            <!-- Quick Preset Pills -->
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button type="button" onclick="setMilitaryPreset('prelim')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); border-radius: 6px;">
+                <i class="fa-solid fa-file-pen"></i> Prelim Only
+              </button>
+              <button type="button" onclick="setMilitaryPreset('issb')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(234,179,8,0.12); color: #facc15; border: 1px solid rgba(234,179,8,0.3); border-radius: 6px;">
+                <i class="fa-solid fa-star"></i> ISSB Only
+              </button>
+              <button type="button" onclick="setMilitaryPreset('both')" class="btn-tactical" style="padding: 4px 12px; font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.35); border-radius: 6px;">
+                <i class="fa-solid fa-check-double"></i> Both (Prelim + ISSB)
+              </button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+            <!-- Preliminary Card -->
+            @php $hasPrelimChecked = in_array('prelim', $activeTracks); @endphp
+            <label id="card_track_prelim" class="track-card"
+                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasPrelimChecked ? '#3b82f6' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasPrelimChecked ? 'rgba(59,130,246,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <input type="checkbox" name="category_tracks[]" value="prelim" id="input_track_prelim"
+                       {{ $hasPrelimChecked ? 'checked' : '' }}
+                       onchange="onTrackCheckboxChanged()"
+                       style="accent-color: #3b82f6; width: 18px; height: 18px; margin-top: 2px;">
+                <div style="flex: 1;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <strong style="font-size: 13px; color: #ffffff;">Preliminary (Prelim)</strong>
+                    <span style="font-size: 9.5px; font-weight: 700; color: #60a5fa; background: rgba(59,130,246,0.18); border: 1px solid rgba(59,130,246,0.35); padding: 1px 6px; border-radius: 4px;">Branch Exclusive</span>
+                  </div>
+                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
+                    Authorized to conduct Preliminary written, IQ, and branch-specific academic exam modules for <strong id="prelimBranchText" style="color: #cbd5e1;">{{ $activeWing }}</strong>.
+                  </p>
+                </div>
+              </div>
+            </label>
+
+            <!-- ISSB Card -->
+            @php $hasIssbChecked = in_array('issb', $activeTracks); @endphp
+            <label id="card_track_issb" class="track-card"
+                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasIssbChecked ? '#eab308' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasIssbChecked ? 'rgba(234,179,8,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <input type="checkbox" name="category_tracks[]" value="issb" id="input_track_issb"
+                       {{ $hasIssbChecked ? 'checked' : '' }}
+                       onchange="onTrackCheckboxChanged()"
+                       style="accent-color: #eab308; width: 18px; height: 18px; margin-top: 2px;">
+                <div style="flex: 1;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <strong style="font-size: 13px; color: #ffffff;">ISSB Masterclass</strong>
+                    <span style="font-size: 9.5px; font-weight: 700; color: #facc15; background: rgba(234,179,8,0.18); border: 1px solid rgba(234,179,8,0.35); padding: 1px 6px; border-radius: 4px;">Tri-Services Unlocked</span>
+                  </div>
+                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
+                    Full clearance to conduct <strong style="color: #facc15;">ANY exam set for ISSB</strong> across Bangladesh Army, Navy, and Air Force.
+                  </p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- B. Police Tracks Container (Constable, SI, ASI) -->
+        <div id="policeTracksSection" style="{{ $activeWing === 'Police' ? 'display: block;' : 'display: none;' }}">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <label style="display: block; font-size: 11.5px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px; margin: 0;">
+                Step 2: Select Police Examination Track(s):
+              </label>
+              <span style="font-size: 11.5px; color: #94a3b8;">
+                Select <strong style="color: #c084fc;">Sub-Inspector (SI)</strong>, <strong style="color: #a855f7;">Assistant SI (ASI)</strong>, or <strong style="color: #818cf8;">Constable</strong> (combinations allowed):
+              </span>
+            </div>
+            <!-- Quick Preset Pills -->
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button type="button" onclick="setPolicePreset('si')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(192,132,252,0.12); color: #c084fc; border: 1px solid rgba(192,132,252,0.3); border-radius: 6px;">
+                SI Only
+              </button>
+              <button type="button" onclick="setPolicePreset('asi')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(168,85,247,0.12); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); border-radius: 6px;">
+                ASI Only
+              </button>
+              <button type="button" onclick="setPolicePreset('si_asi')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; font-weight: 700; background: rgba(192,132,252,0.18); color: #c084fc; border: 1.5px solid rgba(192,132,252,0.4); border-radius: 6px;">
+                SI &amp; ASI
+              </button>
+              <button type="button" onclick="setPolicePreset('constable')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(129,140,248,0.12); color: #818cf8; border: 1px solid rgba(129,140,248,0.3); border-radius: 6px;">
+                Constable
+              </button>
+              <button type="button" onclick="setPolicePreset('all')" class="btn-tactical" style="padding: 4px 12px; font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.35); border-radius: 6px;">
+                All 3 Tracks
+              </button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+            <!-- Constable Card -->
+            @php $hasConstableChecked = in_array('constable', $activeTracks); @endphp
+            <label id="card_track_constable" class="track-card"
+                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasConstableChecked ? '#818cf8' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasConstableChecked ? 'rgba(129,140,248,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <input type="checkbox" name="category_tracks[]" value="constable" id="input_track_constable"
+                       {{ $hasConstableChecked ? 'checked' : '' }}
+                       onchange="onTrackCheckboxChanged()"
+                       style="accent-color: #818cf8; width: 18px; height: 18px; margin-top: 2px;">
+                <div style="flex: 1;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <strong style="font-size: 13px; color: #ffffff;">Police Constable</strong>
+                    <span style="font-size: 9.5px; font-weight: 700; color: #818cf8; background: rgba(129,140,248,0.18); border: 1px solid rgba(129,140,248,0.35); padding: 1px 6px; border-radius: 4px;">Constable Track</span>
+                  </div>
+                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
+                    Authorized for Police Constable recruitment tests, physical aptitude &amp; preliminary exams.
+                  </p>
+                </div>
+              </div>
+            </label>
+
+            <!-- Sub-Inspector (SI) Card -->
+            @php $hasSiChecked = in_array('si', $activeTracks); @endphp
+            <label id="card_track_si" class="track-card"
+                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasSiChecked ? '#c084fc' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasSiChecked ? 'rgba(192,132,252,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <input type="checkbox" name="category_tracks[]" value="si" id="input_track_si"
+                       {{ $hasSiChecked ? 'checked' : '' }}
+                       onchange="onTrackCheckboxChanged()"
+                       style="accent-color: #c084fc; width: 18px; height: 18px; margin-top: 2px;">
+                <div style="flex: 1;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <strong style="font-size: 13px; color: #ffffff;">Sub-Inspector (SI)</strong>
+                    <span style="font-size: 9.5px; font-weight: 700; color: #c084fc; background: rgba(192,132,252,0.18); border: 1px solid rgba(192,132,252,0.35); padding: 1px 6px; border-radius: 4px;">SI Track</span>
+                  </div>
+                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
+                    Authorized for Police Sub-Inspector (SI) cadet recruitment, IQ, psychometric and specialized exams.
+                  </p>
+                </div>
+              </div>
+            </label>
+
+            <!-- Assistant Sub-Inspector (ASI) Card -->
+            @php $hasAsiChecked = in_array('asi', $activeTracks); @endphp
+            <label id="card_track_asi" class="track-card"
+                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasAsiChecked ? '#a855f7' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasAsiChecked ? 'rgba(168,85,247,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <input type="checkbox" name="category_tracks[]" value="asi" id="input_track_asi"
+                       {{ $hasAsiChecked ? 'checked' : '' }}
+                       onchange="onTrackCheckboxChanged()"
+                       style="accent-color: #a855f7; width: 18px; height: 18px; margin-top: 2px;">
+                <div style="flex: 1;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <strong style="font-size: 13px; color: #ffffff;">Assistant Sub-Inspector (ASI)</strong>
+                    <span style="font-size: 9.5px; font-weight: 700; color: #a855f7; background: rgba(168,85,247,0.18); border: 1px solid rgba(168,85,247,0.35); padding: 1px 6px; border-radius: 4px;">ASI Track</span>
+                  </div>
+                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
+                    Authorized for Police Assistant Sub-Inspector (ASI) departmental, IQ, and recruitment assessments.
+                  </p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Live Entitlement Status Card -->
+        <div id="liveEntitlementPreview" style="margin-top: 14px; padding: 12px 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12); border-radius: 8px; font-size: 12px; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-certificate" style="color: #ff5757; font-size: 15px;"></i>
+            <span id="liveClearanceSummaryText">Candidate will be cleared for testing based on selected category tracks.</span>
+          </div>
+          <button type="button" onclick="autoSelectMatchingCourses()" class="btn-tactical" style="padding: 5px 12px; font-size: 11px; background: rgba(255,87,87,0.12); color: #ff8585; border: 1px solid rgba(255,87,87,0.3); border-radius: 6px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Select Matching Courses Below
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Enrolled Courses -->
     <div class="content-panel" style="margin-bottom: 24px;">
       <div class="panel-header" style="margin-bottom: 14px;">
         <h3 style="font-size: 15px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-graduation-cap" style="color: #ff5757;"></i>
-          <span>Enrolled Courses</span>
+          <span>Enrolled Courses &amp; Exam Clearances</span>
         </h3>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 12px 16px; margin-top: 10px; margin-bottom: 14px; font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+        <strong style="color: #ff8585; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <i class="fa-solid fa-shield-halved"></i> Automated Testing Entitlement Rules:
+        </strong>
+        <ul style="margin: 0; padding-left: 20px; font-size: 11.5px; color: #94a3b8; line-height: 1.6;">
+          <li><strong>Preliminary Track:</strong> Branch-locked (Army course unlocks Army Prelims, Navy course unlocks Navy Prelims, Air Force unlocks AF Prelims).</li>
+          <li><strong>ISSB Track:</strong> Enrolling in <span style="color: #facc15;">ANY</span> military course (Army, Navy, or Air Force) gives the cadet complete clearance for <span style="color: #facc15;">ALL ISSB examinations</span> across all branches!</li>
+          <li><strong>Police Track:</strong> Clears testing in Constable, Sub-Inspector (SI), and Assistant Sub-Inspector (ASI) tracks.</li>
+        </ul>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 14px;">
@@ -181,7 +411,11 @@
             $isEnrolled = in_array($course->id, $enrolledCourseIds);
           @endphp
           <label style="display: block; cursor: pointer; border: 1.5px solid {{ $isEnrolled ? '#ff5757' : 'rgba(255,255,255,0.08)' }}; background: {{ $isEnrolled ? 'rgba(255,87,87,0.08)' : 'rgba(255,255,255,0.02)' }}; border-radius: 12px; padding: 16px; transition: all 0.2s;"
-                 id="course_card_{{ $course->id }}">
+                 id="course_card_{{ $course->id }}"
+                 class="student-course-card"
+                 data-branch="{{ $course->branch_key }}"
+                 data-track="{{ $course->program_track }}"
+                 data-course-id="{{ $course->id }}">
             <div style="display: flex; align-items: flex-start; gap: 12px;">
               <input type="checkbox" name="course_ids[]" value="{{ $course->id }}"
                      {{ $isEnrolled ? 'checked' : '' }}
@@ -195,6 +429,8 @@
                   <span style="color: #ffffff; font-weight: 700;">৳{{ number_format($course->course_fee, 0) }}</span>
                   <span>&bull;</span>
                   <span>{{ $course->duration_weeks ?? 12 }} weeks</span>
+                  <span>&bull;</span>
+                  <span style="text-transform: capitalize; color: #cbd5e1;">{{ $course->branch_key }}</span>
                 </div>
               </div>
             </div>
@@ -353,7 +589,7 @@
             <div style="grid-column: span 2;">
               <label style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Apply to Invoice (Optional)</label>
               <select name="new_payment_invoice_id" class="form-control">
-                <option value="">-- Apply as General Student Payment --</option>
+                <option value="">-- Apply as General Cadet Payment --</option>
                 @foreach($invoices as $inv)
                   <option value="{{ $inv->id }}">
                     Invoice {{ $inv->invoice_number }} — {{ $inv->title }} (Due: ৳{{ number_format($inv->due_amount, 2) }})
@@ -410,7 +646,7 @@
     </div>
 
     <p style="font-size: 12px; color: #94a3b8; margin: 0 0 16px; line-height: 1.5;">
-      Once deleted, this student account, enrollment records, and exam scores cannot be recovered.
+      Once deleted, this cadet account, enrollment records, and exam scores cannot be recovered.
     </p>
 
     <form method="POST" action="{{ route('admin.student_accounts.destroy', $student->id) }}" id="dangerDeleteForm">
@@ -434,7 +670,7 @@
 
       <button type="submit" id="dangerDeleteBtn" disabled class="btn-tactical"
               style="background: #ef4444; color: #ffffff; border: none; padding: 10px 22px; font-size: 13px; font-weight: 700; opacity: 0.35; cursor: not-allowed; transition: all 0.2s;">
-        <i class="fa-solid fa-trash-can"></i> Delete Student Account
+        <i class="fa-solid fa-trash-can"></i> Delete Cadet Account
       </button>
     </form>
   </div>
@@ -454,6 +690,269 @@
       }
     }
   }
+
+  // Dynamic Service Wing & Category Track Handling
+  function onBranchWingChanged(selectedWing) {
+    // 1. Highlight active wing card
+    var wingCards = document.querySelectorAll('.wing-radio-card');
+    wingCards.forEach(function(card) {
+      var radio = card.querySelector('input[type="radio"]');
+      if (radio && radio.value === selectedWing) {
+        card.style.borderColor = '#ff5757';
+        card.style.background = 'rgba(255, 87, 87, 0.1)';
+        var strong = card.querySelector('strong');
+        if (strong) strong.style.color = '#ffffff';
+      } else {
+        card.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+        card.style.background = 'rgba(255, 255, 255, 0.02)';
+        var strong = card.querySelector('strong');
+        if (strong) strong.style.color = '#cbd5e1';
+      }
+    });
+
+    // 2. Toggle Military vs Police sections
+    var milSec = document.getElementById('militaryTracksSection');
+    var polSec = document.getElementById('policeTracksSection');
+    var prelimText = document.getElementById('prelimBranchText');
+
+    if (selectedWing === 'Police') {
+      if (milSec) milSec.style.display = 'none';
+      if (polSec) polSec.style.display = 'block';
+    } else {
+      if (milSec) milSec.style.display = 'block';
+      if (polSec) polSec.style.display = 'none';
+      if (prelimText) {
+        var wingNameMap = {
+          'Army': 'Bangladesh Army',
+          'Navy': 'Bangladesh Navy',
+          'Air Force': 'Bangladesh Air Force',
+          'General': 'Tri-Services / General'
+        };
+        prelimText.textContent = wingNameMap[selectedWing] || selectedWing;
+      }
+    }
+
+    onTrackCheckboxChanged();
+  }
+
+  function onTrackCheckboxChanged() {
+    var trackMap = {
+      'prelim': { id: 'card_track_prelim', border: '#3b82f6', bg: 'rgba(59, 130, 246, 0.09)' },
+      'issb': { id: 'card_track_issb', border: '#eab308', bg: 'rgba(234, 179, 8, 0.09)' },
+      'constable': { id: 'card_track_constable', border: '#818cf8', bg: 'rgba(129, 140, 248, 0.09)' },
+      'si': { id: 'card_track_si', border: '#c084fc', bg: 'rgba(192, 132, 252, 0.09)' },
+      'asi': { id: 'card_track_asi', border: '#a855f7', bg: 'rgba(168, 85, 247, 0.09)' }
+    };
+
+    for (var key in trackMap) {
+      var item = trackMap[key];
+      var input = document.getElementById('input_track_' + key);
+      var card = document.getElementById(item.id);
+      if (input && card) {
+        if (input.checked) {
+          card.style.borderColor = item.border;
+          card.style.background = item.bg;
+        } else {
+          card.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+          card.style.background = 'rgba(255, 255, 255, 0.02)';
+        }
+      }
+    }
+
+    updateComposedTargetWingAndSummary();
+  }
+
+  function setMilitaryPreset(preset) {
+    var prelim = document.getElementById('input_track_prelim');
+    var issb = document.getElementById('input_track_issb');
+    if (!prelim || !issb) return;
+
+    if (preset === 'prelim') {
+      prelim.checked = true;
+      issb.checked = false;
+    } else if (preset === 'issb') {
+      prelim.checked = false;
+      issb.checked = true;
+    } else if (preset === 'both') {
+      prelim.checked = true;
+      issb.checked = true;
+    }
+
+    onTrackCheckboxChanged();
+  }
+
+  function setPolicePreset(preset) {
+    var c = document.getElementById('input_track_constable');
+    var si = document.getElementById('input_track_si');
+    var asi = document.getElementById('input_track_asi');
+    if (!c || !si || !asi) return;
+
+    if (preset === 'si') {
+      si.checked = true;
+      asi.checked = false;
+      c.checked = false;
+    } else if (preset === 'asi') {
+      si.checked = false;
+      asi.checked = true;
+      c.checked = false;
+    } else if (preset === 'si_asi') {
+      si.checked = true;
+      asi.checked = true;
+      c.checked = false;
+    } else if (preset === 'constable') {
+      si.checked = false;
+      asi.checked = false;
+      c.checked = true;
+    } else if (preset === 'all') {
+      si.checked = true;
+      asi.checked = true;
+      c.checked = true;
+    }
+
+    onTrackCheckboxChanged();
+  }
+
+  function updateComposedTargetWingAndSummary() {
+    var selectedRadio = document.querySelector('input[name="branch_wing"]:checked');
+    var wing = selectedRadio ? selectedRadio.value : 'Army';
+    var summaryEl = document.getElementById('liveClearanceSummaryText');
+    var hiddenWing = document.getElementById('composedTargetWingHidden');
+
+    var composedTitle = wing;
+
+    if (wing === 'Police') {
+      var c = document.getElementById('input_track_constable') ? document.getElementById('input_track_constable').checked : false;
+      var si = document.getElementById('input_track_si') ? document.getElementById('input_track_si').checked : false;
+      var asi = document.getElementById('input_track_asi') ? document.getElementById('input_track_asi').checked : false;
+
+      var parts = [];
+      if (c) parts.push('Constable');
+      if (si) parts.push('Sub-Inspector (SI)');
+      if (asi) parts.push('Assistant Sub-Inspector (ASI)');
+
+      if (parts.length > 0) {
+        composedTitle = 'Police - ' + parts.join(', ');
+        if (summaryEl) {
+          summaryEl.innerHTML = '<span style="color: #34d399; font-weight: 700;"><i class="fa-solid fa-check"></i> Clearance:</span> Cadet is authorized for <strong>' + parts.join(', ') + '</strong> police examination tests.';
+        }
+      } else {
+        composedTitle = 'Police';
+        if (summaryEl) {
+          summaryEl.innerHTML = '<span style="color: #facc15; font-weight: 700;"><i class="fa-solid fa-triangle-exclamation"></i> Notice:</span> No police track selected yet. Please select Constable, SI, ASI or combinations.';
+        }
+      }
+    } else {
+      var prelim = document.getElementById('input_track_prelim') ? document.getElementById('input_track_prelim').checked : false;
+      var issb = document.getElementById('input_track_issb') ? document.getElementById('input_track_issb').checked : false;
+
+      if (prelim && issb) {
+        composedTitle = wing + ' - Prelim & ISSB';
+        if (summaryEl) {
+          summaryEl.innerHTML = '<span style="color: #34d399; font-weight: 700;"><i class="fa-solid fa-check-double"></i> Full Clearance:</span> Authorized for <strong style="color: #60a5fa;">' + wing + ' Preliminary Exams</strong> + <strong style="color: #facc15;">Tri-Services ISSB Exams</strong> across Army, Navy & Air Force!';
+        }
+      } else if (prelim) {
+        composedTitle = wing + ' - Preliminary';
+        if (summaryEl) {
+          summaryEl.innerHTML = '<span style="color: #60a5fa; font-weight: 700;"><i class="fa-solid fa-file-pen"></i> Branch Clearance:</span> Authorized for <strong style="color: #60a5fa;">' + wing + ' Preliminary Exams</strong> only.';
+        }
+      } else if (issb) {
+        composedTitle = wing + ' - ISSB';
+        if (summaryEl) {
+          summaryEl.innerHTML = '<span style="color: #facc15; font-weight: 700;"><i class="fa-solid fa-star"></i> Tri-Services Clearance:</span> Authorized for <strong style="color: #facc15;">All ISSB Exams</strong> across Army, Navy & Air Force!';
+        }
+      } else {
+        composedTitle = wing;
+        if (summaryEl) {
+          summaryEl.innerHTML = '<span style="color: #facc15; font-weight: 700;"><i class="fa-solid fa-triangle-exclamation"></i> Notice:</span> No category track selected yet. Please select Preliminary, ISSB, or both.';
+        }
+      }
+    }
+
+    if (hiddenWing) {
+      hiddenWing.value = composedTitle;
+    }
+  }
+
+  function autoSelectMatchingCourses() {
+    var selectedRadio = document.querySelector('input[name="branch_wing"]:checked');
+    var wing = selectedRadio ? selectedRadio.value.toLowerCase() : '';
+    
+    var isPolice = wing === 'police';
+    var prelimChecked = document.getElementById('input_track_prelim') ? document.getElementById('input_track_prelim').checked : false;
+    var issbChecked = document.getElementById('input_track_issb') ? document.getElementById('input_track_issb').checked : false;
+    var cChecked = document.getElementById('input_track_constable') ? document.getElementById('input_track_constable').checked : false;
+    var siChecked = document.getElementById('input_track_si') ? document.getElementById('input_track_si').checked : false;
+    var asiChecked = document.getElementById('input_track_asi') ? document.getElementById('input_track_asi').checked : false;
+
+    var courseCards = document.querySelectorAll('.student-course-card');
+    var matchedCount = 0;
+
+    courseCards.forEach(function(card) {
+      var branch = (card.getAttribute('data-branch') || '').toLowerCase();
+      var track = (card.getAttribute('data-track') || '').toLowerCase();
+      var text = (card.innerText || '').toLowerCase();
+      var checkbox = card.querySelector('input[type="checkbox"]');
+      if (!checkbox) return;
+
+      var shouldSelect = false;
+
+      if (isPolice) {
+        if (branch.includes('police') || text.includes('police')) {
+          if (cChecked && (text.includes('constable') || track.includes('constable'))) {
+            shouldSelect = true;
+          }
+          if (siChecked && (text.includes('si') || text.includes('sub-inspector')) && !text.includes('assistant')) {
+            shouldSelect = true;
+          }
+          if (asiChecked && (text.includes('asi') || text.includes('assistant sub-inspector') || text.includes('assistant'))) {
+            shouldSelect = true;
+          }
+          if (!cChecked && !siChecked && !asiChecked) {
+            shouldSelect = true;
+          }
+        }
+      } else {
+        var branchMatch = false;
+        if (wing === 'navy' && (branch.includes('navy') || text.includes('navy'))) branchMatch = true;
+        else if (wing === 'army' && (branch.includes('army') || text.includes('army'))) branchMatch = true;
+        else if ((wing === 'air force' || wing === 'airforce' || wing === 'air_force') && (branch.includes('air') || text.includes('air') || text.includes('bafa'))) branchMatch = true;
+        else if (wing === 'general') branchMatch = true;
+
+        if (branchMatch && prelimChecked) {
+          if (text.includes('prelim') || track.includes('prelim') || !text.includes('issb')) {
+            shouldSelect = true;
+          }
+        }
+
+        if (issbChecked && (text.includes('issb') || track.includes('issb'))) {
+          shouldSelect = true;
+        }
+      }
+
+      if (shouldSelect) {
+        checkbox.checked = true;
+        matchedCount++;
+      }
+      toggleCourseCardStyle(checkbox, card.id);
+    });
+
+    var summaryEl = document.getElementById('liveClearanceSummaryText');
+    if (summaryEl) {
+      summaryEl.innerHTML = '<span style="color: #ff5757; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto-selected ' + matchedCount + ' matching course(s) below!</span>';
+      setTimeout(function() {
+        updateComposedTargetWingAndSummary();
+      }, 2500);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var selectedRadio = document.querySelector('input[name="branch_wing"]:checked');
+    if (selectedRadio) {
+      onBranchWingChanged(selectedRadio.value);
+    } else {
+      updateComposedTargetWingAndSummary();
+    }
+  });
 
   function checkDangerDelete() {
     var expected = "{{ strtoupper(trim($currentId)) }}";

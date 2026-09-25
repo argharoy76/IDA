@@ -45,9 +45,12 @@ class ExamController extends Controller
         $ongoingCourses = collect();
 
         if ($selectedBranch) {
-            // Cadet selected a specific branch
+            $isMilitarySector = in_array($selectedBranch, ['army', 'navy', 'air_force'], true);
+            $hasMilitaryCourse = $student ? $student->hasMilitaryCourse() : false;
+
+            // If cadet is not enrolled in the selected branch tab, show ongoing courses to enroll
             if (!in_array($selectedBranch, $enrolledBranches) && !$user->isAdmin()) {
-                // Not enrolled in this sector: show ongoing courses for this sector
+                // Not enrolled in this branch: show ongoing courses for this branch
                 $isEnrolledInSelectedBranch = false;
                 $ongoingCourses = Course::forBranch($selectedBranch)
                     ->where('admission_status', 'open')
@@ -57,7 +60,7 @@ class ExamController extends Controller
                 }
                 $exams = collect();
             } else {
-                // Enrolled in this sector: show exams for this branch
+                // Enrolled or has cross-branch ISSB privilege: show exams for this branch
                 $exams = Exam::where('is_paid_for_external', true)
                     ->whereIn('status', ['open', 'scheduled', 'closed'])
                     ->where('branch', $selectedBranch)
@@ -70,11 +73,18 @@ class ExamController extends Controller
                 ->whereIn('status', ['open', 'scheduled', 'closed']);
 
             if (!$user->isAdmin() && !empty($enrolledBranches)) {
-                $query->where(function ($q) use ($enrolledBranches) {
+                $query->where(function ($q) use ($enrolledBranches, $student) {
                     $q->whereIn('branch', $enrolledBranches)
                       ->orWhereNull('branch')
                       ->orWhere('branch', '')
                       ->orWhere('branch', 'general');
+
+                    // If student has ANY military course (Army, Navy, or Air Force), include all ISSB exams!
+                    if ($student && $student->hasMilitaryCourse()) {
+                        $q->orWhere('target_track', 'issb')
+                          ->orWhere('category', 'like', '%issb%')
+                          ->orWhere('title', 'like', '%issb%');
+                    }
                 });
             }
 
@@ -227,10 +237,19 @@ class ExamController extends Controller
         $user = auth()->user();
         $student = Student::with(['courses', 'currentCourse'])->where('user_id', $user->id)->first();
 
-        // Enrolled branch enforcement: if cadet is not enrolled in this sector, redirect to branch ongoing courses
-        if ($student && !empty($exam->branch) && !$user->isAdmin() && !in_array($user->role, ['super_admin', 'admin', 'instructor']) && !$student->isEnrolledInBranch($exam->branch)) {
+        // Access authorization check according to Prelim / ISSB / Police track rules
+        if (!$exam->canCandidateAccess($student, $user)) {
+            $reason = "You do not have access to this assessment module.";
+            if ($exam->isPrelim()) {
+                $reason = "This Preliminary Examination is exclusive to enrolled cadets of {$exam->branchLabel()}.";
+            } elseif ($exam->isIssb()) {
+                $reason = "This ISSB Masterclass examination requires enrollment in an Army, Navy, or Air Force course.";
+            } elseif ($exam->isPolice()) {
+                $reason = "This assessment requires enrollment in the {$exam->trackLabel()} track.";
+            }
+
             return redirect()->route('cadet.exams.index', ['branch' => $exam->branch])
-                ->with('error', "You are not enrolled in the {$exam->branchLabel()} sector. Please explore the ongoing courses below.");
+                ->with('error', $reason);
         }
 
         // Concluded enforcement: if closed/ended, deny access (unless admin previewing)
@@ -274,7 +293,8 @@ class ExamController extends Controller
             ]);
         }
 
-        $remainingSeconds = max(0, ($exam->duration_minutes * 60) - Carbon::now()->diffInSeconds($attempt->started_at));
+        $diffSec = (int) round(Carbon::now()->diffInSeconds($attempt->started_at));
+        $remainingSeconds = (int) max(0, ((int) $exam->duration_minutes * 60) - $diffSec);
 
         if ($remainingSeconds <= 0) {
             return $this->submit(request(), $id);
@@ -299,6 +319,11 @@ class ExamController extends Controller
         $student = Student::where('user_id', $user->id)->first();
         if (!$student && in_array($user->role, ['super_admin', 'admin', 'instructor'])) {
             $student = Student::first();
+        }
+
+        if (!$exam->canCandidateAccess($student, $user)) {
+            return redirect()->route('cadet.exams.index', ['branch' => $exam->branch])
+                ->with('error', "You do not have access to this assessment module.");
         }
 
         $attemptQuery = ExamAttempt::where('exam_id', $exam->id)

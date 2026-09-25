@@ -1,7 +1,7 @@
 @extends('layouts.portal')
 
-@section('title', 'Student Details: ' . $student->user->name)
-@section('page_title', 'Student Details')
+@section('title', 'Cadet Details: ' . $student->user->name)
+@section('page_title', 'Cadet Details')
 
 @section('content')
 <div style="max-width: 1300px; margin: 0 auto;">
@@ -9,12 +9,12 @@
   <!-- Top Action Bar -->
   <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
     <a href="{{ route('admin.student_accounts.index') }}" class="btn-tactical" style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.12); padding: 8px 16px; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-      <i class="fa-solid fa-arrow-left"></i> Back to Student Management
+      <i class="fa-solid fa-arrow-left"></i> Back to Cadet Management
     </a>
 
     <div style="display: flex; gap: 10px;">
       <a href="{{ route('admin.student_accounts.edit', $student->id) }}" class="btn-tactical" style="background: #ff5757; color: #ffffff; padding: 8px 18px; font-size: 13px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: 8px;">
-        <i class="fa-solid fa-user-pen"></i> Edit Student Details
+        <i class="fa-solid fa-user-pen"></i> Edit Cadet Details
       </a>
     </div>
   </div>
@@ -220,6 +220,103 @@
         @endif
       </div>
 
+      <!-- Exam Clearance & Testing Entitlement Card -->
+      <div class="content-panel" style="margin-bottom: 0;">
+        <div class="panel-header" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 15px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-clipboard-check" style="color: #ff5757;"></i>
+            <span>Exam Clearance &amp; Testing Entitlement</span>
+          </h3>
+          <span style="font-size: 10.5px; font-weight: 700; color: #34d399; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); border-radius: 6px; padding: 2px 8px;">
+            Verified Access
+          </span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          {{-- Military / Tri-Services ISSB Access --}}
+          @if($student->hasMilitaryCourse())
+            <div style="background: rgba(234,179,8,0.06); border: 1px solid rgba(234,179,8,0.25); border-radius: 10px; padding: 14px 16px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="width: 24px; height: 24px; border-radius: 6px; background: rgba(234,179,8,0.2); color: #facc15; display: grid; place-items: center; font-size: 12px;">
+                  <i class="fa-solid fa-star"></i>
+                </span>
+                <strong style="font-size: 13.5px; color: #facc15;">Tri-Services ISSB Clearance Granted</strong>
+              </div>
+              <p style="font-size: 12px; color: #cbd5e1; margin: 0 0 6px 0; line-height: 1.45;">
+                Cadet is enrolled in military preparation. They have full entitlement to conduct <strong>ANY exam set for ISSB</strong> across Bangladesh Army, Navy, and Air Force.
+              </p>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.08); color: #ffffff; padding: 2px 7px; border-radius: 4px;">Army ISSB</span>
+                <span style="font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.08); color: #ffffff; padding: 2px 7px; border-radius: 4px;">Navy ISSB</span>
+                <span style="font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.08); color: #ffffff; padding: 2px 7px; border-radius: 4px;">Air Force ISSB</span>
+              </div>
+            </div>
+
+            {{-- Preliminary Branch Access --}}
+            <div style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.25); border-radius: 10px; padding: 14px 16px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="width: 24px; height: 24px; border-radius: 6px; background: rgba(59,130,246,0.2); color: #60a5fa; display: grid; place-items: center; font-size: 12px;">
+                  <i class="fa-solid fa-shield"></i>
+                </span>
+                <strong style="font-size: 13.5px; color: #60a5fa;">Preliminary Exam Authorization</strong>
+              </div>
+              @php
+                $enrolledBranches = $student->getEnrolledBranches();
+                $prelimWings = array_intersect(['army', 'navy', 'air_force'], $enrolledBranches);
+              @endphp
+              <p style="font-size: 12px; color: #cbd5e1; margin: 0 0 6px 0; line-height: 1.45;">
+                Preliminary exams require enrolled course in the matching branch. Cadet is authorized for:
+              </p>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                @foreach(['army' => 'Army Prelim', 'navy' => 'Navy Prelim', 'air_force' => 'Air Force Prelim'] as $bKey => $bName)
+                  @if(in_array($bKey, $prelimWings))
+                    <span style="font-size: 10px; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.35); padding: 2px 7px; border-radius: 4px;">
+                      <i class="fa-solid fa-check"></i> {{ $bName }} Cleared
+                    </span>
+                  @else
+                    <span style="font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.04); color: #64748b; border: 1px solid rgba(255,255,255,0.08); padding: 2px 7px; border-radius: 4px;">
+                      <i class="fa-solid fa-lock"></i> {{ $bName }} Locked
+                    </span>
+                  @endif
+                @endforeach
+              </div>
+            </div>
+          @endif
+
+          {{-- Police Service Access --}}
+          @if($student->isEnrolledInBranch('police'))
+            <div style="background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.25); border-radius: 10px; padding: 14px 16px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="width: 24px; height: 24px; border-radius: 6px; background: rgba(168,85,247,0.2); color: #c084fc; display: grid; place-items: center; font-size: 12px;">
+                  <i class="fa-solid fa-handcuffs"></i>
+                </span>
+                <strong style="font-size: 13.5px; color: #c084fc;">Police Track Testing Entitlement</strong>
+              </div>
+              <p style="font-size: 12px; color: #cbd5e1; margin: 0 0 6px 0; line-height: 1.45;">
+                Authorized for Police assessments: <strong>{{ $student->target_wing ?: 'Police Service Track' }}</strong>.
+              </p>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 10px; font-weight: 700; background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.35); padding: 2px 7px; border-radius: 4px;">
+                  <i class="fa-solid fa-check"></i> Constable
+                </span>
+                <span style="font-size: 10px; font-weight: 700; background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.35); padding: 2px 7px; border-radius: 4px;">
+                  <i class="fa-solid fa-check"></i> Sub-Inspector (SI)
+                </span>
+                <span style="font-size: 10px; font-weight: 700; background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.35); padding: 2px 7px; border-radius: 4px;">
+                  <i class="fa-solid fa-check"></i> Assistant Sub-Inspector (ASI)
+                </span>
+              </div>
+            </div>
+          @endif
+
+          @if(!$student->hasMilitaryCourse() && !$student->isEnrolledInBranch('police'))
+            <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 10px; padding: 14px 16px; color: #94a3b8; font-size: 12px;">
+              <i class="fa-solid fa-circle-info" style="color: #ff5757; margin-right: 4px;"></i> Cadet is eligible for general public exams. Assign military or police courses to unlock specialized Preliminary, ISSB, or Police examination modules.
+            </div>
+          @endif
+        </div>
+      </div>
+
       <!-- Quick Action Navigation Card -->
       <div class="content-panel" style="margin-bottom: 0;">
         <div class="panel-header" style="margin-bottom: 14px;">
@@ -408,7 +505,7 @@
       @else
         <div style="background: #0f121a; border: 1px dashed rgba(255,255,255,0.08); border-radius: 10px; padding: 24px; text-align: center; color: #64748b;">
           <i class="fa-solid fa-receipt" style="font-size: 20px; margin-bottom: 6px; display: block;"></i>
-          <span style="font-size: 12.5px;">No payment transaction vouchers submitted for this student yet.</span>
+          <span style="font-size: 12.5px;">No payment transaction vouchers submitted for this cadet yet.</span>
         </div>
       @endif
     </div>
@@ -509,7 +606,7 @@
       @else
         <div style="background: #0f121a; border: 1px dashed rgba(255,255,255,0.08); border-radius: 10px; padding: 24px; text-align: center; color: #64748b;">
           <i class="fa-solid fa-file-invoice" style="font-size: 20px; margin-bottom: 6px; display: block;"></i>
-          <span style="font-size: 12.5px;">No tuition fee invoices issued for this student account.</span>
+          <span style="font-size: 12.5px;">No tuition fee invoices issued for this cadet account.</span>
         </div>
       @endif
     </div>

@@ -23,6 +23,7 @@ class Student extends Model
         'address',
         'emergency_contact',
         'target_wing',
+        'target_tracks',
         'institution',
         'hsc_year',
         'district',
@@ -38,6 +39,7 @@ class Student extends Model
         'age' => 'integer',
         'admission_date' => 'date',
         'documents' => 'array',
+        'target_tracks' => 'array',
     ];
 
     public function user()
@@ -124,6 +126,214 @@ class Student extends Model
             return true;
         }
         return in_array($branch, $this->getEnrolledBranches(), true);
+    }
+
+    /**
+     * Check if cadet has purchased/enrolled in ANY Tri-Services Military Course (Army, Navy, or Air Force).
+     */
+    public function hasMilitaryCourse(): bool
+    {
+        $branches = $this->getEnrolledBranches();
+        return in_array('army', $branches, true) 
+            || in_array('navy', $branches, true) 
+            || in_array('air_force', $branches, true);
+    }
+
+    /**
+     * Get array of all assigned program / category tracks (e.g. ['prelim', 'issb'], ['si', 'asi'], ['constable']).
+     */
+    public function getTargetTracks(): array
+    {
+        $tracks = [];
+
+        // 1. From explicit target_tracks field
+        if (!empty($this->target_tracks)) {
+            $raw = is_array($this->target_tracks) ? $this->target_tracks : json_decode($this->target_tracks, true);
+            if (is_array($raw)) {
+                $tracks = array_merge($tracks, $raw);
+            } elseif (is_string($this->target_tracks)) {
+                $tracks = array_merge($tracks, array_map('trim', explode(',', $this->target_tracks)));
+            }
+        }
+
+        // 2. From target_wing string
+        if (!empty($this->target_wing)) {
+            $w = strtolower($this->target_wing);
+            if (str_contains($w, 'prelim') || str_contains($w, 'written')) {
+                $tracks[] = 'prelim';
+            }
+            if (str_contains($w, 'issb')) {
+                $tracks[] = 'issb';
+            }
+            if (str_contains($w, 'constable') || str_contains($w, 'con')) {
+                $tracks[] = 'constable';
+            }
+            if (preg_match('/\b(asi|assistant sub-inspector|assistant sub inspector)\b/i', $w)) {
+                $tracks[] = 'asi';
+            }
+            $withoutAsi = preg_replace('/\b(asi|assistant sub-inspector|assistant sub inspector|assistant)\b/i', '', $w);
+            if (preg_match('/\b(si|sub-inspector|sub inspector)\b/i', $withoutAsi)) {
+                $tracks[] = 'si';
+            }
+        }
+
+        // 3. From enrolled courses
+        $courses = $this->courses;
+        if ($courses->isEmpty() && $this->currentCourse) {
+            $courses = collect([$this->currentCourse]);
+        }
+        foreach ($courses as $c) {
+            if (!empty($c->program_track)) {
+                $tracks[] = $c->program_track;
+            }
+            $cat = strtolower($c->category ?? '');
+            $title = strtolower($c->title ?? '');
+            $text = $cat . ' ' . $title;
+            if (str_contains($text, 'constable')) $tracks[] = 'constable';
+            if (preg_match('/\b(asi|assistant sub-inspector|assistant sub inspector)\b/i', $text)) $tracks[] = 'asi';
+            $withoutAsi = preg_replace('/\b(asi|assistant sub-inspector|assistant sub inspector|assistant)\b/i', '', $text);
+            if (preg_match('/\b(si|sub-inspector|sub inspector)\b/i', $withoutAsi)) $tracks[] = 'si';
+            if (str_contains($text, 'issb')) $tracks[] = 'issb';
+            if (str_contains($text, 'prelim') || str_contains($text, 'bma') || str_contains($text, 'bna') || str_contains($text, 'bafa')) $tracks[] = 'prelim';
+        }
+
+        return array_values(array_unique(array_filter($tracks)));
+    }
+
+    /**
+     * Check if cadet is authorized for Preliminary exams of the specified branch.
+     */
+    public function hasPrelimTrack(?string $branch = null): bool
+    {
+        $branch = $branch ?: 'army';
+        if (!$this->isEnrolledInBranch($branch)) {
+            return false;
+        }
+
+        $tracks = $this->getTargetTracks();
+        // If cadet has designated tracks (e.g. they selected ISSB only), verify 'prelim' is included
+        if (!empty($tracks)) {
+            if (in_array('prelim', $tracks, true)) {
+                return true;
+            }
+            if (in_array('issb', $tracks, true) && !in_array('prelim', $tracks, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if cadet is authorized for ISSB exams across all branches.
+     * Rule: Every student that has ISSB courses, or ISSB track, or military courses can conduct ISSB exams!
+     */
+    public function hasIssbTrack(): bool
+    {
+        // 1. Explicitly assigned ISSB track in target_tracks column
+        $explicitTracks = [];
+        if (!empty($this->target_tracks)) {
+            $raw = is_array($this->target_tracks) ? $this->target_tracks : json_decode($this->target_tracks, true);
+            if (is_array($raw)) {
+                $explicitTracks = $raw;
+            } elseif (is_string($this->target_tracks)) {
+                $explicitTracks = array_map('trim', explode(',', $this->target_tracks));
+            }
+        }
+
+        if (in_array('issb', $explicitTracks, true)) {
+            return true;
+        }
+
+        // 2. Direct enrolled course with ISSB in title, track, or category
+        $courses = $this->courses;
+        if ($courses->isEmpty() && $this->currentCourse) {
+            $courses = collect([$this->currentCourse]);
+        }
+        foreach ($courses as $c) {
+            $text = strtolower(($c->title ?? '') . ' ' . ($c->category ?? '') . ' ' . ($c->program_track ?? ''));
+            if (str_contains($text, 'issb')) {
+                return true;
+            }
+        }
+
+        // 3. Cadets with any military course (Army, Navy, Air Force)
+        // User rule: "if a student buys any of these three courses like army, navy, and air force,
+        // he will be able to conduct any exam that is set for ISSB."
+        if ($this->hasMilitaryCourse()) {
+            // Only restrict if an admin explicitly selected ONLY Prelim in the student's target_tracks
+            if (!empty($explicitTracks) && in_array('prelim', $explicitTracks, true) && !in_array('issb', $explicitTracks, true)) {
+                return false;
+            }
+            $wing = strtolower($this->target_wing ?? '');
+            if (str_contains($wing, 'prelim only') || str_contains($wing, 'preliminary only')) {
+                return false;
+            }
+            return true;
+        }
+
+        // 4. Check if target_wing includes ISSB
+        if (!empty($this->target_wing) && str_contains(strtolower($this->target_wing), 'issb')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if cadet has access to a specific Police Track (Constable, SI, ASI).
+     */
+    public function hasPoliceTrack(string $track): bool
+    {
+        if (!$this->isEnrolledInBranch('police')) {
+            return false;
+        }
+
+        $track = strtolower(trim($track));
+        $tracks = $this->getTargetTracks();
+
+        $policeTracks = array_intersect(['constable', 'si', 'asi'], $tracks);
+        if (!empty($policeTracks)) {
+            return in_array($track, $policeTracks, true);
+        }
+
+        // If enrolled in generic Police with no specific track restriction, allow access
+        return true;
+    }
+
+    /**
+     * Verify if cadet is authorized to conduct the specified exam.
+     */
+    public function canConductExam(Exam $exam): bool
+    {
+        return $exam->canCandidateAccess($this);
+    }
+
+    /**
+     * Human-readable exam clearance overview.
+     */
+    public function getExamClearanceDescription(): string
+    {
+        $branches = $this->getEnrolledBranches();
+        $clearances = [];
+
+        if ($this->hasMilitaryCourse()) {
+            $prelimWings = [];
+            if (in_array('army', $branches, true)) $prelimWings[] = 'Army Prelim';
+            if (in_array('navy', $branches, true)) $prelimWings[] = 'Navy Prelim';
+            if (in_array('air_force', $branches, true)) $prelimWings[] = 'Air Force Prelim';
+
+            if (!empty($prelimWings)) {
+                $clearances[] = implode(', ', $prelimWings);
+            }
+            $clearances[] = 'All Tri-Services ISSB Masterclasses';
+        }
+
+        if (in_array('police', $branches, true)) {
+            $clearances[] = 'Police Assessments (' . ($this->target_wing ?: 'Police Service') . ')';
+        }
+
+        return !empty($clearances) ? implode(' + ', $clearances) : 'General Assessments';
     }
 
     public function currentCourse()

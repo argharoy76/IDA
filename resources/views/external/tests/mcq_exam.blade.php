@@ -183,24 +183,41 @@
 <script>
   let currentQ = 0;
   const totalQ = {{ $exam->questions->count() }};
-  let durationSeconds = {{ $remainingSeconds }};
+  let durationSeconds = Math.max(0, Math.floor(Number({{ (int) floor($remainingSeconds) }})));
   const timerElement = document.getElementById('countdownTimer');
   const timerCard = document.getElementById('examTimerCard');
   const timerIcon = document.getElementById('timerIcon');
+
+  function formatTime(totalSec) {
+    totalSec = Math.max(0, Math.floor(totalSec));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = Math.floor(totalSec % 60);
+    const pad = (n) => (n < 10 ? '0' : '') + n;
+    if (h > 0) {
+      return pad(h) + ':' + pad(m) + ':' + pad(s);
+    }
+    return pad(m) + ':' + pad(s);
+  }
+
+  if (timerElement) {
+    timerElement.innerText = formatTime(durationSeconds);
+  }
 
   const timerInterval = setInterval(function() {
     durationSeconds--;
     if (durationSeconds <= 0) {
       clearInterval(timerInterval);
+      if (timerElement) timerElement.innerText = '00:00';
       alert('Time has expired! Your test is being submitted automatically.');
       document.getElementById('examForm').submit();
       return;
     }
-    const m = Math.floor(durationSeconds / 60);
-    const s = durationSeconds % 60;
+
     if (timerElement) {
-      timerElement.innerText = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+      timerElement.innerText = formatTime(durationSeconds);
     }
+
     if (durationSeconds < 300 && durationSeconds >= 60) {
       if (timerCard) timerCard.className = 'exam-timer-card warning';
       if (timerIcon) timerIcon.style.color = '#d97706';

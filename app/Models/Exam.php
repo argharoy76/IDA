@@ -15,6 +15,7 @@ class Exam extends Model
         'exam_type',
         'category',
         'branch',
+        'target_track',
         'description',
         'duration_minutes',
         'total_marks',
@@ -83,6 +84,99 @@ class Exam extends Model
             'both' => 'Both (Cadet & Free)',
             default => 'Cadet Exam',
         };
+    }
+
+    public function isPrelim(): bool
+    {
+        if ($this->target_track === 'prelim') {
+            return true;
+        }
+        $text = strtolower(($this->target_track ?? '') . ' ' . $this->category . ' ' . $this->title);
+        return str_contains($text, 'prelim');
+    }
+
+    public function isIssb(): bool
+    {
+        if ($this->target_track === 'issb') {
+            return true;
+        }
+        $text = strtolower(($this->target_track ?? '') . ' ' . $this->category . ' ' . $this->title . ' ' . ($this->exam_type ?? ''));
+        return str_contains($text, 'issb') || str_contains($text, 'word_association') || str_contains($text, 'wat');
+    }
+
+    public function isPolice(): bool
+    {
+        return $this->branch === 'police' || in_array($this->target_track, ['constable', 'si', 'asi'], true);
+    }
+
+    public function trackLabel(): string
+    {
+        return match($this->target_track) {
+            'prelim' => 'Preliminary Examination',
+            'issb' => 'ISSB Special Masterclass',
+            'constable' => 'Police Constable',
+            'si' => 'Sub-Inspector (SI)',
+            'asi' => 'Assistant Sub-Inspector (ASI)',
+            default => $this->isIssb() ? 'ISSB Special Masterclass' : ($this->isPrelim() ? 'Preliminary Examination' : 'General Program'),
+        };
+    }
+
+    /**
+     * Check if a candidate/student is authorized to conduct this exam.
+     * Rules:
+     * - Admins / Instructors always have access.
+     * - Free exams (access_type == 'free') are accessible to all candidates.
+     * - ISSB Exams: If cadet has ANY military course (Army, Navy, OR Air Force), they can conduct ANY ISSB exam!
+     * - Preliminary Exams: Cadet MUST have the matching branch course (Army for Army Prelim, Navy for Navy Prelim, Air Force for AF Prelim).
+     * - Police Exams: Cadet MUST have a Police course (or matching Police track course).
+     */
+    public function canCandidateAccess(?Student $student, ?User $user = null): bool
+    {
+        $user = $user ?? auth()->user();
+        if (!$user) {
+            return false;
+        }
+
+        if ($user->isAdmin() || in_array($user->role, ['super_admin', 'admin', 'instructor'])) {
+            return true;
+        }
+
+        // External / Free Exam check
+        if ($this->access_type === 'free' || !$this->is_paid_for_external) {
+            return true;
+        }
+
+        if (!$student) {
+            return false;
+        }
+
+        // Rule 1: ISSB Exams (Cross-branch Tri-Services privilege)
+        // If student has ANY of the three courses (Army, Navy, or Air Force) or ISSB category, they can conduct ANY ISSB exam!
+        if ($this->isIssb()) {
+            return $student->hasIssbTrack();
+        }
+
+        // Rule 2: Preliminary Exams
+        // Requires enrollment and Preliminary clearance in the specific branch
+        if ($this->isPrelim()) {
+            $branch = $this->branch ?: 'army';
+            return $student->hasPrelimTrack($branch);
+        }
+
+        // Rule 3: Police Exams
+        if ($this->isPolice()) {
+            if (!$student->isEnrolledInBranch('police')) {
+                return false;
+            }
+            $pTrack = $this->target_track === 'prelim' ? 'constable' : $this->target_track;
+            if (in_array($pTrack, ['constable', 'si', 'asi'], true)) {
+                return $student->hasPoliceTrack($pTrack);
+            }
+            return true;
+        }
+
+        // Fallback for general branch exam
+        return $student->isEnrolledInBranch($this->branch);
     }
 
     public function isScheduledFuture(): bool

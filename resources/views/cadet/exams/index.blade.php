@@ -320,10 +320,23 @@
             {{-- Top Row: Exam Name (Left) & Condition Status (Right) --}}
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
               {{-- Top Left: Exam Name & Branch Badge (No IQ MCQ) --}}
-              <div style="display: flex; gap: 6px; align-items: center;">
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                 <span style="background: rgba(255,255,255,0.24); color: #ffffff; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; border: 1px solid rgba(255,255,255,0.38); box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: inline-flex; align-items: center; gap: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
                   <i class="fa-solid {{ $exam->branchIcon() }}"></i> {{ $exam->branchLabel() }}
                 </span>
+                @if($exam->isIssb())
+                  <span style="background: rgba(254, 240, 138, 0.28); color: #fef08a; padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; border: 1px solid rgba(254, 240, 138, 0.45); display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                    <i class="fa-solid fa-star"></i> ISSB Masterclass
+                  </span>
+                @elseif($exam->isPrelim())
+                  <span style="background: rgba(255,255,255,0.18); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-shield"></i> Prelim
+                  </span>
+                @elseif($exam->isPolice())
+                  <span style="background: rgba(255,255,255,0.18); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-handcuffs"></i> {{ $exam->trackLabel() }}
+                  </span>
+                @endif
               </div>
 
               {{-- Top Right: Condition (LIVE / SCHEDULED / ENDED) --}}
@@ -412,8 +425,24 @@
             @else
               @php
                 $myAttempt = isset($userAttempts) ? ($userAttempts->get($exam->id)?->first()) : null;
+                $canAccess = $exam->canCandidateAccess($student, auth()->user());
               @endphp
-              @if($myAttempt)
+              @if(!$canAccess)
+                <div class="btn-3d-white" style="cursor: not-allowed; opacity: 0.9; color: #dc2626; font-size: 11.5px; padding: 10px 14px; flex-direction: column; gap: 3px; line-height: 1.35; text-align: center;">
+                  <div style="font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-lock"></i> Enrollment Required
+                  </div>
+                  <div style="font-size: 10px; font-weight: 600; opacity: 0.88;">
+                    @if($exam->isPrelim())
+                      Exclusive to {{ $exam->branchLabel() }} Cadets
+                    @elseif($exam->isPolice())
+                      Requires {{ $exam->trackLabel() }} Course
+                    @else
+                      Course Enrollment Needed
+                    @endif
+                  </div>
+                </div>
+              @elseif($myAttempt)
                 <div style="width: 100%; display: flex; flex-direction: column; gap: 6px; align-items: center;">
                     @if($myAttempt->isRankPublished())
                       <span><i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> Rank #{{ $myAttempt->rank }} of {{ $myAttempt->total_candidates }}</span>
@@ -698,7 +727,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const h = Math.floor(secondsLeft / 3600);
       const m = Math.floor((secondsLeft % 3600) / 60);
-      const s = secondsLeft % 60;
+      const s = Math.floor(secondsLeft % 60);
       const pad = (n) => (n < 10 ? '0' + n : n);
       if (timerDisplay) {
         timerDisplay.textContent = pad(h) + 'h : ' + pad(m) + 'm : ' + pad(s) + 's';

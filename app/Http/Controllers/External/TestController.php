@@ -90,7 +90,8 @@ class TestController extends Controller
             ]);
         }
 
-        $remainingSeconds = max(0, ($exam->duration_minutes * 60) - Carbon::now()->diffInSeconds($attempt->started_at));
+        $diffSec = (int) round(Carbon::now()->diffInSeconds($attempt->started_at));
+        $remainingSeconds = (int) max(0, ((int) $exam->duration_minutes * 60) - $diffSec);
 
         if ($remainingSeconds <= 0) {
             return $this->submit(request(), $id);

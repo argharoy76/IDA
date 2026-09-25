@@ -406,10 +406,16 @@
         <div>
           <div class="timer-label">Time Remaining</div>
           <div id="countdownTimer" class="timer-digits">
-            @if(isset($remainingSeconds))
-              {{ sprintf('%02d:%02d', floor($remainingSeconds / 60), $remainingSeconds % 60) }}
+            @php
+              $initialSec = isset($remainingSeconds) ? (int) floor($remainingSeconds) : ((int) ($exam->duration_minutes ?? 30) * 60);
+              $initHours = (int) floor($initialSec / 3600);
+              $initMins = (int) floor(($initialSec % 3600) / 60);
+              $initSecs = (int) ($initialSec % 60);
+            @endphp
+            @if($initHours > 0)
+              {{ sprintf('%02d:%02d:%02d', $initHours, $initMins, $initSecs) }}
             @else
-              {{ sprintf('%02d:00', $exam->duration_minutes) }}
+              {{ sprintf('%02d:%02d', $initMins, $initSecs) }}
             @endif
           </div>
         </div>

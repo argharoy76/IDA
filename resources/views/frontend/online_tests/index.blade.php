@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const hours = Math.floor(secondsLeft / 3600);
       const minutes = Math.floor((secondsLeft % 3600) / 60);
-      const seconds = secondsLeft % 60;
+      const seconds = Math.floor(secondsLeft % 60);
 
       const pad = (n) => (n < 10 ? '0' + n : n);
       timerDisplay.textContent = pad(hours) + 'h : ' + pad(minutes) + 'm : ' + pad(seconds) + 's';

@@ -47,9 +47,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Enforce HTTPS when deployed in production or behind SSL terminating proxies (Hostinger / Cloudflare)
-        if (config('app.env') === 'production' || 
+        // Never force HTTPS on localhost or 127.0.0.1 to avoid cross-scheme origin mismatch (419 Page Expired)
+        $host = request()->getHost();
+        $isLocalhost = in_array($host, ['localhost', '127.0.0.1', '::1']) || app()->environment('local', 'testing');
+
+        if (!$isLocalhost && (
+            config('app.env') === 'production' || 
             (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') || 
-            (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] == 1))) {
+            (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] === 'on' || $_SERVER['HTTPS'] == 1))
+        )) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 

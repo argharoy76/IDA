@@ -74,17 +74,17 @@ class StudentAccountManagementTest extends TestCase
 
         $response = $this->actingAs($admin)->get('/admin/student-accounts');
         $response->assertStatus(200);
-        $response->assertSee('Student Management');
+        $response->assertSee('Cadet Management');
         $response->assertSee('Navy');
         $response->assertSee('Police');
         $response->assertSee('Army');
         $response->assertSee('Air Force');
-        $response->assertSee('All Students');
+        $response->assertSee('All Cadets');
 
         // Subpage contains registration capability
         $dirResponse = $this->actingAs($admin)->get('/admin/student-accounts?wing=all');
         $dirResponse->assertStatus(200);
-        $dirResponse->assertSee('Register Offline Student');
+        $dirResponse->assertSee('Register Offline Cadet');
     }
 
     /**
@@ -321,7 +321,7 @@ class StudentAccountManagementTest extends TestCase
         $landingResponse->assertSee('Police');
         $landingResponse->assertSee('Army');
         $landingResponse->assertSee('Air Force');
-        $landingResponse->assertSee('All Students');
+        $landingResponse->assertSee('All Cadets');
     }
 
     /**
@@ -349,7 +349,7 @@ class StudentAccountManagementTest extends TestCase
 
         $response = $this->actingAs($admin)->get("/admin/student-accounts/{$student->id}");
         $response->assertStatus(200);
-        $response->assertSee('Student Details');
+        $response->assertSee('Cadet Details');
         $response->assertSee($user->name);
         $response->assertSee($user->account_id);
         $response->assertSee('Fee Invoices & Payment Records');
@@ -381,7 +381,7 @@ class StudentAccountManagementTest extends TestCase
 
         $response = $this->actingAs($admin)->get("/admin/student-accounts/{$student->id}/edit");
         $response->assertStatus(200);
-        $response->assertSee('Update Student Details');
+        $response->assertSee('Update Cadet Details');
         $response->assertSee($user->name);
     }
 

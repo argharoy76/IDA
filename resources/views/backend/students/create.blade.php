@@ -43,7 +43,7 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
         <div class="form-group">
-          <label class="form-label">Student Category *</label>
+          <label class="form-label">Cadet Category *</label>
           <select name="student_type" class="form-control">
             <option value="academic">Academic Cadet (Regular)</option>
             <option value="external">External Candidate</option>
@@ -56,6 +56,7 @@
             <option value="Army">Army (BMA)</option>
             <option value="Navy">Navy (BNA)</option>
             <option value="Airforce">Air Force (BAFA)</option>
+            <option value="Police">Police Service</option>
             <option value="General">General ISSB</option>
           </select>
         </div>

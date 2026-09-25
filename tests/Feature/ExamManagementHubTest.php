@@ -58,7 +58,7 @@ class ExamManagementHubTest extends TestCase
 
         $response = $this->actingAs($admin)->get('/admin/dashboard');
         $response->assertStatus(200);
-        $response->assertSee('Student Management');
+        $response->assertSee('Cadet Management');
         $response->assertSee('Exam Management');
         $response->assertSee(route('admin.exam_management.index'));
     }

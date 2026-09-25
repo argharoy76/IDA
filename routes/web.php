@@ -243,6 +243,7 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::post('/exam-management/{id}/toggle-payment', [AdminExamManagementController::class, 'togglePayment'])->name('exam_management.toggle_payment');
         Route::post('/exam-management/{id}/update-fee', [AdminExamManagementController::class, 'updateFee'])->name('exam_management.update_fee');
         Route::post('/exam-management/store', [AdminExamManagementController::class, 'store'])->name('exam_management.store');
+        Route::post('/system/sync-database-tracks', [AdminExamManagementController::class, 'syncDatabaseTracks'])->name('system.sync_database_tracks');
         
         // Developer Super Admin Control Center (Strictly ArghaRoy Only)
         Route::get('/admin-control', [AdminControlController::class, 'index'])->name('admin_control.index');

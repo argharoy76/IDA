@@ -12,7 +12,7 @@
       <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, cadet ID, roll, phone..." class="form-control" style="max-width: 280px;">
 
       <select name="type" class="form-control" style="max-width: 170px;" onchange="this.form.submit()">
-        <option value="">All Student Types</option>
+        <option value="">All Cadet Types</option>
         <option value="academic" {{ request('type') === 'academic' ? 'selected' : '' }}>Academic Cadets</option>
         <option value="external" {{ request('type') === 'external' ? 'selected' : '' }}>External Candidates</option>
       </select>
@@ -22,6 +22,7 @@
         <option value="Army" {{ request('wing') === 'Army' ? 'selected' : '' }}>Army (BMA)</option>
         <option value="Navy" {{ request('wing') === 'Navy' ? 'selected' : '' }}>Navy (BNA)</option>
         <option value="Airforce" {{ request('wing') === 'Airforce' ? 'selected' : '' }}>Airforce (BAFA)</option>
+        <option value="Police" {{ request('wing') === 'Police' ? 'selected' : '' }}>Police Service</option>
         <option value="General" {{ request('wing') === 'General' ? 'selected' : '' }}>General ISSB</option>
       </select>
 

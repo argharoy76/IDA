@@ -22,7 +22,7 @@
           <th>Duration</th>
           <th>Tuition Fee</th>
           <th>Batches</th>
-          <th>Students</th>
+          <th>Cadets</th>
           <th>Status</th>
           <th>Action</th>
         </tr>
@@ -76,6 +76,7 @@
             <option value="Army">Army (BMA)</option>
             <option value="Navy">Navy (BNA)</option>
             <option value="Airforce">Air Force (BAFA)</option>
+            <option value="Police">Police Service</option>
             <option value="ISSB Special">ISSB Special Masterclass</option>
           </select>
         </div>

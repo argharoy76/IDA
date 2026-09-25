@@ -154,6 +154,46 @@
     }
   });
 
+  let overallDurationSeconds = Math.max(0, Math.floor(Number({{ (int) floor($remainingSeconds) }})));
+  const topTimerEl = document.getElementById('countdownTimer');
+  const topTimerCard = document.getElementById('examTimerCard');
+  const topTimerIcon = document.getElementById('timerIcon');
+
+  function formatOverallTime(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.floor(sec % 60);
+    const pad = (n) => (n < 10 ? '0' : '') + n;
+    if (h > 0) return pad(h) + ':' + pad(m) + ':' + pad(s);
+    return pad(m) + ':' + pad(s);
+  }
+
+  if (topTimerEl) {
+    topTimerEl.innerText = formatOverallTime(overallDurationSeconds);
+  }
+
+  const overallTimerInterval = setInterval(function() {
+    overallDurationSeconds--;
+    if (overallDurationSeconds <= 0) {
+      clearInterval(overallTimerInterval);
+      if (topTimerEl) topTimerEl.innerText = '00:00';
+      alert('Examination time has expired! Submitting responses.');
+      finishWat();
+      return;
+    }
+    if (topTimerEl) {
+      topTimerEl.innerText = formatOverallTime(overallDurationSeconds);
+    }
+    if (overallDurationSeconds < 300 && overallDurationSeconds >= 60) {
+      if (topTimerCard) topTimerCard.className = 'exam-timer-card warning';
+      if (topTimerIcon) topTimerIcon.style.color = '#d97706';
+    } else if (overallDurationSeconds < 60) {
+      if (topTimerCard) topTimerCard.className = 'exam-timer-card danger';
+      if (topTimerIcon) topTimerIcon.style.color = '#dc2626';
+    }
+  }, 1000);
+
   document.addEventListener('DOMContentLoaded', function() {
     startWord(0);
   });

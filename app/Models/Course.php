@@ -72,8 +72,9 @@ class Course extends Model
             } elseif ($branch === 'navy') {
                 $q->where('category', 'like', '%navy%')
                   ->orWhere('title', 'like', '%navy%')
-                  ->orWhere('title', 'like', '%bns%');
-            } elseif ($branch === 'air_force') {
+                  ->orWhere('title', 'like', '%bns%')
+                  ->orWhere('title', 'like', '%bna%');
+            } elseif ($branch === 'air_force' || $branch === 'airforce') {
                 $q->where('category', 'like', '%air%')
                   ->orWhere('title', 'like', '%air%')
                   ->orWhere('title', 'like', '%bafa%');
@@ -95,7 +96,7 @@ class Course extends Model
         if (str_contains($cat, 'army') || str_contains($title, 'army') || str_contains($title, 'bma')) {
             return 'army';
         }
-        if (str_contains($cat, 'navy') || str_contains($title, 'navy') || str_contains($title, 'bns')) {
+        if (str_contains($cat, 'navy') || str_contains($title, 'navy') || str_contains($title, 'bns') || str_contains($title, 'bna')) {
             return 'navy';
         }
         if (str_contains($cat, 'air') || str_contains($title, 'air') || str_contains($title, 'bafa')) {
@@ -105,5 +106,31 @@ class Course extends Model
             return 'police';
         }
         return 'general';
+    }
+
+    /**
+     * Get the program / track key (preliminary, issb, constable, si, asi).
+     */
+    public function getProgramTrackAttribute(): string
+    {
+        $cat = strtolower($this->category ?? '');
+        $title = strtolower($this->title ?? '');
+
+        if (str_contains($cat, 'constable') || str_contains($title, 'constable') || str_contains($title, 'con')) {
+            return 'constable';
+        }
+        if (str_contains($cat, 'asi') || str_contains($title, 'asi') || str_contains($title, 'assistant sub-inspector') || str_contains($cat, 'assistant sub-inspector')) {
+            return 'asi';
+        }
+        if (str_contains($cat, 'sub-inspector') || str_contains($title, 'sub-inspector') || str_contains($title, ' si ') || str_contains($title, 'si &') || str_contains($title, 'si/')) {
+            return 'si';
+        }
+        if (str_contains($cat, 'issb') || str_contains($title, 'issb')) {
+            return 'issb';
+        }
+        if (str_contains($cat, 'prelim') || str_contains($title, 'prelim') || str_contains($title, 'regular') || str_contains($title, 'cadet prep')) {
+            return 'preliminary';
+        }
+        return 'preliminary';
     }
 }

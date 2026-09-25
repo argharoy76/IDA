@@ -81,17 +81,63 @@
           <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Official examination title visible to candidates across all platforms.</small>
         </div>
 
-        {{-- Branch Wing & Access Type (NO EXAM FEE FIELD) --}}
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        {{-- Quick One-Click Examination Stage Presets --}}
+        <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.14); border-radius: 12px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; flex-wrap: wrap; gap: 6px;">
+            <label style="font-size: 11px; font-weight: 800; color: #ff8585; text-transform: uppercase; letter-spacing: 0.6px; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> One-Click Examination Category &amp; Track Presets:
+            </label>
+            <span style="font-size: 11px; color: #64748b;">Instantly selects wing, candidate clearance stage &amp; rules</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" onclick="selectFullTrackPreset('navy', 'prelim', 'Navy Preliminary IQ &amp; Academic')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px;">
+              ⚓ Navy Prelim
+            </button>
+            <button type="button" onclick="selectFullTrackPreset('army', 'prelim', 'Army Preliminary IQ &amp; Academic')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(249,115,22,0.12); color: #fb923c; border: 1px solid rgba(249,115,22,0.35); border-radius: 6px;">
+              🪖 Army Prelim
+            </button>
+            <button type="button" onclick="selectFullTrackPreset('air_force', 'prelim', 'Air Force Preliminary IQ &amp; Academic')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.35); border-radius: 6px;">
+              ✈️ Air Force Prelim
+            </button>
+            <button type="button" onclick="selectFullTrackPreset('army', 'issb', 'Tri-Services ISSB Assessment')" class="btn-tactical" style="padding: 6px 15px; font-size: 11.5px; font-weight: 800; background: rgba(234,179,8,0.18); color: #facc15; border: 1.5px solid rgba(234,179,8,0.5); border-radius: 6px;">
+              🌟 ISSB Masterclass (Tri-Services)
+            </button>
+            <button type="button" onclick="selectFullTrackPreset('police', 'constable', 'Police Constable Recruitment Test')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(129,140,248,0.12); color: #818cf8; border: 1px solid rgba(129,140,248,0.35); border-radius: 6px;">
+              👮 Police Prelim (Constable)
+            </button>
+            <button type="button" onclick="selectFullTrackPreset('police', 'si', 'Police Sub-Inspector (SI) Test')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(192,132,252,0.12); color: #c084fc; border: 1px solid rgba(192,132,252,0.35); border-radius: 6px;">
+              🔍 Police SI
+            </button>
+            <button type="button" onclick="selectFullTrackPreset('police', 'asi', 'Police Assistant Sub-Inspector (ASI) Test')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(168,85,247,0.12); color: #a855f7; border: 1px solid rgba(168,85,247,0.35); border-radius: 6px;">
+              🛡️ Police Assistant SI (ASI)
+            </button>
+          </div>
+        </div>
+
+        {{-- Branch Wing, Target Track & Access Type --}}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px;">
           <div>
             <label class="ida-label">Branch Wing *</label>
-            <select name="branch" class="form-tactical" required style="width: 100%; padding: 11px 16px;">
+            <select name="branch" id="examBranchSelect" class="form-tactical" required style="width: 100%; padding: 11px 16px;">
               <option value="army" {{ old('branch', $exam->branch) === 'army' ? 'selected' : '' }}>Bangladesh Army</option>
               <option value="navy" {{ old('branch', $exam->branch) === 'navy' ? 'selected' : '' }}>Bangladesh Navy</option>
               <option value="air_force" {{ old('branch', $exam->branch) === 'air_force' ? 'selected' : '' }}>Bangladesh Air Force</option>
               <option value="police" {{ old('branch', $exam->branch) === 'police' ? 'selected' : '' }}>Bangladesh Police</option>
             </select>
             <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Branch authority governing this module.</small>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px;">
+              <label class="ida-label" style="margin: 0;">Target Track / Stage *</label>
+              <span id="trackRuleBadge" style="font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(255,87,87,0.15); color: #ff8585;">Track Rule</span>
+            </div>
+            <select name="target_track" id="examTargetTrackSelect" class="form-tactical" required style="width: 100%; padding: 11px 16px;">
+              <!-- Dynamically populated based on branch -->
+            </select>
+            <small id="trackEligibilityHint" style="color: #94a3b8; font-size: 11.5px; margin-top: 4px; display: block; line-height: 1.4;">
+              Candidate eligibility rules for this stage.
+            </small>
           </div>
 
           <div>
@@ -108,7 +154,7 @@
         {{-- Category (Totally Editable) --}}
         <div>
           <label class="ida-label">Category *</label>
-          <input type="text" name="category" value="{{ old('category', $exam->category) }}" required placeholder="e.g. Verbal IQ, WAT, Psychological, Spatial Matrix" class="form-tactical" style="width: 100%; padding: 11px 16px;">
+          <input type="text" name="category" id="examCategoryInput" value="{{ old('category', $exam->category) }}" required placeholder="e.g. Verbal IQ, WAT, Psychological, Spatial Matrix" class="form-tactical" style="width: 100%; padding: 11px 16px;">
           <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Custom topic or subject category (completely editable free text).</small>
         </div>
       </div>
@@ -1454,8 +1500,93 @@ Ans: A`;
       .replace(/'/g, '&#039;');
   }
 
+  const branchTracks = {
+    army: [
+      { value: 'prelim', label: 'Army Preliminary Examination (Army Exclusive)', hint: '🪖 Exclusive: Only cadets enrolled in Bangladesh Army course can conduct this prelim exam.', badge: 'Army Prelim' },
+      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
+      { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Army candidates.', badge: 'Army General' }
+    ],
+    navy: [
+      { value: 'prelim', label: 'Navy Preliminary Examination (Navy Exclusive)', hint: '⚓ Exclusive: Only cadets enrolled in Bangladesh Navy course can conduct this prelim exam.', badge: 'Navy Prelim' },
+      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
+      { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Navy candidates.', badge: 'Navy General' }
+    ],
+    air_force: [
+      { value: 'prelim', label: 'Air Force Preliminary Examination (Air Force Exclusive)', hint: '✈️ Exclusive: Only cadets enrolled in Bangladesh Air Force course can conduct this prelim exam.', badge: 'Air Force Prelim' },
+      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
+      { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Air Force candidates.', badge: 'Air Force General' }
+    ],
+    police: [
+      { value: 'constable', label: 'Police Constable / Preliminary Recruitment', hint: '👮 Exclusive: Open to cadets enrolled in the Police Constable track.', badge: 'Constable' },
+      { value: 'si', label: 'Police Sub-Inspector (SI) Track', hint: '🔍 Exclusive: Open to cadets enrolled in the Sub-Inspector (SI) track.', badge: 'Sub-Inspector' },
+      { value: 'asi', label: 'Police Assistant Sub-Inspector (ASI) Track', hint: '🛡️ Exclusive: Open to cadets enrolled in the Assistant Sub-Inspector (ASI) track.', badge: 'Assistant SI' },
+      { value: 'general', label: 'General Police Program', hint: 'Open to all enrolled Bangladesh Police candidates.', badge: 'Police General' }
+    ]
+  };
+
+  function selectFullTrackPreset(branch, track, suggestedCategory = '') {
+    const branchEl = document.getElementById('examBranchSelect');
+    if (branchEl) {
+      branchEl.value = branch;
+      updateTargetTracks(track);
+    }
+    const catInput = document.getElementById('examCategoryInput');
+    if (catInput && suggestedCategory) {
+      catInput.value = suggestedCategory;
+    }
+  }
+
+  function updateTargetTracks(preselectedValue = null) {
+    const branchEl = document.getElementById('examBranchSelect');
+    const trackEl = document.getElementById('examTargetTrackSelect');
+    const hintEl = document.getElementById('trackEligibilityHint');
+    const badgeEl = document.getElementById('trackRuleBadge');
+    if (!branchEl || !trackEl) return;
+
+    const branch = branchEl.value;
+    const tracks = branchTracks[branch] || branchTracks.army;
+    const currentVal = preselectedValue || trackEl.value || (branch === 'police' ? 'si' : 'prelim');
+
+    trackEl.innerHTML = tracks.map(t => `
+      <option value="${t.value}" ${t.value === currentVal ? 'selected' : ''}>${t.label}</option>
+    `).join('');
+
+    function updateHint() {
+      const selectedTrack = trackEl.value;
+      const matched = tracks.find(t => t.value === selectedTrack) || tracks[0];
+      if (hintEl) hintEl.textContent = matched.hint;
+      if (badgeEl) {
+        badgeEl.textContent = matched.badge;
+        if (matched.value === 'issb') {
+          badgeEl.style.background = 'rgba(234, 179, 8, 0.2)';
+          badgeEl.style.color = '#facc15';
+        } else if (matched.value === 'prelim') {
+          badgeEl.style.background = 'rgba(59, 130, 246, 0.2)';
+          badgeEl.style.color = '#60a5fa';
+        } else if (['constable', 'si', 'asi'].includes(matched.value)) {
+          badgeEl.style.background = 'rgba(168, 85, 247, 0.2)';
+          badgeEl.style.color = '#c084fc';
+        } else {
+          badgeEl.style.background = 'rgba(255, 87, 87, 0.15)';
+          badgeEl.style.color = '#ff8585';
+        }
+      }
+    }
+
+    trackEl.onchange = updateHint;
+    updateHint();
+  }
+
   // Trigger MathJax typeset on DOMContentLoaded for all existing questions
   document.addEventListener('DOMContentLoaded', function() {
+    const branchEl = document.getElementById('examBranchSelect');
+    if (branchEl) {
+      branchEl.addEventListener('change', function() {
+        updateTargetTracks();
+      });
+      updateTargetTracks("{{ old('target_track', $exam->target_track) }}");
+    }
+
     if (window.typesetMathJax) {
       window.typesetMathJax();
     } else if (window.MathJax && window.MathJax.typesetPromise) {

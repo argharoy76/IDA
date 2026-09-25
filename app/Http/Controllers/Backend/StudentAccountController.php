@@ -46,6 +46,87 @@ class StudentAccountController extends Controller
             }
         }
 
+        // Handle Sub-Program / Track Filter (Preliminary, ISSB, Constable, SI, ASI)
+        $selectedTrack = $request->query('track') ?? $request->query('program');
+        if ($request->filled('track') && $request->track !== 'all') {
+            $trackVal = strtolower(trim($request->track));
+            $query->where(function ($q) use ($trackVal) {
+                if ($trackVal === 'preliminary' || $trackVal === 'prelim' || $trackVal === 'p') {
+                    $q->where(function ($sq) {
+                        $sq->where('target_wing', 'like', '%prelim%')
+                          ->orWhere('target_wing', 'like', '%written%')
+                          ->orWhereHas('courses', function ($cq) {
+                              $cq->where('title', 'like', '%prelim%')
+                                 ->orWhere('title', 'like', '%regular%')
+                                 ->orWhere('title', 'like', '%bma%')
+                                 ->orWhere('title', 'like', '%bna%')
+                                 ->orWhere('title', 'like', '%bafa%');
+                          })
+                          ->orWhereHas('currentCourse', function ($cq) {
+                              $cq->where('title', 'like', '%prelim%')
+                                 ->orWhere('title', 'like', '%regular%')
+                                 ->orWhere('title', 'like', '%bma%')
+                                 ->orWhere('title', 'like', '%bna%')
+                                 ->orWhere('title', 'like', '%bafa%');
+                          });
+                    });
+                } elseif ($trackVal === 'issb' || $trackVal === 'i' || $trackVal === 'iss') {
+                    $q->where(function ($sq) {
+                        $sq->where('target_wing', 'like', '%issb%')
+                          ->orWhereHas('courses', function ($cq) {
+                              $cq->where('title', 'like', '%issb%')
+                                 ->orWhere('category', 'like', '%issb%');
+                          })
+                          ->orWhereHas('currentCourse', function ($cq) {
+                              $cq->where('title', 'like', '%issb%')
+                                 ->orWhere('category', 'like', '%issb%');
+                          });
+                    });
+                } elseif ($trackVal === 'constable' || $trackVal === 'con') {
+                    $q->where(function ($sq) {
+                        $sq->where('target_wing', 'like', '%constable%')
+                          ->orWhere('target_wing', 'like', '%con%')
+                          ->orWhereHas('courses', function ($cq) {
+                              $cq->where('title', 'like', '%constable%')
+                                 ->orWhere('category', 'like', '%constable%');
+                          })
+                          ->orWhereHas('currentCourse', function ($cq) {
+                              $cq->where('title', 'like', '%constable%')
+                                 ->orWhere('category', 'like', '%constable%');
+                          });
+                    });
+                } elseif ($trackVal === 'si' || $trackVal === 'sub-inspector') {
+                    $q->where(function ($sq) {
+                        $sq->where('target_wing', 'like', '%sub-inspector%')
+                          ->orWhere('target_wing', 'like', '%si%')
+                          ->orWhereHas('courses', function ($cq) {
+                              $cq->where('title', 'like', '%sub-inspector%')
+                                 ->orWhere('title', 'like', '% si %')
+                                 ->orWhere('title', 'like', '%si &%');
+                          })
+                          ->orWhereHas('currentCourse', function ($cq) {
+                              $cq->where('title', 'like', '%sub-inspector%')
+                                 ->orWhere('title', 'like', '% si %')
+                                 ->orWhere('title', 'like', '%si &%');
+                          });
+                    });
+                } elseif ($trackVal === 'asi' || $trackVal === 'assistant sub-inspector') {
+                    $q->where(function ($sq) {
+                        $sq->where('target_wing', 'like', '%asi%')
+                          ->orWhere('target_wing', 'like', '%assistant sub-inspector%')
+                          ->orWhereHas('courses', function ($cq) {
+                              $cq->where('title', 'like', '%asi%')
+                                 ->orWhere('title', 'like', '%assistant sub-inspector%');
+                          })
+                          ->orWhereHas('currentCourse', function ($cq) {
+                              $cq->where('title', 'like', '%asi%')
+                                 ->orWhere('title', 'like', '%assistant sub-inspector%');
+                          });
+                    });
+                }
+            });
+        }
+
         // Filter by student type (offline vs online / external)
         if ($request->filled('type')) {
             if ($request->type === 'offline') {
@@ -111,7 +192,82 @@ class StudentAccountController extends Controller
             'unassigned' => Student::doesntHave('courses')->whereNull('current_course_id')->count(),
         ];
 
-        return view('backend.student_accounts.index', compact('students', 'courses', 'stats', 'selectedWing'));
+        // Detailed Sub-Program / Track breakdown for each wing (Handwritten Diagram implementation)
+        $wingTrackStats = [
+            'Army' => [
+                'all' => $stats['army'],
+                'preliminary' => Student::where('target_wing', 'like', '%Army%')
+                    ->where(function ($q) {
+                        $q->where('target_wing', 'like', '%prelim%')
+                          ->orWhere('target_wing', 'like', '%written%')
+                          ->orWhereHas('courses', fn($cq) => $cq->where('title', 'like', '%prelim%')->orWhere('title', 'like', '%bma%')->orWhere('title', 'like', '%regular%'))
+                          ->orWhereHas('currentCourse', fn($cq) => $cq->where('title', 'like', '%prelim%')->orWhere('title', 'like', '%bma%')->orWhere('title', 'like', '%regular%'))
+                          ->orWhere(fn($sq) => $sq->doesntHave('courses')->where('target_wing', 'Army'));
+                    })->count(),
+                'issb' => Student::where('target_wing', 'like', '%Army%')
+                    ->where(function ($q) {
+                        $q->where('target_wing', 'like', '%issb%')
+                          ->orWhereHas('courses', fn($cq) => $cq->where('title', 'like', '%issb%'))
+                          ->orWhereHas('currentCourse', fn($cq) => $cq->where('title', 'like', '%issb%'));
+                    })->count(),
+            ],
+            'Navy' => [
+                'all' => $stats['navy'],
+                'preliminary' => Student::where('target_wing', 'like', '%Navy%')
+                    ->where(function ($q) {
+                        $q->where('target_wing', 'like', '%prelim%')
+                          ->orWhereHas('courses', fn($cq) => $cq->where('title', 'like', '%prelim%')->orWhere('title', 'like', '%bna%')->orWhere('title', 'like', '%cadet prep%'))
+                          ->orWhereHas('currentCourse', fn($cq) => $cq->where('title', 'like', '%prelim%')->orWhere('title', 'like', '%bna%')->orWhere('title', 'like', '%cadet prep%'))
+                          ->orWhere(fn($sq) => $sq->doesntHave('courses'));
+                    })->count(),
+                'issb' => Student::where('target_wing', 'like', '%Navy%')
+                    ->where(function ($q) {
+                        $q->where('target_wing', 'like', '%issb%')
+                          ->orWhereHas('courses', fn($cq) => $cq->where('title', 'like', '%issb%'))
+                          ->orWhereHas('currentCourse', fn($cq) => $cq->where('title', 'like', '%issb%'));
+                    })->count(),
+            ],
+            'Air Force' => [
+                'all' => $stats['airforce'],
+                'preliminary' => Student::where(fn($q) => $q->where('target_wing', 'like', '%Air%')->orWhere('target_wing', 'like', '%BAFA%'))
+                    ->where(function ($q) {
+                        $q->where('target_wing', 'like', '%prelim%')
+                          ->orWhereHas('courses', fn($cq) => $cq->where('title', 'like', '%prelim%')->orWhere('title', 'like', '%bafa%')->orWhere('title', 'like', '%flight cadet%'))
+                          ->orWhereHas('currentCourse', fn($cq) => $cq->where('title', 'like', '%prelim%')->orWhere('title', 'like', '%bafa%')->orWhere('title', 'like', '%flight cadet%'))
+                          ->orWhere(fn($sq) => $sq->doesntHave('courses'));
+                    })->count(),
+                'issb' => Student::where(fn($q) => $q->where('target_wing', 'like', '%Air%')->orWhere('target_wing', 'like', '%BAFA%'))
+                    ->where(function ($q) {
+                        $q->where('target_wing', 'like', '%issb%')
+                          ->orWhereHas('courses', fn($cq) => $cq->where('title', 'like', '%issb%'))
+                          ->orWhereHas('currentCourse', fn($cq) => $cq->where('title', 'like', '%issb%'));
+                    })->count(),
+            ],
+            'Police' => [
+                'all' => $stats['police'],
+                'constable' => Student::where('target_wing', 'like', '%Police%')
+                    ->where(function ($q) {
+                        $q->where('target_wing', 'like', '%constable%')->orWhere('target_wing', 'like', '%con%')
+                          ->orWhereHas('courses', fn($cq) => $cq->where('title', 'like', '%constable%'))
+                          ->orWhereHas('currentCourse', fn($cq) => $cq->where('title', 'like', '%constable%'));
+                    })->count(),
+                'si' => Student::where('target_wing', 'like', '%Police%')
+                    ->where(function ($q) {
+                        $q->where('target_wing', 'like', '%sub-inspector%')->orWhere('target_wing', 'like', '%si%')
+                          ->orWhereHas('courses', fn($cq) => $cq->where('title', 'like', '%sub-inspector%')->orWhere('title', 'like', '% si %')->orWhere('title', 'like', '%police si%'))
+                          ->orWhereHas('currentCourse', fn($cq) => $cq->where('title', 'like', '%sub-inspector%')->orWhere('title', 'like', '% si %')->orWhere('title', 'like', '%police si%'))
+                          ->orWhere(fn($sq) => $sq->doesntHave('courses'));
+                    })->count(),
+                'asi' => Student::where('target_wing', 'like', '%Police%')
+                    ->where(function ($q) {
+                        $q->where('target_wing', 'like', '%asi%')->orWhere('target_wing', 'like', '%assistant sub-inspector%')
+                          ->orWhereHas('courses', fn($cq) => $cq->where('title', 'like', '%asi%')->orWhere('title', 'like', '%assistant sub-inspector%'))
+                          ->orWhereHas('currentCourse', fn($cq) => $cq->where('title', 'like', '%asi%')->orWhere('title', 'like', '%assistant sub-inspector%'));
+                    })->count(),
+            ],
+        ];
+
+        return view('backend.student_accounts.index', compact('students', 'courses', 'stats', 'selectedWing', 'selectedTrack', 'wingTrackStats'));
     }
 
     /**
@@ -156,7 +312,31 @@ class StudentAccountController extends Controller
         $totalDue = (float) $student->invoices()->sum('due_amount');
         $totalBilled = (float) $student->invoices()->sum('net_amount');
 
-        return view('backend.student_accounts.edit', compact('student', 'courses', 'invoices', 'payments', 'totalPaid', 'totalDue', 'totalBilled'));
+        // Determine current wing and current tracks
+        $tw = strtolower($student->target_wing ?? '');
+        if (str_contains($tw, 'navy')) {
+            $currentWing = 'Navy';
+        } elseif (str_contains($tw, 'air')) {
+            $currentWing = 'Air Force';
+        } elseif (str_contains($tw, 'police')) {
+            $currentWing = 'Police';
+        } elseif (str_contains($tw, 'general')) {
+            $currentWing = 'General';
+        } elseif (str_contains($tw, 'army')) {
+            $currentWing = 'Army';
+        } else {
+            $branches = $student->getEnrolledBranches();
+            if (in_array('navy', $branches)) $currentWing = 'Navy';
+            elseif (in_array('air_force', $branches)) $currentWing = 'Air Force';
+            elseif (in_array('police', $branches)) $currentWing = 'Police';
+            else $currentWing = 'Army';
+        }
+
+        $currentTracks = $student->getTargetTracks();
+
+        return view('backend.student_accounts.edit', compact(
+            'student', 'courses', 'invoices', 'payments', 'totalPaid', 'totalDue', 'totalBilled', 'currentWing', 'currentTracks'
+        ));
     }
 
     /**
@@ -177,6 +357,9 @@ class StudentAccountController extends Controller
             'address' => 'required|string|max:500',
             'student_type' => 'required|in:offline,online,academic,external',
             'target_wing' => 'nullable|string|max:100',
+            'branch_wing' => 'nullable|string|max:100',
+            'category_tracks' => 'nullable|array',
+            'category_tracks.*' => 'string|max:50',
             'institution' => 'nullable|string|max:255',
             'hsc_year' => 'nullable|string|max:20',
             'district' => 'nullable|string|max:100',
@@ -225,18 +408,88 @@ class StudentAccountController extends Controller
         }
         $user->update($userUpdates);
 
+        // Derive base wing and composed target_wing with category tracks
+        $branchWing = $request->input('branch_wing') ?: $request->input('target_wing') ?: ($student->target_wing ?: 'Army');
+        $bwLower = strtolower($branchWing);
+        if (str_contains($bwLower, 'navy')) {
+            $baseWing = 'Navy';
+        } elseif (str_contains($bwLower, 'air')) {
+            $baseWing = 'Air Force';
+        } elseif (str_contains($bwLower, 'police')) {
+            $baseWing = 'Police';
+        } elseif (str_contains($bwLower, 'general')) {
+            $baseWing = 'General';
+        } else {
+            $baseWing = 'Army';
+        }
+
+        $rawTracks = $request->input('category_tracks', []);
+        if (!is_array($rawTracks)) {
+            $rawTracks = !empty($rawTracks) ? explode(',', $rawTracks) : [];
+        }
+        $tracks = array_values(array_unique(array_filter(array_map('strtolower', array_map('trim', $rawTracks)))));
+
+        if ($baseWing === 'Police') {
+            $validPolice = array_intersect(['constable', 'si', 'asi'], $tracks);
+            if (count($validPolice) === 3) {
+                $targetWing = 'Police - Constable, SI & ASI';
+            } elseif (in_array('si', $validPolice) && in_array('asi', $validPolice)) {
+                $targetWing = 'Police - SI & ASI';
+            } elseif (in_array('constable', $validPolice) && in_array('si', $validPolice)) {
+                $targetWing = 'Police - Constable & SI';
+            } elseif (in_array('constable', $validPolice) && in_array('asi', $validPolice)) {
+                $targetWing = 'Police - Constable & ASI';
+            } elseif (in_array('si', $validPolice)) {
+                $targetWing = 'Police - Sub-Inspector (SI)';
+            } elseif (in_array('asi', $validPolice)) {
+                $targetWing = 'Police - Assistant Sub-Inspector (ASI)';
+            } elseif (in_array('constable', $validPolice)) {
+                $targetWing = 'Police - Constable';
+            } else {
+                $targetWing = 'Police';
+            }
+        } elseif (in_array($baseWing, ['Army', 'Navy', 'Air Force', 'General'], true)) {
+            $hasPrelim = in_array('prelim', $tracks, true);
+            $hasIssb = in_array('issb', $tracks, true);
+
+            if ($hasPrelim && $hasIssb) {
+                $targetWing = "{$baseWing} - Prelim & ISSB";
+            } elseif ($hasPrelim) {
+                $targetWing = "{$baseWing} - Preliminary";
+            } elseif ($hasIssb) {
+                $targetWing = "{$baseWing} - ISSB";
+            } else {
+                $targetWing = $baseWing;
+            }
+        } else {
+            $targetWing = $baseWing;
+        }
+
         // Update Student
-        $student->update([
+        $studentData = [
             'student_id_code' => $newId,
             'age' => $validated['age'] ?? null,
             'gender' => $validated['gender'],
             'address' => $validated['address'],
             'student_type' => $validated['student_type'],
-            'target_wing' => $validated['target_wing'] ?? $student->target_wing,
+            'target_wing' => $targetWing,
             'institution' => $validated['institution'] ?? $student->institution,
             'hsc_year' => $validated['hsc_year'] ?? $student->hsc_year,
             'district' => $validated['district'] ?? $student->district,
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('students', 'target_tracks')) {
+            $studentData['target_tracks'] = $tracks;
+        } else {
+            try {
+                \Illuminate\Support\Facades\Schema::table('students', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('target_tracks', 150)->nullable()->after('target_wing');
+                });
+                $studentData['target_tracks'] = $tracks;
+            } catch (\Throwable $e) {}
+        }
+
+        $student->update($studentData);
 
         // Sync Courses & Payment Status
         $courseIds = $validated['course_ids'] ?? [];
@@ -328,6 +581,11 @@ class StudentAccountController extends Controller
      */
     public function storeOffline(Request $request)
     {
+        // Normalize single course_id to course_ids array
+        if ($request->filled('course_id') && !$request->has('course_ids')) {
+            $request->merge(['course_ids' => [(int)$request->input('course_id')]]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'custom_id' => 'nullable|string|max:60|unique:users,account_id|unique:students,student_id_code',
@@ -337,9 +595,11 @@ class StudentAccountController extends Controller
             'gender' => 'required|in:male,female,other',
             'address' => 'required|string|max:500',
             'password' => 'nullable|string|min:6',
+            'course_id' => 'nullable|exists:courses,id',
             'course_ids' => 'nullable|array',
             'course_ids.*' => 'exists:courses,id',
             'target_wing' => 'nullable|string|max:100',
+            'target_program' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -369,9 +629,15 @@ class StudentAccountController extends Controller
             'status' => 'active',
         ]);
 
-        // 2. Create Student Profile
+        // 2. Create Cadet Profile
         $assignedCourseIds = $validated['course_ids'] ?? [];
         $firstCourseId = count($assignedCourseIds) > 0 ? $assignedCourseIds[0] : null;
+
+        // Combine target_wing and program track if provided
+        $targetWing = $validated['target_wing'] ?? 'Army';
+        if (!empty($request->target_program)) {
+            $targetWing = trim($targetWing) . ' - ' . trim($request->target_program);
+        }
 
         $student = Student::create([
             'user_id' => $user->id,
@@ -381,13 +647,13 @@ class StudentAccountController extends Controller
             'gender' => $validated['gender'],
             'age' => $validated['age'] ?? null,
             'address' => $validated['address'],
-            'target_wing' => $validated['target_wing'] ?? 'Army',
+            'target_wing' => $targetWing,
             'current_course_id' => $firstCourseId,
             'admission_date' => Carbon::today(),
             'status' => 'active',
         ]);
 
-        // 3. Assign Courses if student paid for any initially
+        // 3. Assign Courses if cadet paid for any initially
         if (!empty($assignedCourseIds)) {
             $syncData = [];
             foreach ($assignedCourseIds as $cid) {
@@ -414,7 +680,7 @@ class StudentAccountController extends Controller
             : 'No initial course assigned (free/unassigned profile).';
 
         return redirect()->route('admin.student_accounts.index')->with('success', 
-            "Offline Student Account created! Assigned Login ID: {$studentIdCode}. Password: {$plainPassword}. {$courseMsg}");
+            "Offline Cadet Account created! Assigned Login ID: {$studentIdCode}. Password: {$plainPassword}. {$courseMsg}");
     }
 
     /**

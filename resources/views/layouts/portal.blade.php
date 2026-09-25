@@ -1031,7 +1031,7 @@
             @endif
           </div>
           <a href="{{ route('admin.student_accounts.index') }}" class="sidebar-item {{ request()->routeIs('admin.student_accounts*') ? 'active' : '' }}">
-            <i class="fa-solid fa-users-gear"></i> <span>Student Management</span>
+            <i class="fa-solid fa-users-gear"></i> <span>Cadet Management</span>
           </a>
           <a href="{{ route('admin.exam_management.index') }}" class="sidebar-item {{ request()->routeIs('admin.exam_management*') ? 'active' : '' }}">
             <i class="fa-solid fa-file-signature"></i> <span>Exam Management</span>

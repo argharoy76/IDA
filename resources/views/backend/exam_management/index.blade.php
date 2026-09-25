@@ -25,6 +25,12 @@
       <p style="font-size: 12.5px; color: #94a3b8; margin: 0;">Comprehensive access control, exam creation, condition statuses, and question palette management</p>
     </div>
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <form method="POST" action="{{ route('admin.system.sync_database_tracks') }}" style="display: inline;" onsubmit="return confirm('Safely synchronize database tracks and missing columns on live server? No existing data will be modified.');">
+        @csrf
+        <button type="submit" class="btn-tactical" style="background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3); padding: 8px 14px; font-size: 12.5px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="Safely add missing schema columns and backfill tracks on Hostinger production without data loss">
+          <i class="fa-solid fa-database"></i> Sync DB Tracks
+        </button>
+      </form>
       <button type="button" onclick="openModal('selectExamModal')" class="btn-tactical" style="background: rgba(255,87,87,0.12); color: #ff5757; border: 1px solid rgba(255,87,87,0.3); padding: 8px 16px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
         <i class="fa-solid fa-pen-to-square"></i> Edit an Exam
       </button>
@@ -198,6 +204,50 @@
         </div>
 
       </div>
+
+      {{-- Track Filter Strip --}}
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-right: 4px;">
+            <i class="fa-solid fa-crosshairs" style="color: #ff5757;"></i> Track Stage:
+          </span>
+          <a href="{{ route('admin.exam_management.index', array_filter(['type' => $type, 'branch' => $selectedBranch, 'search' => $search])) }}" 
+             class="btn-tactical" 
+             style="height: 28px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; {{ empty($selectedTrack) ? 'background: #ff5757; color: #fff; border: 1px solid #ff5757;' : 'background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);' }}">
+            All Tracks
+          </a>
+          <a href="{{ route('admin.exam_management.index', array_filter(['type' => $type, 'branch' => $selectedBranch, 'track' => 'prelim', 'search' => $search])) }}" 
+             class="btn-tactical" 
+             style="height: 28px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; {{ $selectedTrack === 'prelim' ? 'background: #3b82f6; color: #fff; border: 1px solid #3b82f6;' : 'background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25);' }}">
+            <i class="fa-solid fa-shield"></i> Preliminary ({{ $stats['prelim'] }})
+          </a>
+          <a href="{{ route('admin.exam_management.index', array_filter(['type' => $type, 'branch' => $selectedBranch, 'track' => 'issb', 'search' => $search])) }}" 
+             class="btn-tactical" 
+             style="height: 28px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; {{ $selectedTrack === 'issb' ? 'background: #eab308; color: #000; border: 1px solid #eab308;' : 'background: rgba(234,179,8,0.1); color: #facc15; border: 1px solid rgba(234,179,8,0.25);' }}">
+            <i class="fa-solid fa-star"></i> ISSB Masterclass ({{ $stats['issb'] }})
+          </a>
+          <a href="{{ route('admin.exam_management.index', array_filter(['type' => $type, 'branch' => $selectedBranch, 'track' => 'constable', 'search' => $search])) }}" 
+             class="btn-tactical" 
+             style="height: 28px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; {{ $selectedTrack === 'constable' ? 'background: #a855f7; color: #fff; border: 1px solid #a855f7;' : 'background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.25);' }}">
+            <i class="fa-solid fa-user-shield"></i> Constable ({{ $stats['constable'] }})
+          </a>
+          <a href="{{ route('admin.exam_management.index', array_filter(['type' => $type, 'branch' => $selectedBranch, 'track' => 'si', 'search' => $search])) }}" 
+             class="btn-tactical" 
+             style="height: 28px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; {{ $selectedTrack === 'si' ? 'background: #a855f7; color: #fff; border: 1px solid #a855f7;' : 'background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.25);' }}">
+            <i class="fa-solid fa-shield"></i> SI ({{ $stats['si'] }})
+          </a>
+          <a href="{{ route('admin.exam_management.index', array_filter(['type' => $type, 'branch' => $selectedBranch, 'track' => 'asi', 'search' => $search])) }}" 
+             class="btn-tactical" 
+             style="height: 28px; padding: 0 10px; font-size: 11px; font-weight: 700; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; {{ $selectedTrack === 'asi' ? 'background: #a855f7; color: #fff; border: 1px solid #a855f7;' : 'background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.25);' }}">
+            <i class="fa-solid fa-id-badge"></i> ASI ({{ $stats['asi'] }})
+          </a>
+        </div>
+        @if(!empty($selectedTrack))
+          <a href="{{ route('admin.exam_management.index', array_filter(['type' => $type, 'branch' => $selectedBranch, 'search' => $search])) }}" style="font-size: 11px; color: #f87171; text-decoration: underline;">
+            Clear Track Filter
+          </a>
+        @endif
+      </div>
     </div>
 
     {{-- Exam Cards Grid (Matching Online Exam Page Layout + Rich Admin Controls) --}}
@@ -250,8 +300,21 @@
             <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 0 0 6px 0; font-family: 'Poppins', sans-serif; line-height: 1.35;">
               {{ $exam->title }}
             </h3>
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
               <span class="badge badge-navy" style="font-size: 10px;">{{ $exam->category }}</span>
+              @if($exam->isIssb())
+                <span style="background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.35); font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="fa-solid fa-star"></i> ISSB Masterclass (Tri-Services)
+                </span>
+              @elseif($exam->isPrelim())
+                <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.35); font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="fa-solid fa-shield"></i> {{ $exam->branchLabel() }} Prelim
+                </span>
+              @elseif($exam->isPolice())
+                <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="fa-solid fa-handcuffs"></i> {{ $exam->trackLabel() }}
+                </span>
+              @endif
               <span style="font-size: 11px; color: #64748b;">• {{ strtoupper(str_replace('_', ' ', $exam->exam_type)) }}</span>
             </div>
 
@@ -279,11 +342,24 @@
             </div>
 
             {{-- Portal Routing Notice --}}
-            <div style="padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); font-size: 11px; color: #94a3b8; margin-bottom: 16px;">
+            <div style="padding: 7px 10px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); font-size: 11px; color: #94a3b8; margin-bottom: 16px; line-height: 1.4;">
               @if($isPaid)
-                <i class="fa-solid fa-user-graduate" style="color: #60a5fa;"></i> Target: <strong style="color: #60a5fa;">Cadet Portal Only</strong>
+                <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;">
+                  <i class="fa-solid fa-user-graduate" style="color: #60a5fa;"></i> Target: <strong style="color: #60a5fa;">Cadet Portal Only</strong>
+                </div>
+                <div style="font-size: 10.5px; color: #cbd5e1;">
+                  @if($exam->isIssb())
+                    <span style="color: #facc15;"><i class="fa-solid fa-unlock-keyhole"></i> Universal Tri-Services Clearance:</span> Enrolling in Army, Navy or Air Force unlocks this exam.
+                  @elseif($exam->isPrelim())
+                    <span style="color: #60a5fa;"><i class="fa-solid fa-lock"></i> Branch Exclusive:</span> Requires enrollment in {{ $exam->branchLabel() }}.
+                  @elseif($exam->isPolice())
+                    <span style="color: #c084fc;"><i class="fa-solid fa-id-card"></i> Police Track:</span> Restricted to {{ $exam->trackLabel() }} cadets.
+                  @else
+                    <span style="color: #94a3b8;"><i class="fa-solid fa-circle-info"></i> Program Track:</span> {{ $exam->trackLabel() }}.
+                  @endif
+                </div>
               @else
-                <i class="fa-solid fa-globe" style="color: #34d399;"></i> Target: <strong style="color: #34d399;">Frontend Online Tests</strong> (Free Access)
+                <i class="fa-solid fa-globe" style="color: #34d399;"></i> Target: <strong style="color: #34d399;">Frontend Online Tests</strong> (Free Access to all candidates)
               @endif
             </div>
           </div>

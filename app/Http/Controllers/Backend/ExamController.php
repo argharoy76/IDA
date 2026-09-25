@@ -244,6 +244,7 @@ class ExamController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|string',
+            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
             'exam_type' => 'required|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'duration_minutes' => 'required|integer|min:1|max:720',
             'question_count' => 'required|integer|min:1',
@@ -287,11 +288,32 @@ class ExamController extends Controller
             ? Carbon::parse($validated['schedule_end']) 
             : ($scheduleStart ? $scheduleStart->copy()->addMinutes($validated['duration_minutes'] + 60) : null);
 
+        $targetTrack = $request->input('target_track');
+        if (empty($targetTrack)) {
+            $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
+            if (in_array($branch, ['army', 'navy', 'air_force'], true)) {
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : 'prelim';
+            } elseif ($branch === 'police') {
+                if (str_contains($catLower, 'constable')) {
+                    $targetTrack = 'constable';
+                } elseif (str_contains($catLower, 'asi') || str_contains($catLower, 'assistant')) {
+                    $targetTrack = 'asi';
+                } elseif (str_contains($catLower, 'si') || str_contains($catLower, 'sub-inspector')) {
+                    $targetTrack = 'si';
+                } else {
+                    $targetTrack = 'si';
+                }
+            } else {
+                $targetTrack = 'general';
+            }
+        }
+
         $exam = Exam::create([
             'title' => $validated['title'],
             'slug' => $slug,
             'branch' => $branch,
             'category' => $validated['category'],
+            'target_track' => $targetTrack,
             'exam_type' => $validated['exam_type'],
             'duration_minutes' => $validated['duration_minutes'],
             'total_marks' => $totalMarks,
@@ -479,6 +501,7 @@ class ExamController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|string',
+            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
             'exam_type' => 'required|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'duration_minutes' => 'required|integer|min:5|max:360',
             'question_count' => 'required|integer|min:1',
@@ -528,11 +551,32 @@ class ExamController extends Controller
         $scheduleStart = !empty($validated['schedule_start']) ? Carbon::parse($validated['schedule_start']) : null;
         $scheduleEnd = $scheduleStart ? $scheduleStart->copy()->addMinutes($validated['duration_minutes'] + 60) : null;
 
+        $targetTrack = $request->input('target_track');
+        if (empty($targetTrack)) {
+            $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
+            if (in_array($branch, ['army', 'navy', 'air_force'], true)) {
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : 'prelim';
+            } elseif ($branch === 'police') {
+                if (str_contains($catLower, 'constable')) {
+                    $targetTrack = 'constable';
+                } elseif (str_contains($catLower, 'asi') || str_contains($catLower, 'assistant')) {
+                    $targetTrack = 'asi';
+                } elseif (str_contains($catLower, 'si') || str_contains($catLower, 'sub-inspector')) {
+                    $targetTrack = 'si';
+                } else {
+                    $targetTrack = 'si';
+                }
+            } else {
+                $targetTrack = 'general';
+            }
+        }
+
         $exam = Exam::create([
             'title' => $validated['title'],
             'slug' => $slug,
             'branch' => $branch,
             'category' => $validated['category'],
+            'target_track' => $targetTrack,
             'exam_type' => $validated['exam_type'],
             'duration_minutes' => $validated['duration_minutes'],
             'total_marks' => $totalMarks,
@@ -794,6 +838,7 @@ class ExamController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'branch' => 'nullable|in:army,navy,air_force,police',
+            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
             'exam_type' => 'required|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'category' => 'required|string',
             'duration_minutes' => 'required|integer|min:1',
@@ -813,8 +858,30 @@ class ExamController extends Controller
             $slug = "{$slug}-" . ($count + 1);
         }
 
+        $targetTrack = $request->input('target_track');
+        if (empty($targetTrack)) {
+            $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
+            $branch = $validated['branch'] ?? 'army';
+            if (in_array($branch, ['army', 'navy', 'air_force'], true)) {
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : 'prelim';
+            } elseif ($branch === 'police') {
+                if (str_contains($catLower, 'constable')) {
+                    $targetTrack = 'constable';
+                } elseif (str_contains($catLower, 'asi') || str_contains($catLower, 'assistant')) {
+                    $targetTrack = 'asi';
+                } elseif (str_contains($catLower, 'si') || str_contains($catLower, 'sub-inspector')) {
+                    $targetTrack = 'si';
+                } else {
+                    $targetTrack = 'si';
+                }
+            } else {
+                $targetTrack = 'general';
+            }
+        }
+
         Exam::create(array_merge($validated, [
             'slug' => $slug,
+            'target_track' => $targetTrack,
             'is_paid_for_external' => ($validated['fee'] ?? 0) > 0,
             'is_public_for_external' => $request->has('is_public_for_external'),
             'schedule_start' => $validated['schedule_start'] ? Carbon::parse($validated['schedule_start']) : null,
@@ -848,6 +915,7 @@ class ExamController extends Controller
             'title' => 'required|string|max:255',
             'branch' => 'nullable|in:army,navy,air_force,police',
             'category' => 'required|string',
+            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
             'exam_type' => 'nullable|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'duration_minutes' => 'required|integer|min:1',
             'total_marks' => 'required|numeric|min:1',
@@ -894,7 +962,28 @@ class ExamController extends Controller
             $fee = isset($validated['fee']) ? (float)$validated['fee'] : (float)($exam->fee ?? 0);
         }
 
-        $exam->update(array_merge($validated, [
+        $targetTrack = $request->input('target_track');
+        if (empty($targetTrack)) {
+            $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
+            $branch = $validated['branch'] ?? $exam->branch;
+            if (in_array($branch, ['army', 'navy', 'air_force'], true)) {
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : ($exam->target_track ?: 'prelim');
+            } elseif ($branch === 'police') {
+                if (str_contains($catLower, 'constable')) {
+                    $targetTrack = 'constable';
+                } elseif (str_contains($catLower, 'asi') || str_contains($catLower, 'assistant')) {
+                    $targetTrack = 'asi';
+                } elseif (str_contains($catLower, 'si') || str_contains($catLower, 'sub-inspector')) {
+                    $targetTrack = 'si';
+                } else {
+                    $targetTrack = $exam->target_track ?: 'si';
+                }
+            } else {
+                $targetTrack = $exam->target_track ?: 'general';
+            }
+        }
+
+        $updateData = array_merge($validated, [
             'status' => $status,
             'fee' => $fee,
             'access_type' => $accessType,
@@ -903,7 +992,20 @@ class ExamController extends Controller
             'is_public_for_external' => $request->has('is_public_for_external') ? (bool) $request->input('is_public_for_external') : $exam->is_public_for_external,
             'schedule_start' => !empty($validated['schedule_start']) ? Carbon::parse($validated['schedule_start']) : null,
             'schedule_end' => !empty($validated['schedule_end']) ? Carbon::parse($validated['schedule_end']) : null,
-        ]));
+        ]);
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('exams', 'target_track')) {
+            $updateData['target_track'] = $targetTrack;
+        } else {
+            try {
+                \Illuminate\Support\Facades\Schema::table('exams', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('target_track', 50)->nullable()->index()->after('branch');
+                });
+                $updateData['target_track'] = $targetTrack;
+            } catch (\Throwable $e) {}
+        }
+
+        $exam->update($updateData);
 
         // Append newly added questions if provided via PDF, JSON, or text
         if ($request->filled('questions_json')) {
