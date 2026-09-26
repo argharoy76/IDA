@@ -28,11 +28,9 @@ class AuthController extends Controller
             if (Auth::user()->isExternalStudent()) {
                 return redirect()->route('online_tests');
             }
-            // If an administrative officer/staff navigates to Cadet Login,
-            // reset session so they can authenticate as cadet without being bounced to admin backend
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            // For administrative officers/staff navigating to Cadet Login,
+            // allow viewing the cadet login page without destructively
+            // invalidating the session and CSRF tokens across the browser.
         }
         return view('auth.login');
     }

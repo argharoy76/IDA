@@ -261,14 +261,6 @@ class Student extends Model
         // User rule: "if a student buys any of these three courses like army, navy, and air force,
         // he will be able to conduct any exam that is set for ISSB."
         if ($this->hasMilitaryCourse()) {
-            // Only restrict if an admin explicitly selected ONLY Prelim in the student's target_tracks
-            if (!empty($explicitTracks) && in_array('prelim', $explicitTracks, true) && !in_array('issb', $explicitTracks, true)) {
-                return false;
-            }
-            $wing = strtolower($this->target_wing ?? '');
-            if (str_contains($wing, 'prelim only') || str_contains($wing, 'preliminary only')) {
-                return false;
-            }
             return true;
         }
 

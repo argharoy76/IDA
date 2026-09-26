@@ -15,17 +15,18 @@ require __DIR__.'/../vendor/autoload.php';
 // Normalize localhost / XAMPP subfolder environment
 if (isset($_SERVER['HTTP_HOST']) && (str_contains($_SERVER['HTTP_HOST'], 'localhost') || str_contains($_SERVER['HTTP_HOST'], '127.0.0.1'))) {
     // Normalize case of base directory in REQUEST_URI for Windows/XAMPP
-    if (isset($_SERVER['REQUEST_URI']) && preg_match('#^/ida(/.*)?$#i', $_SERVER['REQUEST_URI'], $matches)) {
-        $_SERVER['REQUEST_URI'] = '/ida' . ($matches[1] ?? '');
+    if (isset($_SERVER['REQUEST_URI']) && preg_match('#^/(ida|imperialdefence)(/.*)?$#i', $_SERVER['REQUEST_URI'], $matches)) {
+        $sub = strtolower($matches[1]);
+        $_SERVER['REQUEST_URI'] = '/' . $sub . ($matches[2] ?? '');
     }
 
-    // Ensure bare /ida without trailing slash matches home route
-    if (isset($_SERVER['REQUEST_URI']) && $_SERVER['REQUEST_URI'] === '/ida') {
-        $_SERVER['REQUEST_URI'] = '/ida/';
+    // Ensure bare subfolder without trailing slash matches home route
+    if (isset($_SERVER['REQUEST_URI']) && in_array(strtolower($_SERVER['REQUEST_URI']), ['/ida', '/imperialdefence'], true)) {
+        $_SERVER['REQUEST_URI'] = strtolower($_SERVER['REQUEST_URI']) . '/';
     }
 
     // If request was rewritten to public/index.php without public/ in REQUEST_URI,
-    // normalize SCRIPT_NAME and PHP_SELF so Symfony accurately detects the /ida subfolder base URL
+    // normalize SCRIPT_NAME and PHP_SELF so Symfony accurately detects the subfolder base URL
     if (isset($_SERVER['SCRIPT_NAME']) && str_contains($_SERVER['SCRIPT_NAME'], '/public/index.php') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/public/')) {
         $_SERVER['SCRIPT_NAME'] = str_replace('/public/index.php', '/index.php', $_SERVER['SCRIPT_NAME']);
         if (isset($_SERVER['PHP_SELF'])) {

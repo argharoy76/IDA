@@ -29,5 +29,15 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->respond(function ($response, $e, $request) {
+            if ($response->getStatusCode() === 419) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'CSRF token mismatch. Please refresh and try again.'], 419);
+                }
+                return redirect()->route('login')
+                    ->withInput($request->except('password', 'password_confirmation', '_token'))
+                    ->with('error', 'Your session or security token expired. A fresh session has been loaded, please sign in.');
+            }
+            return $response;
+        });
     })->create();
