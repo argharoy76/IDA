@@ -59,6 +59,23 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
+        // Safe Auto-Healing for Hostinger Production Database (Zero Data Loss)
+        // Automatically adds target_track and target_tracks columns if missing on production deployment
+        try {
+            if (Schema::hasTable('exams') && !Schema::hasColumn('exams', 'target_track')) {
+                Schema::table('exams', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('target_track', 50)->nullable()->index()->after('branch');
+                });
+            }
+            if (Schema::hasTable('students') && !Schema::hasColumn('students', 'target_tracks')) {
+                Schema::table('students', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('target_tracks', 150)->nullable()->after('target_wing');
+                });
+            }
+        } catch (\Throwable $e) {
+            // Silently pass if DDL permissions restricted or table locked
+        }
+
         // Share CMS settings across all views
         View::composer('*', function ($view) {
             try {

@@ -42,12 +42,22 @@ class ExamManagementController extends Controller
             'navy' => Exam::where('branch', 'navy')->where('status', '!=', 'archived')->count(),
             'air_force' => Exam::where('branch', 'air_force')->where('status', '!=', 'archived')->count(),
             'police' => Exam::where('branch', 'police')->where('status', '!=', 'archived')->count(),
-            'prelim' => Exam::where('target_track', 'prelim')->where('status', '!=', 'archived')->count(),
-            'issb' => Exam::where('target_track', 'issb')->where('status', '!=', 'archived')->count(),
-            'constable' => Exam::where('target_track', 'constable')->where('status', '!=', 'archived')->count(),
-            'si' => Exam::where('target_track', 'si')->where('status', '!=', 'archived')->count(),
-            'asi' => Exam::where('target_track', 'asi')->where('status', '!=', 'archived')->count(),
         ];
+
+        $hasTargetTrack = \Illuminate\Support\Facades\Schema::hasColumn('exams', 'target_track');
+        if ($hasTargetTrack) {
+            $stats['prelim'] = Exam::where('target_track', 'prelim')->where('status', '!=', 'archived')->count();
+            $stats['issb'] = Exam::where('target_track', 'issb')->where('status', '!=', 'archived')->count();
+            $stats['constable'] = Exam::where('target_track', 'constable')->where('status', '!=', 'archived')->count();
+            $stats['si'] = Exam::where('target_track', 'si')->where('status', '!=', 'archived')->count();
+            $stats['asi'] = Exam::where('target_track', 'asi')->where('status', '!=', 'archived')->count();
+        } else {
+            $stats['prelim'] = Exam::where(function($q){ $q->where('category', 'like', '%prelim%')->orWhere('title', 'like', '%prelim%'); })->where('status', '!=', 'archived')->count();
+            $stats['issb'] = Exam::where(function($q){ $q->where('category', 'like', '%issb%')->orWhere('title', 'like', '%issb%'); })->where('status', '!=', 'archived')->count();
+            $stats['constable'] = Exam::where(function($q){ $q->where('category', 'like', '%constable%')->orWhere('title', 'like', '%constable%'); })->where('status', '!=', 'archived')->count();
+            $stats['si'] = Exam::where(function($q){ $q->where('category', 'like', '%si%')->orWhere('title', 'like', '%si%'); })->where('status', '!=', 'archived')->count();
+            $stats['asi'] = Exam::where(function($q){ $q->where('category', 'like', '%asi%')->orWhere('title', 'like', '%asi%'); })->where('status', '!=', 'archived')->count();
+        }
 
         $exams = collect();
 
@@ -66,7 +76,14 @@ class ExamManagementController extends Controller
             }
 
             if ($selectedTrack && in_array($selectedTrack, ['prelim', 'issb', 'constable', 'si', 'asi', 'general'])) {
-                $query->where('target_track', $selectedTrack);
+                if ($hasTargetTrack) {
+                    $query->where('target_track', $selectedTrack);
+                } else {
+                    $query->where(function ($q) use ($selectedTrack) {
+                        $q->where('category', 'like', "%{$selectedTrack}%")
+                          ->orWhere('title', 'like', "%{$selectedTrack}%");
+                    });
+                }
             }
 
             if (!empty($search)) {
@@ -80,9 +97,13 @@ class ExamManagementController extends Controller
             $exams = $query->orderBy('id', 'desc')->get();
         }
 
+        $selectCols = ['id', 'title', 'branch', 'category', 'access_type', 'is_paid_for_external'];
+        if ($hasTargetTrack) {
+            $selectCols[] = 'target_track';
+        }
         $allExams = Exam::where('status', '!=', 'archived')
             ->orderBy('title')
-            ->get(['id', 'title', 'branch', 'category', 'target_track', 'access_type', 'is_paid_for_external']);
+            ->get($selectCols);
 
         return view('backend.exam_management.index', compact(
             'isLanding',

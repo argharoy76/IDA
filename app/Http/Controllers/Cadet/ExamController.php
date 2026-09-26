@@ -81,9 +81,17 @@ class ExamController extends Controller
 
                     // If student has ANY military course (Army, Navy, or Air Force), include all ISSB exams!
                     if ($student && $student->hasMilitaryCourse()) {
-                        $q->orWhere('target_track', 'issb')
-                          ->orWhere('category', 'like', '%issb%')
-                          ->orWhere('title', 'like', '%issb%');
+                        $hasTargetTrack = \Illuminate\Support\Facades\Schema::hasColumn('exams', 'target_track');
+                        $q->orWhere(function ($issbQ) use ($hasTargetTrack) {
+                            if ($hasTargetTrack) {
+                                $issbQ->where('target_track', 'issb')
+                                      ->orWhere('category', 'like', '%issb%')
+                                      ->orWhere('title', 'like', '%issb%');
+                            } else {
+                                $issbQ->where('category', 'like', '%issb%')
+                                      ->orWhere('title', 'like', '%issb%');
+                            }
+                        });
                     }
                 });
             }
