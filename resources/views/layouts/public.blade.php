@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-  <meta name="theme-color" content="#050b14">
+  <meta name="theme-color" content="#85c9cc">
   <title>@yield('title', 'Imperial Defence Academy | Khulna')</title>
 
   <!-- Google Fonts: Roboto -->
@@ -89,12 +89,12 @@
 
   <style>
     :root {
-      --brand-emerald: {{ cms('color_primary', '#059669') }};
-      --brand-primary: {{ cms('color_primary', '#064e3b') }};
-      --brand-deep: {{ cms('color_deep', '#022c22') }};
-      --brand-mint: {{ cms('color_mint', '#10b981') }};
+      --brand-emerald: {{ cms('color_primary', '#85c9cc') }};
+      --brand-primary: {{ cms('color_primary', '#85c9cc') }};
+      --brand-deep: {{ cms('color_deep', '#082d2f') }};
+      --brand-mint: {{ cms('color_mint', '#7ec2c5') }};
       --accent-gold: {{ cms('color_gold', '#d4af37') }};
-      --accent-navy: {{ cms('color_navy', '#050b14') }};
+      --accent-navy: {{ cms('color_navy', '#082d2f') }};
     }
 
     /* Enforce Roboto sitewide across frontend while preserving Font Awesome icons */
@@ -137,7 +137,7 @@
       backdrop-filter: blur(16px) saturate(180%) !important;
       -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
       border-bottom: 1px solid rgba(226, 232, 240, 0.85) !important;
-      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.04), inset 0 -1px 0 rgba(5, 150, 105, 0.08) !important;
+      box-shadow: 0 4px 20px -2px rgba(8, 45, 47, 0.05), 0 1px 3px rgba(8, 45, 47, 0.03), inset 0 -1px 0 rgba(133, 201, 204, 0.25) !important;
       position: sticky;
       top: 0;
       z-index: 1000;
@@ -173,11 +173,11 @@
       justify-content: center;
       flex-shrink: 0;
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
-      filter: drop-shadow(0 6px 14px rgba(5, 150, 105, 0.28)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.22));
+      filter: drop-shadow(0 6px 14px rgba(133, 201, 204, 0.35)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
     }
     .brand-box:hover .brand-crest-3d-wrap {
       transform: translateY(-2px) scale(1.06);
-      filter: drop-shadow(0 10px 22px rgba(217, 119, 6, 0.35)) drop-shadow(0 4px 10px rgba(5, 150, 105, 0.45));
+      filter: drop-shadow(0 10px 22px rgba(217, 119, 6, 0.35)) drop-shadow(0 4px 10px rgba(133, 201, 204, 0.5));
     }
     .brand-titles {
       display: flex;
@@ -187,12 +187,12 @@
     .brand-titles h1 {
       font-size: 15.5px;
       font-weight: 900;
-      color: #071426 !important;
+      color: #082d2f !important;
       margin: 0;
       line-height: 1.2;
       white-space: nowrap;
       letter-spacing: 0.4px;
-      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
       font-family: 'Roboto', sans-serif;
     }
     .brand-titles span {
@@ -203,7 +203,7 @@
       display: block;
       margin-top: 2.5px;
       white-space: nowrap;
-      background: linear-gradient(90deg, #059669 0%, #10b981 40%, #d97706 100%);
+      background: linear-gradient(90deg, #082d2f 0%, #134e4a 40%, #85c9cc 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       text-shadow: none;
@@ -230,18 +230,18 @@
       border: 1px solid transparent;
     }
     .nav-link-item:hover {
-      color: #047857 !important;
-      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
-      border-color: rgba(16, 185, 129, 0.25) !important;
+      color: #082d2f !important;
+      background: #eef8f8 !important;
+      border-color: rgba(133, 201, 204, 0.45) !important;
       transform: translateY(-1px);
-      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.1);
+      box-shadow: 0 2px 6px rgba(133, 201, 204, 0.15);
     }
     .nav-link-item.active {
-      color: #064e3b !important;
-      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+      color: #082d2f !important;
+      background: #85c9cc !important;
       font-weight: 700;
-      border-color: rgba(5, 150, 105, 0.35) !important;
-      box-shadow: inset 0 1px 2px rgba(5, 150, 105, 0.12), 0 2px 6px rgba(5, 150, 105, 0.08);
+      border-color: #72bcc0 !important;
+      box-shadow: inset 0 1px 2px rgba(8, 45, 47, 0.1), 0 2px 6px rgba(133, 201, 204, 0.25);
     }
     .nav-auth-group {
       display: flex;
@@ -293,15 +293,15 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: #ffffff;
+      background: #85c9cc;
+      color: #082d2f;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
+      font-weight: 800;
       font-size: 12px;
       flex-shrink: 0;
-      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);
+      box-shadow: 0 2px 6px rgba(133, 201, 204, 0.4);
     }
     .nav-candidate-name {
       font-size: 13px;
@@ -320,24 +320,25 @@
       padding: 9px 20px !important;
       border-radius: 9px;
       font-size: 13px;
-      font-weight: 700;
-      color: #ffffff !important;
+      font-weight: 800;
+      color: #082d2f !important;
       text-decoration: none !important;
-      background: linear-gradient(180deg, #10b981 0%, #059669 45%, #047857 100%) !important;
-      border: 1px solid #064e3b !important;
+      background: #85c9cc !important;
+      border: 1.5px solid #72bcc0 !important;
       white-space: nowrap;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -2px 0 rgba(2, 44, 34, 0.45), 0 4px 12px rgba(5, 150, 105, 0.35), 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+      box-shadow: 0 4px 14px rgba(133, 201, 204, 0.4) !important;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+      text-shadow: none;
     }
     .nav-btn-signup:hover {
-      background: linear-gradient(180deg, #34d399 0%, #10b981 45%, #059669 100%) !important;
+      background: #72bcc0 !important;
+      color: #062325 !important;
       transform: translateY(-2px);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 -2px 0 rgba(2, 44, 34, 0.45), 0 8px 20px rgba(5, 150, 105, 0.45), 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+      box-shadow: 0 8px 20px rgba(133, 201, 204, 0.5) !important;
     }
     .nav-btn-signup:active {
       transform: translateY(1px);
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(5, 150, 105, 0.2) !important;
+      box-shadow: 0 2px 4px rgba(133, 201, 204, 0.25) !important;
     }
     .nav-btn-logout {
       display: inline-flex;
@@ -377,9 +378,9 @@
       transition: all 0.2s ease;
     }
     .mobile-nav-toggle:active, .mobile-nav-toggle:focus {
-      background: #f0fdf4;
-      border-color: var(--brand-emerald);
-      color: var(--brand-emerald);
+      background: #eef8f8;
+      border-color: #85c9cc;
+      color: #082d2f;
     }
     .mobile-nav-drawer {
       display: none;
@@ -388,7 +389,7 @@
       left: 0;
       right: 0;
       background: #ffffff;
-      border-bottom: 2px solid var(--brand-emerald);
+      border-bottom: 2px solid #85c9cc;
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
       padding: 16px 20px 24px;
       z-index: 1000;
@@ -427,19 +428,19 @@
     .mobile-nav-item i {
       width: 22px;
       text-align: center;
-      color: var(--brand-emerald);
+      color: #082d2f;
       font-size: 16px;
     }
     .mobile-nav-item:hover {
-      background: #f0fdf4;
-      color: var(--brand-emerald) !important;
-      border-color: #d1fae5;
+      background: #eef8f8;
+      color: #082d2f !important;
+      border-color: rgba(133, 201, 204, 0.35);
     }
     .mobile-nav-item.active {
-      background: #ecfdf5 !important;
-      color: #047857 !important;
+      background: #85c9cc !important;
+      color: #082d2f !important;
       font-weight: 700;
-      border-color: #a7f3d0;
+      border-color: #72bcc0;
     }
     .mobile-auth-section {
       border-top: 1px solid #e2e8f0;
@@ -719,7 +720,7 @@
       </div>
       <div style="display: flex; gap: 16px; align-items: center; font-size: 12px;">
         <span style="color: #94a3b8; display: inline-flex; align-items: center;" class="announcement-hide-mobile"><i class="fa-solid fa-location-dot" style="color: #f59e0b; margin-right: 6px;"></i> {{ cms('academy_location', 'Boyra Main Road, Khulna') }}</span>
-        <span style="color: #94a3b8; display: inline-flex; align-items: center;" class="announcement-hide-mobile"><i class="fa-solid fa-phone" style="color: #10b981; margin-right: 6px;"></i> {{ explode(',', cms('academy_phone', '+880 1712-345678'))[0] }}</span>
+        <span style="color: #94a3b8; display: inline-flex; align-items: center;" class="announcement-hide-mobile"><i class="fa-solid fa-phone" style="color: #85c9cc; margin-right: 6px;"></i> {{ explode(',', cms('academy_phone', '+880 1712-345678'))[0] }}</span>
       </div>
     </div>
   </div>
@@ -826,7 +827,7 @@
   </main>
 
   <!-- Clean Institutional Footer -->
-  <footer style="background: #090e1a; color: #94a3b8; padding: 65px 24px 30px; margin-top: 70px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+  <footer style="background: #090e1a; color: #94a3b8; padding: 65px 24px 30px; margin-top: 70px; border-top: 1px solid rgba(133, 201, 204, 0.25);">
     <div style="max-width: 1240px; margin: 0 auto;" class="public-footer-grid">
       <div>
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
@@ -848,7 +849,7 @@
         @if(filled($tag1) || filled($tag2) || filled($tag3))
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           @if(filled($tag1))
-            <span class="badge badge-emerald" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">{{ $tag1 }}</span>
+            <span class="badge badge-emerald" style="background: rgba(133, 201, 204, 0.18); color: #85c9cc; border-color: rgba(133, 201, 204, 0.4);">{{ $tag1 }}</span>
           @endif
           @if(filled($tag2))
             <span class="badge badge-blue" style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3);">{{ $tag2 }}</span>
@@ -867,7 +868,7 @@
               <a href="{{ cms('social_youtube') }}" target="_blank" rel="noopener" style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: inline-flex; align-items: center; justify-content: center; color: #f87171; font-size: 14px; transition: all 0.2s;" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
             @endif
             @if(cms('social_whatsapp'))
-              <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', cms('social_whatsapp')) }}" target="_blank" rel="noopener" style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: inline-flex; align-items: center; justify-content: center; color: #34d399; font-size: 14px; transition: all 0.2s;" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+              <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', cms('social_whatsapp')) }}" target="_blank" rel="noopener" style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: inline-flex; align-items: center; justify-content: center; color: #85c9cc; font-size: 14px; transition: all 0.2s;" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
             @endif
             @if(cms('social_linkedin'))
               <a href="{{ cms('social_linkedin') }}" target="_blank" rel="noopener" style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: inline-flex; align-items: center; justify-content: center; color: #38bdf8; font-size: 14px; transition: all 0.2s;" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
@@ -885,7 +886,7 @@
           <li><a href="{{ route('notices') }}" style="color: #cbd5e1;">Notice Circulars</a></li>
           <li><a href="{{ route('gallery') }}" style="color: #cbd5e1;">Training Gallery</a></li>
           <li><a href="{{ route('about') }}" style="color: #cbd5e1;">About IDA</a></li>
-          <li><a href="{{ auth()->check() ? (auth()->user()->role === 'external_student' ? route('external.dashboard') : route('cadet.dashboard')) : route('login') }}" style="color: var(--brand-mint); font-weight: 600;"><i class="fa-solid fa-user-graduate"></i> Cadet Portal</a></li>
+          <li><a href="{{ auth()->check() ? (auth()->user()->role === 'external_student' ? route('external.dashboard') : route('cadet.dashboard')) : route('login') }}" style="color: #85c9cc; font-weight: 600;"><i class="fa-solid fa-user-graduate"></i> Cadet Portal</a></li>
         </ul>
       </div>
 
@@ -915,25 +916,25 @@
         @endif
         @if(filled($campusLocation))
         <p style="font-size: 13px; margin-bottom: 8px; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px;">
-          <i class="fa-solid fa-location-dot" style="color: var(--brand-mint); width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
+          <i class="fa-solid fa-location-dot" style="color: #85c9cc; width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
           <span>{{ $campusLocation }}</span>
         </p>
         @endif
         @if(filled($campusPhone))
         <p style="font-size: 13px; margin-bottom: 8px; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px;">
-          <i class="fa-solid fa-phone" style="color: var(--brand-mint); width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
+          <i class="fa-solid fa-phone" style="color: #85c9cc; width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
           <span>{{ $campusPhone }}</span>
         </p>
         @endif
         @if(filled($campusEmail))
         <p style="font-size: 13px; margin-bottom: 8px; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px;">
-          <i class="fa-solid fa-envelope" style="color: var(--brand-mint); width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
+          <i class="fa-solid fa-envelope" style="color: #85c9cc; width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
           <span>{{ $campusEmail }}</span>
         </p>
         @endif
         @if(filled($campusHours))
         <p style="font-size: 13px; color: #cbd5e1; display: flex; align-items: flex-start; gap: 10px;">
-          <i class="fa-regular fa-clock" style="color: var(--brand-mint); width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
+          <i class="fa-regular fa-clock" style="color: #85c9cc; width: 16px; margin-top: 3px; flex-shrink: 0;"></i>
           <span>{{ $campusHours }}</span>
         </p>
         @endif

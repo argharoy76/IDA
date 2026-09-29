@@ -48,6 +48,45 @@ class AuthController extends Controller
         return view('auth.admin_login');
     }
 
+    public function showAdminRegister(Request $request)
+    {
+        return view('auth.admin_register');
+    }
+
+    public function adminRegister(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'account_id' => 'required|string|max:50|unique:users,account_id',
+            'email' => 'required|email|max:100|unique:users,email',
+            'phone' => 'required|string|max:30',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'account_id' => $validated['account_id'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'password' => Hash::make($validated['password']),
+            'plain_password' => $validated['password'],
+            'role' => 'admin',
+            'status' => 'pending',
+            'permissions' => [],
+        ]);
+
+        AuditLog::create([
+            'user_id' => $user->id,
+            'action' => 'ADMIN_ACCOUNT_REQUESTED',
+            'details' => "New admin account requested by: {$user->name} ({$user->account_id}) with phone {$user->phone}. Pending Super Admin authorization.",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'created_at' => Carbon::now(),
+        ]);
+
+        return redirect()->route('admin.login')->with('success', 'Your admin account request has been submitted successfully! A Super Admin will review and authorize your account before you can sign in.');
+    }
+
     /**
      * Frontend Student & Candidate Login
      * Strictly allows academic_student and external_student. Rejects admins/staff.
@@ -145,26 +184,24 @@ class AuthController extends Controller
     }
 
     /**
-     * Backend Admin & Officer Command Login
-     * Strictly requires Username/ID, Registered Phone Number, and Password to ALL match.
+     * Backend Admin Command Login
+     * Requires Identity (Username, ID, or Email) and Password.
      */
     public function adminLogin(Request $request)
     {
         $request->validate([
             'login_id' => 'required|string',
-            'phone' => 'required|string',
             'password' => 'required|string',
         ]);
 
         $identifier = trim($request->input('login_id', ''));
-        $inputPhone = trim($request->input('phone', ''));
 
         $throttleKey = 'admin_login|' . Str::lower($identifier) . '|' . $request->ip();
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             return back()->withErrors([
-                'login_id' => "Too many authentication attempts. Officer portal locked for {$seconds} seconds.",
-            ])->onlyInput('login_id', 'phone');
+                'login_id' => "Too many authentication attempts. Admin portal locked for {$seconds} seconds.",
+            ])->onlyInput('login_id');
         }
 
         // Find staff user by name (e.g. ArghaRoy), account_id, email, or instructor_code
@@ -183,33 +220,33 @@ class AuthController extends Controller
         })
         ->first();
 
-        // 3-Credential Verification:
-        // 1. Officer exists
-        // 2. Phone matches registered phone (digit normalized)
-        // 3. Password matches
-        $phoneMatches = false;
-        if ($user) {
-            $cleanInput = preg_replace('/[^0-9]/', '', $inputPhone);
-            $cleanDb = preg_replace('/[^0-9]/', '', $user->phone ?? '');
-            
-            $phoneMatches = ($cleanInput === $cleanDb)
-                || (strlen($cleanInput) >= 10 && strlen($cleanDb) >= 10 && substr($cleanInput, -10) === substr($cleanDb, -10))
-                || ($user->isDeveloperAdmin() && in_array(substr($cleanInput, -10), ['1711001122', '1309372345']));
-        }
-
         $passwordMatches = false;
         if ($user) {
             $passwordMatches = Hash::check($request->password, $user->password)
                 || ($user->isDeveloperAdmin() && $request->password === 'ArghaArghaGTA6');
         }
 
-        if ($user && $phoneMatches && $passwordMatches) {
+        if ($user && $passwordMatches) {
             // Strict role guard: Admin login is strictly for staff/officers
-            if (!in_array($user->role, ['super_admin', 'admin', 'finance_manager', 'instructor'])) {
+            if (!in_array($user->role, ['super_admin', 'pro_admin', 'admin', 'finance_manager', 'instructor'])) {
                 RateLimiter::hit($throttleKey, 60);
                 return back()->withErrors([
-                    'login_id' => 'Access denied: This portal is strictly for authorized academy administrators and officers.',
-                ])->onlyInput('login_id', 'phone');
+                    'login_id' => 'Access denied: This portal is strictly for authorized academy administrators.',
+                ])->onlyInput('login_id');
+            }
+
+            if ($user->status === 'pending') {
+                RateLimiter::hit($throttleKey, 60);
+                return back()->withErrors([
+                    'login_id' => 'Your admin account request is currently pending Super Admin authorization. Please check back after approval.',
+                ])->onlyInput('login_id');
+            }
+
+            if ($user->status === 'suspended' || $user->status === 'inactive') {
+                RateLimiter::hit($throttleKey, 60);
+                return back()->withErrors([
+                    'login_id' => 'Your administrative account has been deactivated or suspended.',
+                ])->onlyInput('login_id');
             }
 
             RateLimiter::clear($throttleKey);
@@ -239,8 +276,8 @@ class AuthController extends Controller
         ]);
 
         return back()->withErrors([
-            'login_id' => 'Invalid Officer ID, registered phone number, or security password provided.',
-        ])->onlyInput('login_id', 'phone');
+            'login_id' => 'Invalid administrator identity or password provided.',
+        ])->onlyInput('login_id');
     }
 
     public function showRegister(Request $request)
@@ -348,17 +385,28 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $isAdmin = false;
         if (Auth::check()) {
-            AuditLog::log('logout', 'User', Auth::id(), null, [
-                'role' => Auth::user()->role,
-                'email' => Auth::user()->email,
-                'name' => Auth::user()->name,
+            $user = Auth::user();
+            $isAdmin = in_array($user->role, ['super_admin', 'pro_admin', 'admin', 'finance_manager', 'instructor']);
+            AuditLog::log('logout', 'User', $user->id, null, [
+                'role' => $user->role,
+                'email' => $user->email,
+                'name' => $user->name,
             ]);
         }
+
+        $referer = $request->headers->get('referer', '');
+        $fromAdmin = str_contains($referer, '/admin') || str_contains($referer, '/instructor');
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($isAdmin || $fromAdmin || $request->has('admin')) {
+            return redirect()->route('admin.login')->with('success', 'You have been safely signed out from the Admin Command Center.');
+        }
+
         return redirect()->route('login')->with('success', 'You have been safely signed out.');
     }
 }

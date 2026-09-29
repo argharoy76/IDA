@@ -12,11 +12,22 @@
     <a href="{{ route('admin.exams.questions', $exam->id) }}" class="btn-tactical" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 16px; font-size: 13px; font-weight: 700; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 7px;">
       <i class="fa-solid fa-list-ol"></i> Manage Questions ({{ $exam->questions_count ?? $exam->questions()->count() }})
     </a>
+    <button type="button" onclick="submitExamFormAjax()" id="topSaveExamBtn" class="btn-primary" style="background: #ff5757; color: #ffffff; border: none; padding: 8px 20px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 4px 12px rgba(255, 87, 87, 0.35);">
+      <i class="fa-solid fa-floppy-disk"></i> Update &amp; Save
+    </button>
   </div>
 @endsection
 
 @section('content')
 <div style="max-width: 1200px; margin: 0 auto; width: 100%;">
+
+  <!-- Floating Toast Notification (Without taking a load) -->
+  <div id="tacticalToast" style="position: fixed; top: 24px; right: 24px; z-index: 999999; transform: translateY(-80px); opacity: 0; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none;">
+    <div id="tacticalToastInner" style="background: #0f172a; border: 1.5px solid #10b981; border-radius: 12px; padding: 14px 22px; color: #34d399; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+      <i id="tacticalToastIcon" class="fa-solid fa-circle-check" style="font-size: 18px; color: #10b981;"></i>
+      <span id="tacticalToastText">Details updated in system successfully!</span>
+    </div>
+  </div>
 
   <!-- Breadcrumb & Quick Action Bar -->
   <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
@@ -25,7 +36,7 @@
       <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
       <a href="{{ route('admin.exam_management.index') }}" style="color: #94a3b8; text-decoration: none;">Exam Management</a>
       <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
-      <span style="color: #ff5757; font-weight: 700;">Edit: {{ Str::limit($exam->title, 40) }}</span>
+      <span id="breadcrumbExamTitle" style="color: #ff5757; font-weight: 700;">Edit: {{ Str::limit($exam->title, 40) }}</span>
     </div>
 
     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -40,6 +51,9 @@
       </a>
     </div>
   </div>
+
+  {{-- Dynamic Live Alert Container (Updated via AJAX without page reload) --}}
+  <div id="liveAlertContainer" style="margin-bottom: 20px;"></div>
 
   {{-- Notification Alerts --}}
   @if(isset($errors) && $errors->any())
@@ -62,7 +76,7 @@
     <input type="hidden" name="return_to" value="{{ request('return_to', route('admin.exam_management.index')) }}">
 
     <!-- SECTION 1: ASSESSMENT IDENTITY & ACCESS CONTROL -->
-    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); position: relative; z-index: 40;">
       <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h3 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff; display: flex; align-items: center; gap: 10px;">
           <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(255, 87, 87, 0.15); color: #ff5757; display: grid; place-items: center; font-size: 15px;">
@@ -81,68 +95,49 @@
           <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Official examination title visible to candidates across all platforms.</small>
         </div>
 
-        {{-- Quick One-Click Examination Stage Presets --}}
-        <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.14); border-radius: 12px; padding: 14px 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; flex-wrap: wrap; gap: 6px;">
-            <label style="font-size: 11px; font-weight: 800; color: #ff8585; text-transform: uppercase; letter-spacing: 0.6px; margin: 0; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> One-Click Examination Category &amp; Track Presets:
-            </label>
-            <span style="font-size: 11px; color: #64748b;">Instantly selects wing, candidate clearance stage &amp; rules</span>
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" onclick="selectFullTrackPreset('navy', 'prelim', 'Navy Preliminary IQ &amp; Academic')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px;">
-              ⚓ Navy Prelim
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('army', 'prelim', 'Army Preliminary IQ &amp; Academic')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(249,115,22,0.12); color: #fb923c; border: 1px solid rgba(249,115,22,0.35); border-radius: 6px;">
-              🪖 Army Prelim
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('air_force', 'prelim', 'Air Force Preliminary IQ &amp; Academic')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.35); border-radius: 6px;">
-              ✈️ Air Force Prelim
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('army', 'issb', 'Tri-Services ISSB Assessment')" class="btn-tactical" style="padding: 6px 15px; font-size: 11.5px; font-weight: 800; background: rgba(234,179,8,0.18); color: #facc15; border: 1.5px solid rgba(234,179,8,0.5); border-radius: 6px;">
-              🌟 ISSB Masterclass (Tri-Services)
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('police', 'constable', 'Police Constable Recruitment Test')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(129,140,248,0.12); color: #818cf8; border: 1px solid rgba(129,140,248,0.35); border-radius: 6px;">
-              👮 Police Prelim (Constable)
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('police', 'si', 'Police Sub-Inspector (SI) Test')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(192,132,252,0.12); color: #c084fc; border: 1px solid rgba(192,132,252,0.35); border-radius: 6px;">
-              🔍 Police SI
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('police', 'asi', 'Police Assistant Sub-Inspector (ASI) Test')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(168,85,247,0.12); color: #a855f7; border: 1px solid rgba(168,85,247,0.35); border-radius: 6px;">
-              🛡️ Police Assistant SI (ASI)
-            </button>
-          </div>
-        </div>
-
-        {{-- Branch Wing, Target Track & Access Type --}}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px;">
+        {{-- Cascading Dropdown Hierarchy for Assessment Identity & Access Control --}}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; align-items: start;">
+          {{-- Dropdown 1: Branch Wing --}}
           <div>
-            <label class="ida-label">Branch Wing *</label>
-            <select name="branch" id="examBranchSelect" class="form-tactical" required style="width: 100%; padding: 11px 16px;">
-              <option value="army" {{ old('branch', $exam->branch) === 'army' ? 'selected' : '' }}>Bangladesh Army</option>
+            <label class="ida-label">1. Branch Wing *</label>
+            <select name="branch" id="examBranchSelect" class="form-tactical ida-cascading-select ida-track-select" required style="width: 100%; padding: 11px 16px;">
               <option value="navy" {{ old('branch', $exam->branch) === 'navy' ? 'selected' : '' }}>Bangladesh Navy</option>
-              <option value="air_force" {{ old('branch', $exam->branch) === 'air_force' ? 'selected' : '' }}>Bangladesh Air Force</option>
               <option value="police" {{ old('branch', $exam->branch) === 'police' ? 'selected' : '' }}>Bangladesh Police</option>
+              <option value="army" {{ old('branch', $exam->branch) === 'army' ? 'selected' : '' }}>Bangladesh Army</option>
+              <option value="air_force" {{ old('branch', $exam->branch) === 'air_force' ? 'selected' : '' }}>Bangladesh Air Force</option>
             </select>
             <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Branch authority governing this module.</small>
           </div>
 
+          {{-- Dropdown 2: Cadre / Post (Military: Officer vs Sailor/Soldier/Airman) --}}
+          <div id="cadreSelectContainer" style="display: block;">
+            <label class="ida-label" id="cadreSelectLabel">2. Cadre / Post *</label>
+            <select id="examCadreSelect" class="form-tactical ida-cascading-select ida-track-select" style="width: 100%; padding: 11px 16px;">
+              <option value="officer">Officer Cadre</option>
+              <option value="soldier" id="soldierCadreOption">Sailor Cadre</option>
+            </select>
+            <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Select Officer or Non-Commissioned Post.</small>
+          </div>
+
+          {{-- Dropdown 3: Target Stage / Track --}}
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px;">
-              <label class="ida-label" style="margin: 0;">Target Track / Stage *</label>
+              <label class="ida-label" style="margin: 0;" id="trackSelectLabel">3. Target Stage / Track *</label>
               <span id="trackRuleBadge" style="font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(255,87,87,0.15); color: #ff8585;">Track Rule</span>
             </div>
-            <select name="target_track" id="examTargetTrackSelect" class="form-tactical" required style="width: 100%; padding: 11px 16px;">
-              <!-- Dynamically populated based on branch -->
+            <select id="examTargetTrackSelect" class="form-tactical ida-cascading-select ida-track-select" style="width: 100%; padding: 11px 16px;">
+              <!-- Dynamically populated based on branch + cadre -->
             </select>
+            <input type="hidden" name="target_track" id="finalTargetTrackInput" value="{{ old('target_track', $exam->target_track ?? 'prelim') }}">
             <small id="trackEligibilityHint" style="color: #94a3b8; font-size: 11.5px; margin-top: 4px; display: block; line-height: 1.4;">
               Candidate eligibility rules for this stage.
             </small>
           </div>
 
+          {{-- Dropdown 4: Access Type --}}
           <div>
-            <label class="ida-label">Access Type *</label>
-            <select name="access_type" class="form-tactical" required style="width: 100%; padding: 11px 16px;">
+            <label class="ida-label">4. Access Type *</label>
+            <select name="access_type" class="form-tactical ida-cascading-select ida-track-select" required style="width: 100%; padding: 11px 16px;">
               <option value="free" {{ old('access_type', $exam->access_type ?? ($exam->is_paid_for_external ? 'paid' : 'free')) === 'free' ? 'selected' : '' }}>Free Exam</option>
               <option value="paid" {{ in_array(old('access_type', $exam->access_type ?? ($exam->is_paid_for_external ? 'paid' : 'free')), ['paid', 'cadet']) ? 'selected' : '' }}>Cadet Exam</option>
               <option value="both" {{ old('access_type', $exam->access_type ?? ($exam->is_paid_for_external ? 'paid' : 'free')) === 'both' ? 'selected' : '' }}>Both</option>
@@ -151,22 +146,13 @@
           </div>
         </div>
 
-        {{-- Category (Totally Editable) & Quick Track Badges --}}
-        <div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; flex-wrap: wrap; gap: 8px;">
-            <label class="ida-label" style="margin: 0;">Category / Preparation Track *</label>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="categoryQuickPills">
-              <!-- Dynamically populated from selected branch -->
-            </div>
-          </div>
-          <input type="text" name="category" id="examCategoryInput" value="{{ old('category', $exam->category) }}" required placeholder="e.g. Verbal IQ, WAT, Psychological, Spatial Matrix" class="form-tactical" style="width: 100%; padding: 11px 16px;">
-          <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Custom topic or preparatory program track. Click any quick pill above to auto-fill.</small>
-        </div>
+        {{-- Hidden Category Input automatically updated from selected track & stage --}}
+        <input type="hidden" name="category" id="examCategoryInput" value="{{ old('category', $exam->category) }}">
       </div>
     </div>
 
     <!-- SECTION 2: ENGINE CONFIGURATION & SCORING RULES -->
-    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); position: relative; z-index: 30;">
       <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h3 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff; display: flex; align-items: center; gap: 10px;">
           <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; display: grid; place-items: center; font-size: 15px;">
@@ -238,7 +224,7 @@
     </div>
 
     <!-- SECTION 3: SCHEDULING & BRIEF DESCRIPTION -->
-    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); position: relative; z-index: 20;">
       <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h3 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff; display: flex; align-items: center; gap: 10px;">
           <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(16, 185, 129, 0.15); color: #34d399; display: grid; place-items: center; font-size: 15px;">
@@ -590,8 +576,8 @@
       </div>
 
       <div style="display: flex; align-items: center; gap: 12px;">
-        <button type="submit" class="btn-primary" style="background: #ff5757; color: #ffffff; padding: 11px 32px; font-size: 14px; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(255, 87, 87, 0.35);">
-          <i class="fa-solid fa-check"></i> Save Question Paper
+        <button type="submit" id="bottomSaveExamBtn" class="btn-primary" style="background: #ff5757; color: #ffffff; padding: 11px 32px; font-size: 14px; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(255, 87, 87, 0.35); transition: all 0.2s ease;">
+          <i class="fa-solid fa-floppy-disk"></i> Update &amp; Save Question Paper
         </button>
       </div>
     </div>
@@ -601,6 +587,234 @@
 
 <script>
   let newLoadedQuestions = [];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const editForm = document.getElementById('editExamForm');
+    if (editForm) {
+      editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitExamFormAjax();
+      });
+    }
+  });
+
+  async function submitExamFormAjax() {
+    const form = document.getElementById('editExamForm');
+    if (!form) return;
+
+    const bottomBtn = document.getElementById('bottomSaveExamBtn');
+    const topBtn = document.getElementById('topSaveExamBtn');
+    const alertContainer = document.getElementById('liveAlertContainer');
+
+    // 1. If newly ingested/staged questions exist, serialize them into questions_json
+    const qJsonInput = document.getElementById('questionsJsonInput');
+    if (qJsonInput && typeof newLoadedQuestions !== 'undefined' && newLoadedQuestions.length > 0) {
+      qJsonInput.value = JSON.stringify(newLoadedQuestions);
+    }
+
+    // 2. Client-side native HTML5 validation check
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    // 3. Set loading state on submit buttons without full page load
+    const origBottomHtml = bottomBtn ? bottomBtn.innerHTML : '<i class="fa-solid fa-floppy-disk"></i> Update &amp; Save Exam';
+    const origTopHtml = topBtn ? topBtn.innerHTML : '<i class="fa-solid fa-floppy-disk"></i> Update &amp; Save';
+
+    if (bottomBtn) {
+      bottomBtn.disabled = true;
+      bottomBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating System...';
+      bottomBtn.style.opacity = '0.85';
+    }
+    if (topBtn) {
+      topBtn.disabled = true;
+      topBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+      topBtn.style.opacity = '0.85';
+    }
+
+    try {
+      const formData = new FormData(form);
+
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Success feedback
+        if (bottomBtn) {
+          bottomBtn.style.background = '#10b981';
+          bottomBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Updated Successfully!';
+          bottomBtn.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.4)';
+        }
+        if (topBtn) {
+          topBtn.style.background = '#10b981';
+          topBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Saved!';
+          topBtn.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.4)';
+        }
+
+        // Show floating tactical toast
+        showTacticalToast(data.message || 'Assessment details updated in system successfully!', 'success');
+
+        // Show smooth inline confirmation banner
+        if (alertContainer) {
+          alertContainer.innerHTML = `
+            <div style="background: rgba(16,185,129,0.12); border: 1.5px solid rgba(16,185,129,0.4); border-radius: 12px; padding: 14px 18px; color: #34d399; font-size: 13.5px; display: flex; align-items: center; justify-content: space-between; gap: 10px; animation: slideDown 0.3s ease;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-circle-check" style="font-size: 17px; color: #10b981;"></i>
+                <span><strong>System Updated:</strong> ${escapeHtml(data.message || 'Exam parameters successfully updated.')}</span>
+              </div>
+              <button type="button" onclick="this.parentElement.remove()" style="background: none; border: none; color: #34d399; cursor: pointer; font-size: 18px;">&times;</button>
+            </div>
+          `;
+        }
+
+        // Dynamically update DOM details in the system without reload
+        const newTitle = form.querySelector('[name="title"]')?.value;
+        if (newTitle) {
+          document.title = 'Edit Assessment: ' + newTitle + ' | IDA Portal';
+          const breadcrumbTitle = document.getElementById('breadcrumbExamTitle');
+          if (breadcrumbTitle) {
+            breadcrumbTitle.textContent = 'Edit: ' + (newTitle.length > 40 ? newTitle.substring(0, 37) + '...' : newTitle);
+          }
+        }
+
+        // If new questions were submitted and saved, clear the staged box and update counts
+        if (typeof newLoadedQuestions !== 'undefined' && newLoadedQuestions.length > 0) {
+          newLoadedQuestions = [];
+          if (qJsonInput) qJsonInput.value = '';
+          const placeholder = document.getElementById('emptyNewQuestionsPlaceholder');
+          const previewContainer = document.getElementById('newQuestionsPreviewContainer');
+          if (previewContainer && placeholder) {
+            previewContainer.innerHTML = '';
+            previewContainer.appendChild(placeholder);
+            placeholder.style.display = 'block';
+          }
+          const badge = document.getElementById('stagedQuestionsBadge');
+          if (badge) badge.textContent = '0 Staged';
+          const summary = document.getElementById('stagedSummaryText');
+          if (summary) summary.textContent = 'No questions staged for ingestion.';
+        }
+
+        // Restore button state after 2.2 seconds
+        setTimeout(() => {
+          if (bottomBtn) {
+            bottomBtn.disabled = false;
+            bottomBtn.style.background = '#ff5757';
+            bottomBtn.style.boxShadow = '0 4px 14px rgba(255, 87, 87, 0.35)';
+            bottomBtn.style.opacity = '1';
+            bottomBtn.innerHTML = origBottomHtml;
+          }
+          if (topBtn) {
+            topBtn.disabled = false;
+            topBtn.style.background = '#ff5757';
+            topBtn.style.boxShadow = '0 4px 12px rgba(255, 87, 87, 0.35)';
+            topBtn.style.opacity = '1';
+            topBtn.innerHTML = origTopHtml;
+          }
+        }, 2200);
+
+      } else {
+        // Validation errors (422) or server failure
+        let errorMessages = [];
+        if (data && data.errors) {
+          for (const key in data.errors) {
+            if (Array.isArray(data.errors[key])) {
+              data.errors[key].forEach(msg => errorMessages.push(msg));
+            } else {
+              errorMessages.push(data.errors[key]);
+            }
+          }
+        } else if (data && data.message) {
+          errorMessages.push(data.message);
+        } else {
+          errorMessages.push('An unexpected error occurred while saving.');
+        }
+
+        if (alertContainer) {
+          alertContainer.innerHTML = `
+            <div style="background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.35); border-radius: 12px; padding: 16px 20px; color: #fca5a5; font-size: 13px;">
+              <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
+                <span>Please resolve the following errors before saving:</span>
+              </div>
+              <ul style="margin: 0; padding-left: 22px; font-size: 12.5px; line-height: 1.6;">
+                ${errorMessages.map(m => `<li>${escapeHtml(m)}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+          alertContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        showTacticalToast('Please correct errors before saving.', 'error');
+
+        if (bottomBtn) {
+          bottomBtn.disabled = false;
+          bottomBtn.style.opacity = '1';
+          bottomBtn.innerHTML = origBottomHtml;
+        }
+        if (topBtn) {
+          topBtn.disabled = false;
+          topBtn.style.opacity = '1';
+          topBtn.innerHTML = origTopHtml;
+        }
+      }
+
+    } catch (err) {
+      console.error(err);
+      showTacticalToast('Network error while saving: ' + err.message, 'error');
+      if (bottomBtn) {
+        bottomBtn.disabled = false;
+        bottomBtn.style.opacity = '1';
+        bottomBtn.innerHTML = origBottomHtml;
+      }
+      if (topBtn) {
+        topBtn.disabled = false;
+        topBtn.style.opacity = '1';
+        topBtn.innerHTML = origTopHtml;
+      }
+    }
+  }
+
+  function showTacticalToast(msg, type = 'success') {
+    const toast = document.getElementById('tacticalToast');
+    const toastInner = document.getElementById('tacticalToastInner');
+    const toastIcon = document.getElementById('tacticalToastIcon');
+    const toastText = document.getElementById('tacticalToastText');
+    if (!toast || !toastInner || !toastText) return;
+
+    toastText.textContent = msg;
+    if (type === 'success') {
+      toastInner.style.borderColor = '#10b981';
+      toastInner.style.color = '#34d399';
+      toastIcon.className = 'fa-solid fa-circle-check';
+      toastIcon.style.color = '#10b981';
+    } else {
+      toastInner.style.borderColor = '#ef4444';
+      toastInner.style.color = '#f87171';
+      toastIcon.className = 'fa-solid fa-triangle-exclamation';
+      toastIcon.style.color = '#ef4444';
+    }
+
+    toast.style.transform = 'translateY(0)';
+    toast.style.opacity = '1';
+    toast.style.pointerEvents = 'auto';
+
+    clearTimeout(window.tacticalToastTimer);
+    window.tacticalToastTimer = setTimeout(() => {
+      toast.style.transform = 'translateY(-80px)';
+      toast.style.opacity = '0';
+      toast.style.pointerEvents = 'none';
+    }, 3500);
+  }
 
   async function deleteExistingQuestion(qId) {
     if (!confirm('Are you sure you want to permanently remove this question from this exam module?')) {
@@ -1506,101 +1720,116 @@ Ans: A`;
   }
 
   const branchTracks = {
-    army: [
-      { value: 'prelim', label: 'Army Preliminary Examination (Army Exclusive)', hint: '🪖 Exclusive: Only cadets enrolled in Bangladesh Army course can conduct this prelim exam.', badge: 'Army Prelim' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
-      { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Army candidates.', badge: 'Army General' }
-    ],
     navy: [
-      { value: 'prelim', label: 'Navy Preliminary Examination (Navy Exclusive)', hint: '⚓ Exclusive: Only cadets enrolled in Bangladesh Navy course can conduct this prelim exam.', badge: 'Navy Prelim' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
+      { value: 'prelim', label: 'Navy Preliminary Examination (Officer Exam 1)', hint: '⚓ Exclusive: Only cadets enrolled in Bangladesh Navy course can conduct this prelim exam.', badge: 'Navy Prelim (Officer 1)' },
+      { value: 'issb', label: 'ISSB Special Masterclass (Officer Exam 2 - Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Navy, Army, Air Force) can conduct this exam!', badge: 'ISSB Universal (Officer 2)' },
+      { value: 'soldier', label: 'Sailor (Navy Non-Commissioned)', hint: 'Exclusive: Only cadets enrolled in Bangladesh Navy Sailor track.', badge: 'Navy Sailor' },
       { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Navy candidates.', badge: 'Navy General' }
     ],
-    air_force: [
-      { value: 'prelim', label: 'Air Force Preliminary Examination (Air Force Exclusive)', hint: '✈️ Exclusive: Only cadets enrolled in Bangladesh Air Force course can conduct this prelim exam.', badge: 'Air Force Prelim' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
-      { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Air Force candidates.', badge: 'Air Force General' }
-    ],
-    police: [
-      { value: 'constable', label: 'Police Constable / Preliminary Recruitment', hint: '👮 Exclusive: Open to cadets enrolled in the Police Constable track.', badge: 'Constable' },
-      { value: 'si', label: 'Police Sub-Inspector (SI) Track', hint: '🔍 Exclusive: Open to cadets enrolled in the Sub-Inspector (SI) track.', badge: 'Sub-Inspector' },
-      { value: 'asi', label: 'Police Assistant Sub-Inspector (ASI) Track', hint: '🛡️ Exclusive: Open to cadets enrolled in the Assistant Sub-Inspector (ASI) track.', badge: 'Assistant SI' },
-      { value: 'general', label: 'General Police Program', hint: 'Open to all enrolled Bangladesh Police candidates.', badge: 'Police General' }
-    ]
+  const hierarchyConfig = {
+    navy: {
+      soldierLabel: 'Sailor Cadre (Navy Sailor)',
+      cadres: {
+        officer: [
+          { value: 'prelim', label: 'Preliminary Examination (Officer 1)', hint: '⚓ Exclusive: Restricted to cadets enrolled in Bangladesh Navy Officer track.', badge: 'Navy Prelim (Officer 1)', defaultCategory: 'Navy Preliminary IQ & Academic' },
+          { value: 'issb', label: 'ISSB Masterclass (Officer 2 - Tri-Services)', hint: '🌟 Tri-Services Clearance: Universal assessment across Navy, Army, and Air Force Officer Cadets!', badge: 'ISSB Universal (Officer 2)', defaultCategory: 'Navy ISSB Masterclass' }
+        ],
+        soldier: [
+          { value: 'soldier', label: 'Sailor Recruitment Examination (Navy Sailor)', hint: '⚓ Exclusive: Restricted to candidates enrolled in Bangladesh Navy Sailor track.', badge: 'Navy Sailor', defaultCategory: 'Navy Sailor Recruitment Test' },
+          { value: 'issb', label: 'ISSB Masterclass (Navy Sailor Post)', hint: '🌟 Tri-Services Clearance: Universal assessment across military candidates.', badge: 'Navy Sailor ISSB', defaultCategory: 'Navy Sailor ISSB Masterclass' }
+        ]
+      }
+    },
+    police: {
+      ranks: [
+        { value: 'constable', label: 'Police Constable / Preliminary Recruitment Test', hint: '👮 Exclusive: Open to cadets enrolled in the Police Constable track.', badge: 'Police Constable', defaultCategory: 'Police Constable Recruitment Test' },
+        { value: 'si', label: 'Police Sub-Inspector (SI) Recruitment Test', hint: '🔍 Exclusive: Open to cadets enrolled in the Sub-Inspector (SI) track.', badge: 'Sub-Inspector SI', defaultCategory: 'Police Sub-Inspector (SI) Test' },
+        { value: 'asi', label: 'Police Assistant Sub-Inspector (ASI) Test', hint: '🛡️ Exclusive: Open to cadets enrolled in the Assistant Sub-Inspector (ASI) track.', badge: 'Assistant SI ASI', defaultCategory: 'Police Assistant Sub-Inspector (ASI) Test' }
+      ]
+    },
+    army: {
+      soldierLabel: 'Soldier / Sainik Cadre (Army Soldier)',
+      cadres: {
+        officer: [
+          { value: 'prelim', label: 'Preliminary Examination (Officer 1)', hint: '🪖 Exclusive: Restricted to cadets enrolled in Bangladesh Army Officer track.', badge: 'Army Prelim (Officer 1)', defaultCategory: 'Army Preliminary IQ & Academic' },
+          { value: 'issb', label: 'ISSB Masterclass (Officer 2 - Tri-Services)', hint: '🌟 Tri-Services Clearance: Universal assessment across Navy, Army, and Air Force Officer Cadets!', badge: 'ISSB Universal (Officer 2)', defaultCategory: 'Army ISSB Masterclass' }
+        ],
+        soldier: [
+          { value: 'soldier', label: 'Soldier / Sainik Recruitment Examination (Army Soldier)', hint: '🪖 Exclusive: Restricted to candidates enrolled in Bangladesh Army Soldier track.', badge: 'Army Soldier', defaultCategory: 'Army Soldier Recruitment Test' },
+          { value: 'issb', label: 'ISSB Masterclass (Army Soldier Post)', hint: '🌟 Tri-Services Clearance: Universal assessment across military candidates.', badge: 'Army Soldier ISSB', defaultCategory: 'Army Soldier ISSB Masterclass' }
+        ]
+      }
+    },
+    air_force: {
+      soldierLabel: 'Airman Cadre (Air Force Airman)',
+      cadres: {
+        officer: [
+          { value: 'prelim', label: 'Preliminary Examination (Officer 1)', hint: '✈️ Exclusive: Restricted to cadets enrolled in Bangladesh Air Force Officer track.', badge: 'Air Force Prelim (Officer 1)', defaultCategory: 'Air Force Preliminary IQ & Academic' },
+          { value: 'issb', label: 'ISSB Masterclass (Officer 2 - Tri-Services)', hint: '🌟 Tri-Services Clearance: Universal assessment across Navy, Army, and Air Force Officer Cadets!', badge: 'ISSB Universal (Officer 2)', defaultCategory: 'Air Force ISSB Masterclass' }
+        ],
+        soldier: [
+          { value: 'soldier', label: 'Airman Recruitment Examination (Air Force Airman)', hint: '✈️ Exclusive: Restricted to candidates enrolled in Bangladesh Air Force Airman track.', badge: 'Air Force Airman', defaultCategory: 'Air Force Airman Recruitment Test' },
+          { value: 'issb', label: 'ISSB Masterclass (Air Force Airman Post)', hint: '🌟 Tri-Services Clearance: Universal assessment across military candidates.', badge: 'Air Force Airman ISSB', defaultCategory: 'Air Force Airman ISSB Masterclass' }
+        ]
+      }
+    }
   };
 
-  function selectFullTrackPreset(branch, track, suggestedCategory = '') {
+  function updateCascadingFormHierarchy(branch, cadre = null, targetTrack = null) {
     const branchEl = document.getElementById('examBranchSelect');
-    if (branchEl) {
-      branchEl.value = branch;
-      updateCategoryPills();
-      updateTargetTracks(track);
-    }
-    const catInput = document.getElementById('examCategoryInput');
-    if (catInput && suggestedCategory) {
-      catInput.value = suggestedCategory;
-    }
-  }
-
-  const branchPills = {
-    army: [
-      { name: 'Preliminary IQ', track: 'prelim' },
-      { name: 'ISSB Special', track: 'issb' },
-      { name: 'Verbal IQ', track: 'prelim' },
-      { name: 'Psychological', track: 'issb' }
-    ],
-    navy: [
-      { name: 'Preliminary IQ', track: 'prelim' },
-      { name: 'ISSB Special', track: 'issb' },
-      { name: 'Naval Aptitude', track: 'prelim' },
-      { name: 'Psychological', track: 'issb' }
-    ],
-    air_force: [
-      { name: 'Preliminary IQ', track: 'prelim' },
-      { name: 'ISSB Special', track: 'issb' },
-      { name: 'Aviation Aptitude', track: 'prelim' },
-      { name: 'Psychological', track: 'issb' }
-    ],
-    police: [
-      { name: 'Constable Recruitment', track: 'constable' },
-      { name: 'Sub-Inspector (SI)', track: 'si' },
-      { name: 'Assistant Sub-Inspector (ASI)', track: 'asi' },
-      { name: 'General Aptitude', track: 'general' }
-    ]
-  };
-
-  function updateCategoryPills() {
-    const branchEl = document.getElementById('examBranchSelect');
-    const container = document.getElementById('categoryQuickPills');
-    if (!branchEl || !container) return;
-
-    const branch = branchEl.value;
-    const pills = branchPills[branch] || branchPills.army;
-    container.innerHTML = pills.map(p => `
-      <button type="button" onclick="setExamCategory('${p.name}', '${p.track}')" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.borderColor='#ff5757'; this.style.color='#ff5757'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#cbd5e1'">
-        + ${p.name}
-      </button>
-    `).join('');
-  }
-
-  function updateTargetTracks(preselectedValue = null) {
-    const branchEl = document.getElementById('examBranchSelect');
+    const cadreContainer = document.getElementById('cadreSelectContainer');
+    const cadreEl = document.getElementById('examCadreSelect');
+    const cadreLabel = document.getElementById('cadreSelectLabel');
+    const soldierOption = document.getElementById('soldierCadreOption');
     const trackEl = document.getElementById('examTargetTrackSelect');
+    const trackLabel = document.getElementById('trackSelectLabel');
+    const hiddenTrackInput = document.getElementById('finalTargetTrackInput');
+    const hiddenCatInput = document.getElementById('examCategoryInput');
     const hintEl = document.getElementById('trackEligibilityHint');
     const badgeEl = document.getElementById('trackRuleBadge');
+
     if (!branchEl || !trackEl) return;
 
-    const branch = branchEl.value;
-    const tracks = branchTracks[branch] || branchTracks.army;
-    const currentVal = preselectedValue || trackEl.value || (branch === 'police' ? 'si' : 'prelim');
+    if (branchEl.value !== branch) {
+      branchEl.value = branch;
+    }
 
-    trackEl.innerHTML = tracks.map(t => `
-      <option value="${t.value}" ${t.value === currentVal ? 'selected' : ''}>${t.label}</option>
-    `).join('');
+    let activeTracks = [];
 
-    function updateHint() {
-      const selectedTrack = trackEl.value;
-      const matched = tracks.find(t => t.value === selectedTrack) || tracks[0];
+    if (branch === 'police') {
+      if (cadreContainer) cadreContainer.style.display = 'none';
+      if (trackLabel) trackLabel.textContent = '2. Police Rank / Track *';
+      activeTracks = hierarchyConfig.police.ranks;
+      const validVal = activeTracks.some(t => t.value === targetTrack) ? targetTrack : (activeTracks.some(t => t.value === trackEl.value) ? trackEl.value : 'si');
+      trackEl.innerHTML = activeTracks.map(t => `<option value="${t.value}" ${t.value === validVal ? 'selected' : ''}>${t.label}</option>`).join('');
+      if (hiddenTrackInput) hiddenTrackInput.value = validVal;
+    } else {
+      if (cadreContainer) cadreContainer.style.display = 'block';
+      if (cadreLabel) cadreLabel.textContent = '2. Cadre / Post *';
+      const wingConf = hierarchyConfig[branch] || hierarchyConfig.navy;
+      if (soldierOption) soldierOption.textContent = wingConf.soldierLabel;
+
+      const activeCadre = cadre || (cadreEl ? cadreEl.value : null) || (targetTrack === 'soldier' ? 'soldier' : 'officer');
+      if (cadreEl) cadreEl.value = activeCadre;
+
+      if (activeCadre === 'soldier') {
+        const postName = (branch === 'navy') ? 'Sailor' : ((branch === 'air_force') ? 'Airman' : 'Soldier');
+        if (trackLabel) trackLabel.textContent = '3. ' + postName + ' Examination Track *';
+        activeTracks = wingConf.cadres.soldier;
+      } else {
+        if (trackLabel) trackLabel.textContent = '3. Officer Examination Stage *';
+        activeTracks = wingConf.cadres.officer;
+      }
+
+      const defaultTrackVal = (activeCadre === 'soldier') ? 'soldier' : 'prelim';
+      const validVal = activeTracks.some(t => t.value === targetTrack) ? targetTrack : (activeTracks.some(t => t.value === trackEl.value) ? trackEl.value : defaultTrackVal);
+      trackEl.innerHTML = activeTracks.map(t => `<option value="${t.value}" ${t.value === validVal ? 'selected' : ''}>${t.label}</option>`).join('');
+      if (hiddenTrackInput) hiddenTrackInput.value = validVal;
+    }
+
+    const currentTrackVal = hiddenTrackInput ? hiddenTrackInput.value : trackEl.value;
+    const matched = activeTracks.find(t => t.value === currentTrackVal) || activeTracks[0];
+    if (matched) {
       if (hintEl) hintEl.textContent = matched.hint;
       if (badgeEl) {
         badgeEl.textContent = matched.badge;
@@ -1618,23 +1847,39 @@ Ans: A`;
           badgeEl.style.color = '#ff8585';
         }
       }
-    }
-
-    trackEl.onchange = updateHint;
-    updateHint();
-  }
-
-  function setExamCategory(val, track = null) {
-    const input = document.getElementById('examCategoryInput');
-    if (input) input.value = val;
-
-    if (track) {
-      const trackEl = document.getElementById('examTargetTrackSelect');
-      if (trackEl) {
-        trackEl.value = track;
-        trackEl.dispatchEvent(new Event('change'));
+      if (hiddenCatInput && matched.defaultCategory) {
+        // If current value is empty or generic, fill it
+        if (!hiddenCatInput.value || hiddenCatInput.value === 'Preliminary Examination' || hiddenCatInput.value === 'Verbal IQ') {
+          hiddenCatInput.value = matched.defaultCategory;
+        }
       }
     }
+
+    if (typeof window.refreshTacticalSelect === 'function') {
+      window.refreshTacticalSelect(branchEl);
+      window.refreshTacticalSelect(cadreEl);
+      window.refreshTacticalSelect(trackEl);
+    }
+  }
+
+  function onExamFormBranchChange(branch) {
+    updateCascadingFormHierarchy(branch, null, null);
+  }
+
+  function onExamFormCadreChange(cadre) {
+    const branchEl = document.getElementById('examBranchSelect');
+    const branch = branchEl ? branchEl.value : 'navy';
+    updateCascadingFormHierarchy(branch, cadre, null);
+  }
+
+  function onExamFormTrackChange(track) {
+    const hiddenTrackInput = document.getElementById('finalTargetTrackInput');
+    if (hiddenTrackInput) hiddenTrackInput.value = track;
+    const branchEl = document.getElementById('examBranchSelect');
+    const cadreEl = document.getElementById('examCadreSelect');
+    const branch = branchEl ? branchEl.value : 'navy';
+    const cadre = cadreEl ? cadreEl.value : 'officer';
+    updateCascadingFormHierarchy(branch, cadre, track);
   }
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -1645,13 +1890,34 @@ Ans: A`;
     }
 
     const branchEl = document.getElementById('examBranchSelect');
+    const initialBranch = branchEl ? branchEl.value : '{{ $exam->branch ?? "navy" }}';
+    const initialTrack = "{{ old('target_track', $exam->target_track ?? 'prelim') }}";
+    const initialCadre = (initialTrack === 'soldier') ? 'soldier' : 'officer';
+
     if (branchEl) {
       branchEl.addEventListener('change', function() {
-        updateCategoryPills();
-        updateTargetTracks();
+        onExamFormBranchChange(this.value);
       });
-      updateCategoryPills();
-      updateTargetTracks("{{ old('target_track', $exam->target_track) }}");
+      const cadreEl = document.getElementById('examCadreSelect');
+      if (cadreEl) {
+        cadreEl.addEventListener('change', function() {
+          onExamFormCadreChange(this.value);
+        });
+      }
+      const trackEl = document.getElementById('examTargetTrackSelect');
+      if (trackEl) {
+        trackEl.addEventListener('change', function() {
+          onExamFormTrackChange(this.value);
+        });
+      }
+
+      updateCascadingFormHierarchy(initialBranch, initialCadre, initialTrack);
+
+      if (typeof window.initTacticalSelect === 'function') {
+        document.querySelectorAll('.ida-cascading-select, .ida-track-select').forEach(function(sel) {
+          window.initTacticalSelect(sel);
+        });
+      }
     }
   });
 </script>
@@ -1666,18 +1932,25 @@ Ans: A`;
     letter-spacing: 0.6px;
     margin-bottom: 7px;
   }
-  .form-tactical {
-    background: #11141d;
+  .form-tactical, select.form-tactical, .ida-cascading-select {
+    color-scheme: dark !important;
+    background-color: #11141d !important;
+    color: #ffffff !important;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    color: #ffffff;
     box-sizing: border-box;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .form-tactical:focus {
-    border-color: #ff5757;
-    box-shadow: 0 0 0 3px rgba(255, 87, 87, 0.18);
+  select.form-tactical option, .ida-cascading-select option {
+    background-color: #11141d !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+  .form-tactical:focus, select.form-tactical:focus, .ida-cascading-select:focus {
+    border-color: #ff5757 !important;
+    box-shadow: 0 0 0 3px rgba(255, 87, 87, 0.18) !important;
   }
   .q-card:hover, .q-preview-card:hover {
     border-color: rgba(255, 255, 255, 0.18) !important;

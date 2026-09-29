@@ -50,6 +50,10 @@ class AccountController extends Controller
     {
         $user = User::findOrFail($id);
 
+        if ($user->isDeveloperAdmin() && !auth()->user()->isDeveloperAdmin()) {
+            abort(403, 'Critical Security Protection: No administrator can modify Developer account credentials.');
+        }
+
         if ($user->role === 'super_admin' && auth()->user()->role !== 'super_admin') {
             abort(403, 'Only Super Administrators can modify Super Administrator accounts.');
         }
@@ -167,6 +171,10 @@ class AccountController extends Controller
     public function updatePassword(Request $request, $id)
     {
         $user = User::findOrFail($id);
+
+        if ($user->isDeveloperAdmin() && !auth()->user()->isDeveloperAdmin()) {
+            abort(403, 'Critical Security Protection: No administrator can modify Developer account credentials.');
+        }
 
         if ($user->role === 'super_admin' && auth()->user()->role !== 'super_admin') {
             abort(403, 'Only Super Administrators can reset passwords for Super Administrator accounts.');

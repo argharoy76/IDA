@@ -57,7 +57,7 @@
     @csrf
 
     <!-- SECTION 1: ASSESSMENT IDENTITY & ACCESS CONTROL -->
-    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); position: relative; z-index: 40;">
       <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h3 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff; display: flex; align-items: center; gap: 10px;">
           <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(255, 87, 87, 0.15); color: #ff5757; display: grid; place-items: center; font-size: 15px;">
@@ -76,68 +76,49 @@
           <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Official examination title visible to candidates across all platforms.</small>
         </div>
 
-        {{-- Quick One-Click Examination Stage Presets --}}
-        <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.14); border-radius: 12px; padding: 14px 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; flex-wrap: wrap; gap: 6px;">
-            <label style="font-size: 11px; font-weight: 800; color: #ff8585; text-transform: uppercase; letter-spacing: 0.6px; margin: 0; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> One-Click Examination Category &amp; Track Presets:
-            </label>
-            <span style="font-size: 11px; color: #64748b;">Instantly selects wing, candidate clearance stage &amp; rules</span>
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" onclick="selectFullTrackPreset('navy', 'prelim', 'Navy Preliminary IQ &amp; Academic')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); border-radius: 6px;">
-              ⚓ Navy Prelim
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('army', 'prelim', 'Army Preliminary IQ &amp; Academic')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(249,115,22,0.12); color: #fb923c; border: 1px solid rgba(249,115,22,0.35); border-radius: 6px;">
-              🪖 Army Prelim
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('air_force', 'prelim', 'Air Force Preliminary IQ &amp; Academic')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.35); border-radius: 6px;">
-              ✈️ Air Force Prelim
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('army', 'issb', 'Tri-Services ISSB Assessment')" class="btn-tactical" style="padding: 6px 15px; font-size: 11.5px; font-weight: 800; background: rgba(234,179,8,0.18); color: #facc15; border: 1.5px solid rgba(234,179,8,0.5); border-radius: 6px;">
-              🌟 ISSB Masterclass (Tri-Services)
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('police', 'constable', 'Police Constable Recruitment Test')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(129,140,248,0.12); color: #818cf8; border: 1px solid rgba(129,140,248,0.35); border-radius: 6px;">
-              👮 Police Prelim (Constable)
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('police', 'si', 'Police Sub-Inspector (SI) Test')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(192,132,252,0.12); color: #c084fc; border: 1px solid rgba(192,132,252,0.35); border-radius: 6px;">
-              🔍 Police SI
-            </button>
-            <button type="button" onclick="selectFullTrackPreset('police', 'asi', 'Police Assistant Sub-Inspector (ASI) Test')" class="btn-tactical" style="padding: 6px 13px; font-size: 11px; font-weight: 700; background: rgba(168,85,247,0.12); color: #a855f7; border: 1px solid rgba(168,85,247,0.35); border-radius: 6px;">
-              🛡️ Police Assistant SI (ASI)
-            </button>
-          </div>
-        </div>
-
-        {{-- Branch Wing, Target Track & Access Type --}}
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px;">
+        {{-- Cascading Dropdown Hierarchy for Assessment Identity & Access Control --}}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; align-items: start;">
+          {{-- Dropdown 1: Branch Wing --}}
           <div>
-            <label class="ida-label">Branch Wing *</label>
-            <select name="branch" id="examBranchSelect" class="form-tactical" required style="width: 100%; padding: 11px 16px;">
-              <option value="army" {{ old('branch', $prefillBranch) === 'army' ? 'selected' : '' }}>Bangladesh Army</option>
+            <label class="ida-label">1. Branch Wing *</label>
+            <select name="branch" id="examBranchSelect" class="form-tactical ida-cascading-select ida-track-select" required style="width: 100%; padding: 11px 16px;">
               <option value="navy" {{ old('branch', $prefillBranch) === 'navy' ? 'selected' : '' }}>Bangladesh Navy</option>
-              <option value="air_force" {{ old('branch', $prefillBranch) === 'air_force' ? 'selected' : '' }}>Bangladesh Air Force</option>
               <option value="police" {{ old('branch', $prefillBranch) === 'police' ? 'selected' : '' }}>Bangladesh Police</option>
+              <option value="army" {{ old('branch', $prefillBranch) === 'army' ? 'selected' : '' }}>Bangladesh Army</option>
+              <option value="air_force" {{ old('branch', $prefillBranch) === 'air_force' ? 'selected' : '' }}>Bangladesh Air Force</option>
             </select>
             <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Branch authority governing this module.</small>
           </div>
 
+          {{-- Dropdown 2: Cadre / Post (Military: Officer vs Sailor/Soldier/Airman) --}}
+          <div id="cadreSelectContainer" style="display: block;">
+            <label class="ida-label" id="cadreSelectLabel">2. Cadre / Post *</label>
+            <select id="examCadreSelect" class="form-tactical ida-cascading-select ida-track-select" style="width: 100%; padding: 11px 16px;">
+              <option value="officer">Officer Cadre</option>
+              <option value="soldier" id="soldierCadreOption">Sailor Cadre</option>
+            </select>
+            <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Select Officer or Non-Commissioned Post.</small>
+          </div>
+
+          {{-- Dropdown 3: Target Stage / Track --}}
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px;">
-              <label class="ida-label" style="margin: 0;">Target Track / Stage *</label>
+              <label class="ida-label" style="margin: 0;" id="trackSelectLabel">3. Target Stage / Track *</label>
               <span id="trackRuleBadge" style="font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(255,87,87,0.15); color: #ff8585;">Track Rule</span>
             </div>
-            <select name="target_track" id="examTargetTrackSelect" class="form-tactical" required style="width: 100%; padding: 11px 16px;">
-              <!-- Dynamically populated based on branch -->
+            <select id="examTargetTrackSelect" class="form-tactical ida-cascading-select ida-track-select" style="width: 100%; padding: 11px 16px;">
+              <!-- Dynamically populated based on branch + cadre -->
             </select>
+            <input type="hidden" name="target_track" id="finalTargetTrackInput" value="{{ old('target_track', 'prelim') }}">
             <small id="trackEligibilityHint" style="color: #94a3b8; font-size: 11.5px; margin-top: 4px; display: block; line-height: 1.4;">
               Candidate eligibility rules for this stage.
             </small>
           </div>
 
+          {{-- Dropdown 4: Access Type --}}
           <div>
-            <label class="ida-label">Access Type *</label>
-            <select name="access_type" class="form-tactical" required style="width: 100%; padding: 11px 16px;">
+            <label class="ida-label">4. Access Type *</label>
+            <select name="access_type" class="form-tactical ida-cascading-select ida-track-select" required style="width: 100%; padding: 11px 16px;">
               <option value="free" {{ old('access_type', $prefillType) === 'free' ? 'selected' : '' }}>Free Exam</option>
               <option value="paid" {{ old('access_type', $prefillType) === 'paid' ? 'selected' : '' }}>Cadet Exam</option>
               <option value="both" {{ old('access_type', $prefillType) === 'both' ? 'selected' : '' }}>Both</option>
@@ -146,22 +127,13 @@
           </div>
         </div>
 
-        {{-- Category (Totally Editable) & Quick Track Badges --}}
-        <div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; flex-wrap: wrap; gap: 8px;">
-            <label class="ida-label" style="margin: 0;">Category / Preparation Track *</label>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="categoryQuickPills">
-              <!-- Dynamically populated from selected branch -->
-            </div>
-          </div>
-          <input type="text" name="category" id="examCategoryInput" value="{{ old('category', 'Verbal IQ') }}" required placeholder="e.g. Verbal IQ, WAT, Psychological, Spatial Matrix" class="form-tactical" style="width: 100%; padding: 11px 16px;">
-          <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Custom topic or preparatory program track. Click any quick pill above to auto-fill.</small>
-        </div>
+        {{-- Hidden Category Input automatically updated from selected track & stage --}}
+        <input type="hidden" name="category" id="examCategoryInput" value="{{ old('category', 'Preliminary Examination') }}">
       </div>
     </div>
 
     <!-- SECTION 2: ENGINE CONFIGURATION & SCORING RULES -->
-    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); position: relative; z-index: 30;">
       <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h3 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff; display: flex; align-items: center; gap: 10px;">
           <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; display: grid; place-items: center; font-size: 15px;">
@@ -233,7 +205,7 @@
     </div>
 
     <!-- SECTION 3: SCHEDULING & BRIEF DESCRIPTION -->
-    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <div class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); position: relative; z-index: 20;">
       <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h3 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff; display: flex; align-items: center; gap: 10px;">
           <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(16, 185, 129, 0.15); color: #34d399; display: grid; place-items: center; font-size: 15px;">
@@ -281,7 +253,7 @@
     </div>
 
     <!-- SECTION 4: QUESTION PAPER -->
-    <div id="section-question-ingestion" class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <div id="section-question-ingestion" class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); position: relative; z-index: 10;">
       <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; margin-bottom: 22px;">
         <h3 style="font-size: 18px; font-weight: 800; margin: 0; color: #ffffff; display: flex; align-items: center; gap: 10px;">
           <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(245, 158, 11, 0.15); color: #fbbf24; display: grid; place-items: center; font-size: 15px;">
@@ -1311,102 +1283,110 @@ Ans: C`;
       .replace(/'/g, '&#039;');
   }
 
-  const branchTracks = {
-    army: [
-      { value: 'prelim', label: 'Army Preliminary Examination (Army Exclusive)', hint: '🪖 Exclusive: Only cadets enrolled in Bangladesh Army course can conduct this prelim exam.', badge: 'Army Prelim' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
-      { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Army candidates.', badge: 'Army General' }
-    ],
-    navy: [
-      { value: 'prelim', label: 'Navy Preliminary Examination (Navy Exclusive)', hint: '⚓ Exclusive: Only cadets enrolled in Bangladesh Navy course can conduct this prelim exam.', badge: 'Navy Prelim' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
-      { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Navy candidates.', badge: 'Navy General' }
-    ],
-    air_force: [
-      { value: 'prelim', label: 'Air Force Preliminary Examination (Air Force Exclusive)', hint: '✈️ Exclusive: Only cadets enrolled in Bangladesh Air Force course can conduct this prelim exam.', badge: 'Air Force Prelim' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
-      { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Air Force candidates.', badge: 'Air Force General' }
-    ],
-    police: [
-      { value: 'constable', label: 'Police Constable / Preliminary Recruitment', hint: '👮 Exclusive: Open to cadets enrolled in the Police Constable track.', badge: 'Constable' },
-      { value: 'si', label: 'Police Sub-Inspector (SI) Track', hint: '🔍 Exclusive: Open to cadets enrolled in the Sub-Inspector (SI) track.', badge: 'Sub-Inspector' },
-      { value: 'asi', label: 'Police Assistant Sub-Inspector (ASI) Track', hint: '🛡️ Exclusive: Open to cadets enrolled in the Assistant Sub-Inspector (ASI) track.', badge: 'Assistant SI' },
-      { value: 'general', label: 'General Police Program', hint: 'Open to all enrolled Bangladesh Police candidates.', badge: 'Police General' }
-    ]
+  const hierarchyConfig = {
+    navy: {
+      soldierLabel: 'Sailor Cadre (Navy Sailor)',
+      cadres: {
+        officer: [
+          { value: 'prelim', label: 'Preliminary Examination (Officer 1)', hint: '⚓ Exclusive: Restricted to cadets enrolled in Bangladesh Navy Officer track.', badge: 'Navy Prelim (Officer 1)', defaultCategory: 'Navy Preliminary IQ & Academic' },
+          { value: 'issb', label: 'ISSB Masterclass (Officer 2 - Tri-Services)', hint: '🌟 Tri-Services Clearance: Universal assessment across Navy, Army, and Air Force Officer Cadets!', badge: 'ISSB Universal (Officer 2)', defaultCategory: 'Navy ISSB Masterclass' }
+        ],
+        soldier: [
+          { value: 'soldier', label: 'Sailor Recruitment Examination (Navy Sailor)', hint: '⚓ Exclusive: Restricted to candidates enrolled in Bangladesh Navy Sailor track.', badge: 'Navy Sailor', defaultCategory: 'Navy Sailor Recruitment Test' },
+          { value: 'issb', label: 'ISSB Masterclass (Navy Sailor Post)', hint: '🌟 Tri-Services Clearance: Universal assessment across military candidates.', badge: 'Navy Sailor ISSB', defaultCategory: 'Navy Sailor ISSB Masterclass' }
+        ]
+      }
+    },
+    police: {
+      ranks: [
+        { value: 'constable', label: 'Police Constable / Preliminary Recruitment Test', hint: '👮 Exclusive: Open to cadets enrolled in the Police Constable track.', badge: 'Police Constable', defaultCategory: 'Police Constable Recruitment Test' },
+        { value: 'si', label: 'Police Sub-Inspector (SI) Recruitment Test', hint: '🔍 Exclusive: Open to cadets enrolled in the Sub-Inspector (SI) track.', badge: 'Sub-Inspector SI', defaultCategory: 'Police Sub-Inspector (SI) Test' },
+        { value: 'asi', label: 'Police Assistant Sub-Inspector (ASI) Test', hint: '🛡️ Exclusive: Open to cadets enrolled in the Assistant Sub-Inspector (ASI) track.', badge: 'Assistant SI ASI', defaultCategory: 'Police Assistant Sub-Inspector (ASI) Test' }
+      ]
+    },
+    army: {
+      soldierLabel: 'Soldier / Sainik Cadre (Army Soldier)',
+      cadres: {
+        officer: [
+          { value: 'prelim', label: 'Preliminary Examination (Officer 1)', hint: '🪖 Exclusive: Restricted to cadets enrolled in Bangladesh Army Officer track.', badge: 'Army Prelim (Officer 1)', defaultCategory: 'Army Preliminary IQ & Academic' },
+          { value: 'issb', label: 'ISSB Masterclass (Officer 2 - Tri-Services)', hint: '🌟 Tri-Services Clearance: Universal assessment across Navy, Army, and Air Force Officer Cadets!', badge: 'ISSB Universal (Officer 2)', defaultCategory: 'Army ISSB Masterclass' }
+        ],
+        soldier: [
+          { value: 'soldier', label: 'Soldier / Sainik Recruitment Examination (Army Soldier)', hint: '🪖 Exclusive: Restricted to candidates enrolled in Bangladesh Army Soldier track.', badge: 'Army Soldier', defaultCategory: 'Army Soldier Recruitment Test' },
+          { value: 'issb', label: 'ISSB Masterclass (Army Soldier Post)', hint: '🌟 Tri-Services Clearance: Universal assessment across military candidates.', badge: 'Army Soldier ISSB', defaultCategory: 'Army Soldier ISSB Masterclass' }
+        ]
+      }
+    },
+    air_force: {
+      soldierLabel: 'Airman Cadre (Air Force Airman)',
+      cadres: {
+        officer: [
+          { value: 'prelim', label: 'Preliminary Examination (Officer 1)', hint: '✈️ Exclusive: Restricted to cadets enrolled in Bangladesh Air Force Officer track.', badge: 'Air Force Prelim (Officer 1)', defaultCategory: 'Air Force Preliminary IQ & Academic' },
+          { value: 'issb', label: 'ISSB Masterclass (Officer 2 - Tri-Services)', hint: '🌟 Tri-Services Clearance: Universal assessment across Navy, Army, and Air Force Officer Cadets!', badge: 'ISSB Universal (Officer 2)', defaultCategory: 'Air Force ISSB Masterclass' }
+        ],
+        soldier: [
+          { value: 'soldier', label: 'Airman Recruitment Examination (Air Force Airman)', hint: '✈️ Exclusive: Restricted to candidates enrolled in Bangladesh Air Force Airman track.', badge: 'Air Force Airman', defaultCategory: 'Air Force Airman Recruitment Test' },
+          { value: 'issb', label: 'ISSB Masterclass (Air Force Airman Post)', hint: '🌟 Tri-Services Clearance: Universal assessment across military candidates.', badge: 'Air Force Airman ISSB', defaultCategory: 'Air Force Airman ISSB Masterclass' }
+        ]
+      }
+    }
   };
 
-  function selectFullTrackPreset(branch, track, suggestedCategory = '') {
+  function updateCascadingFormHierarchy(branch, cadre = null, targetTrack = null) {
     const branchEl = document.getElementById('examBranchSelect');
-    if (branchEl) {
-      branchEl.value = branch;
-      updateCategoryPills();
-      updateTargetTracks(track);
-    }
-    const catInput = document.getElementById('examCategoryInput');
-    if (catInput && suggestedCategory) {
-      catInput.value = suggestedCategory;
-    }
-  }
-
-  const branchPills = {
-    army: [
-      { name: 'Preliminary IQ', track: 'prelim' },
-      { name: 'ISSB Special', track: 'issb' },
-      { name: 'Verbal IQ', track: 'prelim' },
-      { name: 'Psychological', track: 'issb' }
-    ],
-    navy: [
-      { name: 'Preliminary IQ', track: 'prelim' },
-      { name: 'ISSB Special', track: 'issb' },
-      { name: 'Naval Aptitude', track: 'prelim' },
-      { name: 'Psychological', track: 'issb' }
-    ],
-    air_force: [
-      { name: 'Preliminary IQ', track: 'prelim' },
-      { name: 'ISSB Special', track: 'issb' },
-      { name: 'Aviation Aptitude', track: 'prelim' },
-      { name: 'Psychological', track: 'issb' }
-    ],
-    police: [
-      { name: 'Constable Recruitment', track: 'constable' },
-      { name: 'Sub-Inspector (SI)', track: 'si' },
-      { name: 'Assistant Sub-Inspector (ASI)', track: 'asi' },
-      { name: 'General Aptitude', track: 'general' }
-    ]
-  };
-
-  function updateCategoryPills() {
-    const branchEl = document.getElementById('examBranchSelect');
-    const container = document.getElementById('categoryQuickPills');
-    if (!branchEl || !container) return;
-
-    const branch = branchEl.value;
-    const pills = branchPills[branch] || branchPills.army;
-    container.innerHTML = pills.map(p => `
-      <button type="button" onclick="setExamCategory('${p.name}', '${p.track}')" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.borderColor='#ff5757'; this.style.color='#ff5757'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#cbd5e1'">
-        + ${p.name}
-      </button>
-    `).join('');
-  }
-
-  function updateTargetTracks(preselectedValue = null) {
-    const branchEl = document.getElementById('examBranchSelect');
+    const cadreContainer = document.getElementById('cadreSelectContainer');
+    const cadreEl = document.getElementById('examCadreSelect');
+    const cadreLabel = document.getElementById('cadreSelectLabel');
+    const soldierOption = document.getElementById('soldierCadreOption');
     const trackEl = document.getElementById('examTargetTrackSelect');
+    const trackLabel = document.getElementById('trackSelectLabel');
+    const hiddenTrackInput = document.getElementById('finalTargetTrackInput');
+    const hiddenCatInput = document.getElementById('examCategoryInput');
     const hintEl = document.getElementById('trackEligibilityHint');
     const badgeEl = document.getElementById('trackRuleBadge');
+
     if (!branchEl || !trackEl) return;
 
-    const branch = branchEl.value;
-    const tracks = branchTracks[branch] || branchTracks.army;
-    const currentVal = preselectedValue || trackEl.value || (branch === 'police' ? 'si' : 'prelim');
+    if (branchEl.value !== branch) {
+      branchEl.value = branch;
+    }
 
-    trackEl.innerHTML = tracks.map(t => `
-      <option value="${t.value}" ${t.value === currentVal ? 'selected' : ''}>${t.label}</option>
-    `).join('');
+    let activeTracks = [];
 
-    function updateHint() {
-      const selectedTrack = trackEl.value;
-      const matched = tracks.find(t => t.value === selectedTrack) || tracks[0];
+    if (branch === 'police') {
+      if (cadreContainer) cadreContainer.style.display = 'none';
+      if (trackLabel) trackLabel.textContent = '2. Police Rank / Track *';
+      activeTracks = hierarchyConfig.police.ranks;
+      const validVal = activeTracks.some(t => t.value === targetTrack) ? targetTrack : (activeTracks.some(t => t.value === trackEl.value) ? trackEl.value : 'si');
+      trackEl.innerHTML = activeTracks.map(t => `<option value="${t.value}" ${t.value === validVal ? 'selected' : ''}>${t.label}</option>`).join('');
+      if (hiddenTrackInput) hiddenTrackInput.value = validVal;
+    } else {
+      if (cadreContainer) cadreContainer.style.display = 'block';
+      if (cadreLabel) cadreLabel.textContent = '2. Cadre / Post *';
+      const wingConf = hierarchyConfig[branch] || hierarchyConfig.navy;
+      if (soldierOption) soldierOption.textContent = wingConf.soldierLabel;
+
+      const activeCadre = cadre || (cadreEl ? cadreEl.value : null) || (targetTrack === 'soldier' ? 'soldier' : 'officer');
+      if (cadreEl) cadreEl.value = activeCadre;
+
+      if (activeCadre === 'soldier') {
+        const postName = (branch === 'navy') ? 'Sailor' : ((branch === 'air_force') ? 'Airman' : 'Soldier');
+        if (trackLabel) trackLabel.textContent = '3. ' + postName + ' Examination Track *';
+        activeTracks = wingConf.cadres.soldier;
+      } else {
+        if (trackLabel) trackLabel.textContent = '3. Officer Examination Stage *';
+        activeTracks = wingConf.cadres.officer;
+      }
+
+      const defaultTrackVal = (activeCadre === 'soldier') ? 'soldier' : 'prelim';
+      const validVal = activeTracks.some(t => t.value === targetTrack) ? targetTrack : (activeTracks.some(t => t.value === trackEl.value) ? trackEl.value : defaultTrackVal);
+      trackEl.innerHTML = activeTracks.map(t => `<option value="${t.value}" ${t.value === validVal ? 'selected' : ''}>${t.label}</option>`).join('');
+      if (hiddenTrackInput) hiddenTrackInput.value = validVal;
+    }
+
+    const currentTrackVal = hiddenTrackInput ? hiddenTrackInput.value : trackEl.value;
+    const matched = activeTracks.find(t => t.value === currentTrackVal) || activeTracks[0];
+    if (matched) {
       if (hintEl) hintEl.textContent = matched.hint;
       if (badgeEl) {
         badgeEl.textContent = matched.badge;
@@ -1424,34 +1404,68 @@ Ans: C`;
           badgeEl.style.color = '#ff8585';
         }
       }
-    }
-
-    trackEl.onchange = updateHint;
-    updateHint();
-  }
-
-  function setExamCategory(val, track = null) {
-    const input = document.getElementById('examCategoryInput');
-    if (input) input.value = val;
-
-    if (track) {
-      const trackEl = document.getElementById('examTargetTrackSelect');
-      if (trackEl) {
-        trackEl.value = track;
-        trackEl.dispatchEvent(new Event('change'));
+      if (hiddenCatInput && matched.defaultCategory) {
+        hiddenCatInput.value = matched.defaultCategory;
       }
     }
+
+    if (typeof window.refreshTacticalSelect === 'function') {
+      window.refreshTacticalSelect(branchEl);
+      window.refreshTacticalSelect(cadreEl);
+      window.refreshTacticalSelect(trackEl);
+    }
+  }
+
+  function onExamFormBranchChange(branch) {
+    updateCascadingFormHierarchy(branch, null, null);
+  }
+
+  function onExamFormCadreChange(cadre) {
+    const branchEl = document.getElementById('examBranchSelect');
+    const branch = branchEl ? branchEl.value : 'navy';
+    updateCascadingFormHierarchy(branch, cadre, null);
+  }
+
+  function onExamFormTrackChange(track) {
+    const hiddenTrackInput = document.getElementById('finalTargetTrackInput');
+    if (hiddenTrackInput) hiddenTrackInput.value = track;
+    const branchEl = document.getElementById('examBranchSelect');
+    const cadreEl = document.getElementById('examCadreSelect');
+    const branch = branchEl ? branchEl.value : 'navy';
+    const cadre = cadreEl ? cadreEl.value : 'officer';
+    updateCascadingFormHierarchy(branch, cadre, track);
   }
 
   document.addEventListener('DOMContentLoaded', function() {
     const branchEl = document.getElementById('examBranchSelect');
+    const initialBranch = branchEl ? branchEl.value : 'navy';
+    const initialTrack = "{{ old('target_track', 'prelim') }}";
+    const initialCadre = (initialTrack === 'soldier') ? 'soldier' : 'officer';
+
     if (branchEl) {
       branchEl.addEventListener('change', function() {
-        updateCategoryPills();
-        updateTargetTracks();
+        onExamFormBranchChange(this.value);
       });
-      updateCategoryPills();
-      updateTargetTracks("{{ old('target_track') }}");
+      const cadreEl = document.getElementById('examCadreSelect');
+      if (cadreEl) {
+        cadreEl.addEventListener('change', function() {
+          onExamFormCadreChange(this.value);
+        });
+      }
+      const trackEl = document.getElementById('examTargetTrackSelect');
+      if (trackEl) {
+        trackEl.addEventListener('change', function() {
+          onExamFormTrackChange(this.value);
+        });
+      }
+
+      updateCascadingFormHierarchy(initialBranch, initialCadre, initialTrack);
+
+      if (typeof window.initTacticalSelect === 'function') {
+        document.querySelectorAll('.ida-cascading-select, .ida-track-select').forEach(function(sel) {
+          window.initTacticalSelect(sel);
+        });
+      }
     }
   });
 </script>
@@ -1466,18 +1480,25 @@ Ans: C`;
     letter-spacing: 0.6px;
     margin-bottom: 7px;
   }
-  .form-tactical {
-    background: #11141d;
+  .form-tactical, select.form-tactical, .ida-cascading-select {
+    color-scheme: dark !important;
+    background-color: #11141d !important;
+    color: #ffffff !important;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    color: #ffffff;
     box-sizing: border-box;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .form-tactical:focus {
-    border-color: #ff5757;
-    box-shadow: 0 0 0 3px rgba(255, 87, 87, 0.18);
+  select.form-tactical option, .ida-cascading-select option {
+    background-color: #11141d !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+  .form-tactical:focus, select.form-tactical:focus, .ida-cascading-select:focus {
+    border-color: #ff5757 !important;
+    box-shadow: 0 0 0 3px rgba(255, 87, 87, 0.18) !important;
   }
   .q-preview-card:hover {
     border-color: rgba(255, 255, 255, 0.18) !important;

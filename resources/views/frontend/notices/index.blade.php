@@ -3,18 +3,27 @@
 @section('title', 'Academy Notices & Circulars | Imperial Defence Academy')
 
 @section('content')
-<!-- Page Header (Atmospheric Emerald & Obsidian) -->
-<section style="position: relative; background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15) 0%, var(--brand-deep, #022c22) 50%, var(--accent-navy, #050b14) 100%); border-bottom: 1px solid rgba(16, 185, 129, 0.2); padding: 65px 24px; text-align: center; overflow: hidden;">
-  <div style="position: relative; max-width: 800px; margin: 0 auto;">
-    <span data-aos="fade-down" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(52, 211, 153, 0.3); padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; color: #a7f3d0; margin-bottom: 16px; letter-spacing: 0.8px;">
+<!-- Page Header (Luminous Seafoam #85c9cc & Slate Aesthetic) -->
+<section style="position: relative; background: linear-gradient(135deg, #f0f9fa 0%, #e6f4f5 50%, #f8fafc 100%); border-bottom: 1px solid rgba(133, 201, 204, 0.35); padding: 75px 24px 65px; text-align: center; overflow: hidden;">
+  <div style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 20%, rgba(133, 201, 204, 0.25) 0%, transparent 70%); pointer-events: none;"></div>
+  <div style="position: relative; z-index: 2; max-width: 800px; margin: 0 auto;">
+    @if(filled(cms('notices_badge', 'OFFICIAL BULLETIN')))
+    <span data-aos="fade-down" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(133, 201, 204, 0.22); border: 1px solid #85c9cc; padding: 5px 16px; border-radius: 9999px; font-size: 11.5px; font-weight: 800; color: #082d2f; margin-bottom: 16px; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 2px 8px rgba(133, 201, 204, 0.25);">
       {{ cms('notices_badge', 'OFFICIAL BULLETIN') }}
     </span>
-    <h1 data-aos="zoom-in" data-aos-delay="150" style="font-size: 40px; font-weight: 800; color: #ffffff; font-family: 'Roboto', sans-serif; letter-spacing: -0.02em; margin-bottom: 12px;">
+    @endif
+
+    @if(filled(cms('notices_title', 'Notices, Circulars & Announcements')))
+    <h1 data-aos="zoom-in" data-aos-delay="150" style="font-size: clamp(30px, 4.5vw, 42px); font-weight: 900; color: #082d2f; font-family: 'Roboto', sans-serif; letter-spacing: -0.02em; margin-bottom: 14px;">
       {{ cms('notices_title', 'Notices, Circulars & Announcements') }}
     </h1>
-    <p data-aos="fade-up" data-aos-delay="250" style="color: #cbd5e1; font-size: 15.5px; line-height: 1.7; margin: 0 auto; max-width: 680px;">
+    @endif
+
+    @if(filled(cms('notices_subtitle', 'Real-time official academy notifications regarding batch commencement, mock test schedules, and board results.')))
+    <p data-aos="fade-up" data-aos-delay="250" style="color: #475569; font-size: 16px; line-height: 1.75; margin: 0 auto; max-width: 680px; font-weight: 400;">
       {{ cms('notices_subtitle', 'Real-time official academy notifications regarding batch commencement, mock test schedules, and board results.') }}
     </p>
+    @endif
   </div>
 </section>
 

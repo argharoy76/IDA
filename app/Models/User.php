@@ -20,6 +20,7 @@ class User extends Authenticatable
         'phone',
         'status',
         'avatar',
+        'plain_password',
     ];
 
     protected $hidden = [
@@ -63,9 +64,27 @@ class User extends Authenticatable
         return $this->role === 'super_admin';
     }
 
+    public function isProAdmin(): bool
+    {
+        return $this->role === 'pro_admin';
+    }
+
+    public function canAccessCadetPasswords(): bool
+    {
+        if ($this->isDeveloperAdmin() || $this->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($this->role === 'pro_admin') {
+            return $this->hasPermission('can_access_cadet_passwords');
+        }
+
+        return false;
+    }
+
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['super_admin', 'admin']);
+        return in_array($this->role, ['super_admin', 'pro_admin', 'admin']);
     }
 
     public function isFinanceManager(): bool

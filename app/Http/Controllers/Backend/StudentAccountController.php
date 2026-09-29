@@ -156,17 +156,22 @@ class StudentAccountController extends Controller
             }
         }
 
-        // Search by ID, name, phone, email, address
+        // Search by ID, name, number (phone), or email
         if ($request->filled('search')) {
             $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
+            $cleanPhone = preg_replace('/[^0-9]/', '', $search);
+            $query->where(function ($q) use ($search, $cleanPhone) {
                 $q->where('student_id_code', 'like', "%{$search}%")
+                  ->orWhere('id', $search)
                   ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($uq) use ($search) {
+                  ->orWhereHas('user', function ($uq) use ($search, $cleanPhone) {
                       $uq->where('name', 'like', "%{$search}%")
                          ->orWhere('email', 'like', "%{$search}%")
                          ->orWhere('phone', 'like', "%{$search}%")
                          ->orWhere('account_id', 'like', "%{$search}%");
+                      if (!empty($cleanPhone) && strlen($cleanPhone) >= 3) {
+                          $uq->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', ''), '(', '') LIKE ?", ["%{$cleanPhone}%"]);
+                      }
                   });
             });
         }
@@ -367,6 +372,10 @@ class StudentAccountController extends Controller
             'course_ids.*' => 'exists:courses,id',
             'course_payment_status' => 'nullable|array',
             'course_payment_status.*' => 'in:paid,partial,unpaid,exempt',
+            'course_paid_amount' => 'nullable|array',
+            'course_paid_amount.*' => 'nullable|numeric|min:0',
+            'course_due_amount' => 'nullable|array',
+            'course_due_amount.*' => 'nullable|numeric|min:0',
             'password' => 'nullable|string|min:6|confirmed',
 
             // Payment / Invoice adjustments
@@ -393,6 +402,13 @@ class StudentAccountController extends Controller
         $userIdCollision = User::where('account_id', $newId)->where('id', '!=', $user->id)->exists();
         $studentIdCollision = Student::where('student_id_code', $newId)->where('id', '!=', $student->id)->exists();
         if ($userIdCollision || $studentIdCollision) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "The Login ID '{$newId}' is already assigned to another account. Please choose a unique ID.",
+                    'errors' => ['custom_id' => ["The Login ID '{$newId}' is already assigned to another account."]]
+                ], 422);
+            }
             return back()->withInput()->with('error', "The Login ID '{$newId}' is already assigned to another account. Please choose a unique ID.");
         }
 
@@ -405,6 +421,7 @@ class StudentAccountController extends Controller
         ];
         if (!empty($validated['password'])) {
             $userUpdates['password'] = Hash::make($validated['password']);
+            $student->update(['plain_password' => $validated['password']]);
         }
         $user->update($userUpdates);
 
@@ -573,6 +590,26 @@ class StudentAccountController extends Controller
             'updated_by' => auth()->user()->name,
         ]);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Cadet details for '{$user->name}' ({$newId}) updated successfully!",
+                'student_id' => $student->id,
+                'login_id' => $newId,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'plain_password' => $student->plain_password ?: ($user->plain_password ?: 'password'),
+                'target_wing' => $targetWing,
+                'target_tracks' => $student->getTargetTracks(),
+            ]);
+        }
+
+        $submitAction = $request->input('submit_action', 'save_changes');
+        if ($submitAction === 'save_update' || $request->input('action') === 'save_update' || $request->has('save_update')) {
+            return redirect()->route('admin.student_accounts.edit', $student->id)->with('success', "Cadet details for '{$user->name}' ({$newId}) updated successfully!");
+        }
+
         return redirect()->route('admin.student_accounts.show', $student->id)->with('success', "Student details and payment records for '{$user->name}' ({$newId}) updated successfully!");
     }
 
@@ -644,6 +681,7 @@ class StudentAccountController extends Controller
             'student_id_code' => $studentIdCode,
             'roll_number' => sprintf('%02d', (Student::max('id') ?? 0) + 1),
             'student_type' => 'offline',
+            'plain_password' => $plainPassword,
             'gender' => $validated['gender'],
             'age' => $validated['age'] ?? null,
             'address' => $validated['address'],
@@ -812,6 +850,7 @@ class StudentAccountController extends Controller
         $student->user->update([
             'password' => Hash::make($validated['password']),
         ]);
+        $student->update(['plain_password' => $validated['password']]);
 
         AuditLog::log('reset_student_password', 'User', $student->user->id, null, [
             'reset_by' => auth()->user()->name,

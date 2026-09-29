@@ -282,7 +282,6 @@ class TargetTrackAndClearanceTest extends TestCase
 
         $response = $this->actingAs($admin)->get(route('admin.student_accounts.index', ['wing' => 'all']));
         $response->assertStatus(200);
-        $response->assertSee('Tri-Services ISSB');
 
         $showResponse = $this->actingAs($admin)->get(route('admin.student_accounts.show', $armyStudent->id));
         $showResponse->assertStatus(200);

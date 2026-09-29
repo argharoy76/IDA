@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
   <title>@yield('title', 'IDA Portal') | Imperial Defence Academy</title>
 
   <!-- Google Fonts: Poppins (Primary Portal Font) -->
@@ -88,6 +89,12 @@
   <!-- IDA Dark Command Theme -->
   <link rel="stylesheet" href="{{ asset('css/ida_theme.css') }}">
   <style>
+    /* Enforce Dark Scheme & Obsidian Canvas Globally */
+    :root, html {
+      color-scheme: dark !important;
+      background-color: #0c0f17 !important;
+    }
+
     /* Viewport & Overflow Shield */
     html, body.portal-body {
       width: 100% !important;
@@ -100,12 +107,139 @@
 
     /* Dark Theme High-Contrast Variable Overrides for Portal */
     body.portal-body {
+      color-scheme: dark !important;
+      background-color: #0c0f17 !important;
       --brand-deep: #ffffff !important;
       --surface-subtle: #161a26 !important;
       --border-soft: rgba(255, 255, 255, 0.08) !important;
       --text-main: #ffffff !important;
       --text-body: #cbd5e1 !important;
       --text-muted: #94a3b8 !important;
+    }
+
+    /* Native Select Dark Baseline Fallback */
+    select, option, optgroup {
+      color-scheme: dark !important;
+      background-color: #181d29 !important;
+      color: #ffffff !important;
+    }
+
+    /* TACTICAL CUSTOM SELECT DROPDOWNS (100% DOM-based, Eliminates OS White Canvas Glitches) */
+    .tactical-custom-select-wrap {
+      position: relative !important;
+      display: inline-block !important;
+      vertical-align: middle !important;
+      box-sizing: border-box !important;
+    }
+    .tactical-custom-select-wrap.is-open {
+      z-index: 999999 !important;
+    }
+    .tactical-custom-select-wrap.is-block {
+      display: block !important;
+      width: 100% !important;
+    }
+    .tactical-custom-select-trigger {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 10px !important;
+      background-color: #181d29 !important;
+      border: 1px solid rgba(255, 255, 255, 0.14) !important;
+      border-radius: 9px !important;
+      color: #ffffff !important;
+      padding: 0 14px !important;
+      height: 40px !important;
+      font-size: 12.5px !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+      transition: all 0.2s ease !important;
+      user-select: none !important;
+      box-sizing: border-box !important;
+      width: 100% !important;
+      font-family: inherit !important;
+    }
+    .tactical-custom-select-trigger:hover {
+      border-color: rgba(255, 255, 255, 0.3) !important;
+      background-color: #212737 !important;
+    }
+    .tactical-custom-select-trigger:focus,
+    .tactical-custom-select-wrap.is-open .tactical-custom-select-trigger {
+      border-color: #ff5757 !important;
+      box-shadow: 0 0 0 3px rgba(255, 87, 87, 0.2) !important;
+      outline: none !important;
+    }
+    .tactical-custom-select-label {
+      flex: 1 1 auto !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      text-align: left !important;
+    }
+    .tactical-custom-select-arrow {
+      color: #94a3b8 !important;
+      font-size: 11px !important;
+      transition: transform 0.2s ease !important;
+      flex-shrink: 0 !important;
+    }
+    .tactical-custom-select-wrap.is-open .tactical-custom-select-arrow {
+      transform: rotate(180deg) !important;
+      color: #ff8585 !important;
+    }
+    .tactical-custom-select-menu {
+      position: absolute !important;
+      top: calc(100% + 4px) !important;
+      left: 0 !important;
+      min-width: 100% !important;
+      width: max-content !important;
+      max-width: 380px !important;
+      max-height: 280px !important;
+      overflow-y: auto !important;
+      background: #181d29 !important;
+      border: 1px solid rgba(255, 255, 255, 0.16) !important;
+      border-radius: 10px !important;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6) !important;
+      z-index: 99999 !important;
+      padding: 6px !important;
+      box-sizing: border-box !important;
+      display: none !important;
+      scrollbar-width: thin !important;
+      scrollbar-color: rgba(255, 255, 255, 0.15) transparent !important;
+    }
+    .tactical-custom-select-wrap.is-open .tactical-custom-select-menu {
+      display: block !important;
+      animation: tacticalSelectFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    @keyframes tacticalSelectFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .tactical-custom-select-item {
+      padding: 9px 12px !important;
+      border-radius: 6px !important;
+      color: #cbd5e1 !important;
+      font-size: 12.5px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 10px !important;
+      transition: all 0.15s ease !important;
+      user-select: none !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      background: transparent !important;
+      text-align: left !important;
+    }
+    .tactical-custom-select-item:hover {
+      background: rgba(255, 87, 87, 0.14) !important;
+      color: #ff8585 !important;
+    }
+    .tactical-custom-select-item.is-selected {
+      background: rgba(255, 87, 87, 0.22) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
     }
 
     /* Dark Theme Button Overrides for Portal */
@@ -1077,14 +1211,14 @@
           </a>
 
           {{-- EXCLUSIVE TO DEVELOPER ADMIN (ArghaRoy) ONLY --}}
-          @if(auth()->user()->isDeveloperAdmin())
+          @if(auth()->user()->role === 'super_admin')
           <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
             <div style="padding: 4px 12px; font-size: 10px; font-weight: 800; color: #ef4444; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;">
               <i class="fa-solid fa-crown"></i> <span>Highest Authority</span>
             </div>
             <a href="{{ route('admin.admin_control.index') }}" class="sidebar-item {{ request()->routeIs('admin.admin_control*') ? 'active' : '' }}" style="background: linear-gradient(90deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.04)); border-left: 3px solid #ef4444; color: #ffffff;">
               <i class="fa-solid fa-user-shield" style="color: #ef4444;"></i> <span>Admin Control</span>
-              <span style="font-size: 9.5px; background: #ef4444; color: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: auto; letter-spacing: 0.5px;">DEV ADMIN</span>
+              <span style="font-size: 9.5px; background: #ef4444; color: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: auto; letter-spacing: 0.5px;">SUPER</span>
             </a>
           </div>
           @endif
@@ -1684,6 +1818,176 @@
             }
           }, { passive: false });
         }
+      }
+    });
+
+    // =========================================================================
+    // TACTICAL CUSTOM SELECT (100% In-DOM, Eliminates Windows Chrome White Box)
+    // =========================================================================
+    function initTacticalSelect(selectEl) {
+      if (!selectEl || selectEl.dataset.tacticalEnhanced === 'true') {
+        if (selectEl && selectEl.dataset.tacticalEnhanced === 'true') {
+          refreshTacticalSelect(selectEl);
+        }
+        return;
+      }
+
+      selectEl.dataset.tacticalEnhanced = 'true';
+      const isBlock = (selectEl.style.width === '100%' || selectEl.classList.contains('ida-cascading-select'));
+
+      // Create wrapper
+      const wrap = document.createElement('div');
+      wrap.className = 'tactical-custom-select-wrap' + (isBlock ? ' is-block' : '');
+      if (selectEl.id) wrap.dataset.forId = selectEl.id;
+      if (selectEl.style.minWidth) wrap.style.minWidth = selectEl.style.minWidth;
+      if (selectEl.style.maxWidth) wrap.style.maxWidth = selectEl.style.maxWidth;
+
+      // Create trigger
+      const trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'tactical-custom-select-trigger';
+      if (selectEl.disabled) trigger.disabled = true;
+
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'tactical-custom-select-label';
+
+      const arrowI = document.createElement('i');
+      arrowI.className = 'fa-solid fa-chevron-down tactical-custom-select-arrow';
+
+      trigger.appendChild(labelSpan);
+      trigger.appendChild(arrowI);
+
+      // Create menu
+      const menu = document.createElement('div');
+      menu.className = 'tactical-custom-select-menu';
+
+      // Insert wrapper before select and move select inside wrapper
+      selectEl.parentNode.insertBefore(wrap, selectEl);
+      wrap.appendChild(trigger);
+      wrap.appendChild(menu);
+      wrap.appendChild(selectEl);
+
+      // Visually hide native select while keeping it functional in form
+      selectEl.style.setProperty('position', 'absolute', 'important');
+      selectEl.style.setProperty('opacity', '0', 'important');
+      selectEl.style.setProperty('pointer-events', 'none', 'important');
+      selectEl.style.setProperty('width', '0', 'important');
+      selectEl.style.setProperty('height', '0', 'important');
+      selectEl.style.setProperty('margin', '0', 'important');
+      selectEl.style.setProperty('padding', '0', 'important');
+      selectEl.style.setProperty('border', '0', 'important');
+
+      function buildOptions() {
+        menu.innerHTML = '';
+        const selectedOpt = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+        labelSpan.textContent = selectedOpt ? selectedOpt.text : 'Select Option...';
+        trigger.disabled = !!selectEl.disabled;
+
+        Array.from(selectEl.options).forEach((opt, idx) => {
+          const item = document.createElement('div');
+          item.className = 'tactical-custom-select-item' + (opt.selected ? ' is-selected' : '');
+          item.textContent = opt.text;
+          item.dataset.value = opt.value;
+
+          if (opt.selected) {
+            const check = document.createElement('i');
+            check.className = 'fa-solid fa-check';
+            check.style.fontSize = '11px';
+            check.style.color = '#ff8585';
+            item.appendChild(check);
+          }
+
+          item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectEl.selectedIndex = idx;
+            selectEl.value = opt.value;
+            closeAllTacticalSelects();
+            buildOptions();
+
+            // Trigger events
+            selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+            if (typeof selectEl.onchange === 'function') {
+              selectEl.onchange.call(selectEl);
+            }
+          });
+
+          menu.appendChild(item);
+        });
+      }
+
+      wrap._refreshOptions = buildOptions;
+      buildOptions();
+
+      // Toggle dropdown on trigger click
+      trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (selectEl.disabled) return;
+        const wasOpen = wrap.classList.contains('is-open');
+        closeAllTacticalSelects();
+        if (!wasOpen) {
+          wrap.classList.add('is-open');
+          const p = wrap.closest('.content-panel, .tactical-card, .card, .classical-card, fieldset');
+          if (p) {
+            if (p.dataset.origZIndex === undefined) {
+              p.dataset.origZIndex = p.style.zIndex || '';
+              p.dataset.origPosition = p.style.position || '';
+            }
+            p.style.setProperty('z-index', '99999', 'important');
+            p.style.setProperty('position', 'relative', 'important');
+          }
+        }
+      });
+
+      // Observe DOM option changes dynamically
+      const observer = new MutationObserver(function() {
+        buildOptions();
+      });
+      observer.observe(selectEl, { childList: true, attributes: true, subtree: true });
+    }
+
+    function closeAllTacticalSelects() {
+      document.querySelectorAll('.tactical-custom-select-wrap.is-open').forEach(w => {
+        w.classList.remove('is-open');
+        const p = w.closest('.content-panel, .tactical-card, .card, .classical-card, fieldset');
+        if (p) {
+          if (p.dataset.origZIndex) {
+            p.style.setProperty('z-index', p.dataset.origZIndex);
+          } else {
+            p.style.removeProperty('z-index');
+          }
+          if (p.dataset.origPosition) {
+            p.style.setProperty('position', p.dataset.origPosition);
+          } else {
+            p.style.removeProperty('position');
+          }
+          delete p.dataset.origZIndex;
+          delete p.dataset.origPosition;
+        }
+      });
+    }
+
+    function refreshTacticalSelect(selectEl) {
+      if (!selectEl) return;
+      const wrap = selectEl.closest('.tactical-custom-select-wrap');
+      if (wrap && typeof wrap._refreshOptions === 'function') {
+        wrap._refreshOptions();
+        const trigger = wrap.querySelector('.tactical-custom-select-trigger');
+        if (trigger) trigger.disabled = !!selectEl.disabled;
+      }
+    }
+    window.initTacticalSelect = initTacticalSelect;
+    window.refreshTacticalSelect = refreshTacticalSelect;
+    window.closeAllTacticalSelects = closeAllTacticalSelects;
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.tactical-custom-select-wrap')) {
+        closeAllTacticalSelects();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeAllTacticalSelects();
       }
     });
   </script>

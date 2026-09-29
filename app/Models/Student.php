@@ -32,6 +32,7 @@ class Student extends Model
         'admission_date',
         'status',
         'documents',
+        'plain_password',
     ];
 
     protected $casts = [
@@ -201,6 +202,30 @@ class Student extends Model
     }
 
     /**
+     * Check if cadet is authorized for Soldier/Non-Commissioned exams of the specified branch.
+     */
+    public function hasSoldierTrack(?string $branch = null): bool
+    {
+        $branch = $branch ?: 'army';
+        if (!$this->isEnrolledInBranch($branch)) {
+            return false;
+        }
+
+        $tracks = $this->getTargetTracks();
+        if (!empty($tracks)) {
+            if (in_array('soldier', $tracks, true)) {
+                return true;
+            }
+            // If they only have officer tracks (prelim/issb), they don't get soldier exams
+            if (in_array('prelim', $tracks, true) || in_array('issb', $tracks, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Check if cadet is authorized for Preliminary exams of the specified branch.
      */
     public function hasPrelimTrack(?string $branch = null): bool
@@ -211,12 +236,13 @@ class Student extends Model
         }
 
         $tracks = $this->getTargetTracks();
-        // If cadet has designated tracks (e.g. they selected ISSB only), verify 'prelim' is included
+        // If cadet has designated tracks
         if (!empty($tracks)) {
             if (in_array('prelim', $tracks, true)) {
                 return true;
             }
-            if (in_array('issb', $tracks, true) && !in_array('prelim', $tracks, true)) {
+            // If they are strictly in Soldier or ISSB track, deny prelim
+            if (in_array('soldier', $tracks, true) || in_array('issb', $tracks, true)) {
                 return false;
             }
         }
@@ -258,9 +284,11 @@ class Student extends Model
         }
 
         // 3. Cadets with any military course (Army, Navy, Air Force)
-        // User rule: "if a student buys any of these three courses like army, navy, and air force,
-        // he will be able to conduct any exam that is set for ISSB."
         if ($this->hasMilitaryCourse()) {
+            // New Rule: If they are strictly enrolled in the 'soldier' track, they do not get automatic ISSB access.
+            if (in_array('soldier', $explicitTracks, true) && !in_array('issb', $explicitTracks, true) && !in_array('prelim', $explicitTracks, true)) {
+                return false;
+            }
             return true;
         }
 

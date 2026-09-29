@@ -1,8 +1,8 @@
 @extends('layouts.portal')
 
 @section('title', 'Admin Control Command Center')
-@section('page_title', 'Developer Admin Control Command Center')
-@section('page_subtitle', 'Highest clearance authority management. Provision administrators, assign fine-grained operational permissions, and enforce 3-factor login credentials.')
+@section('page_title', 'Admin Control Panel')
+@section('page_subtitle', 'Manage all administrative accounts, roles, and platform access permissions.')
 
 @section('topbar_actions')
   <button type="button" class="btn-tactical btn-tactical-primary" onclick="openAddAdminModal()">
@@ -37,7 +37,7 @@
     border-radius: 4px;
     background: #f1f5f9;
     color: #334155;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.1);
     margin: 2px 0;
   }
   .perm-chip.active {
@@ -81,7 +81,7 @@
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.1);
     font-family: inherit;
   }
   .tactical-modal-header {
@@ -111,29 +111,6 @@
 
 <div style="display: flex; flex-direction: column; gap: 24px;">
 
-  <!-- Developer Authority Banner -->
-  <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); color: #ffffff; border-radius: 16px; padding: 22px 28px; border: 1px solid rgba(239, 68, 68, 0.4); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
-    <div style="display: flex; align-items: center; gap: 16px;">
-      <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(239, 68, 68, 0.2); border: 1.5px solid #ef4444; display: grid; place-items: center; font-size: 24px; color: #ef4444;">
-        <i class="fa-solid fa-crown"></i>
-      </div>
-      <div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <h2 style="font-size: 18px; font-weight: 800; color: #ffffff; margin: 0;">Master Developer Console &bull; ArghaRoy</h2>
-          <span class="dev-crown-badge"><i class="fa-solid fa-shield-halved"></i> HIGHEST AUTHORITY</span>
-        </div>
-        <p style="font-size: 13px; color: #cbd5e1; margin: 4px 0 0 0;">
-          Enforcing 3-Match Security: Username + Registered Phone + Password. Only your account has access to this Admin Control console.
-        </p>
-      </div>
-    </div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <span style="font-size: 12px; background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: #f8fafc;">
-        <i class="fa-solid fa-user-shield" style="color: #ef4444; margin-right: 6px;"></i> Active Super Admin: <strong>{{ auth()->user()->name }}</strong>
-      </span>
-    </div>
-  </div>
-
   <!-- Messages -->
   @if(session('success'))
     <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px 18px; color: #065f46; font-size: 13.5px; display: flex; align-items: center; gap: 10px;">
@@ -162,69 +139,121 @@
     </div>
   @endif
 
+    @if(isset($pendingRequests) && $pendingRequests->count() > 0)
+    <div style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; display: grid; place-items: center; font-size: 18px;">
+          <i class="fa-solid fa-bell"></i>
+        </div>
+        <h4 style="font-size: 14.5px; font-weight: 800; color: #fbbf24; margin: 0;">
+          {{ $pendingRequests->count() }} Pending Admin Request(s)
+        </h4>
+      </div>
+      <button type="button" onclick="switchAdminTab('requests')" class="btn-tactical" style="background: #f59e0b; color: #000000; font-weight: 700; padding: 8px 16px; font-size: 12.5px; border-radius: 8px; border: none; cursor: pointer;">
+        <i class="fa-solid fa-user-check"></i> Review Requests
+      </button>
+    </div>
+  @endif
+
   <!-- Key Statistics Grid -->
   <div class="admin-control-grid">
-    <div class="stat-card">
+    <div class="stat-card" style="background: #0f121a; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
       <div class="stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">
         <i class="fa-solid fa-user-shield"></i>
       </div>
       <div>
-        <div class="stat-label">Total Officers / Admins</div>
-        <div class="stat-value">{{ $stats['total_admins'] }}</div>
+        <div class="stat-label" style="color: #94a3b8;">Total Admins</div>
+        <div class="stat-value" style="color: #ffffff;">{{ $stats['total_admins'] }}</div>
       </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card" style="background: #0f121a; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
       <div class="stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
         <i class="fa-solid fa-crown"></i>
       </div>
       <div>
-        <div class="stat-label">Super Administrators</div>
-        <div class="stat-value">{{ $stats['super_admins'] }}</div>
+        <div class="stat-label" style="color: #94a3b8;">Super Admin</div>
+        <div class="stat-value" style="color: #ffffff;">{{ $stats['super_admins'] }}</div>
       </div>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-icon" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6;">
-        <i class="fa-solid fa-id-badge"></i>
+    <div class="stat-card" style="background: #0f121a; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+      <div class="stat-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+        <i class="fa-solid fa-award"></i>
       </div>
       <div>
-        <div class="stat-label">Standard Admins</div>
-        <div class="stat-value">{{ $stats['standard_admins'] }}</div>
+        <div class="stat-label" style="color: #94a3b8;">Pro Admin</div>
+        <div class="stat-value" style="color: #ffffff;">{{ $stats['pro_admins'] ?? 0 }}</div>
+      </div>
+    </div>
+    
+    <div class="stat-card" style="background: #0f121a; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+      <div class="stat-icon" style="background: rgba(14, 165, 233, 0.12); color: #0ea5e9;">
+        <i class="fa-solid fa-user-shield"></i>
+      </div>
+      <div>
+        <div class="stat-label" style="color: #94a3b8;">Normal Admin</div>
+        <div class="stat-value" style="color: #ffffff;">{{ $stats['standard_admins'] }}</div>
       </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card" style="background: #0f121a; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
       <div class="stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
-        <i class="fa-solid fa-wallet"></i>
+        <i class="fa-solid fa-vault"></i>
       </div>
       <div>
-        <div class="stat-label">Finance Managers</div>
-        <div class="stat-value">{{ $stats['finance_managers'] }}</div>
+        <div class="stat-label" style="color: #94a3b8;">Account Manager</div>
+        <div class="stat-value" style="color: #ffffff;">{{ $stats['finance_managers'] }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="background: #0f121a; border: 1px solid {{ $stats['pending_requests'] > 0 ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255,255,255,0.06)' }}; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer;" onclick="switchAdminTab('requests')">
+      <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+        <i class="fa-solid fa-user-clock"></i>
+      </div>
+      <div>
+        <div class="stat-label" style="color: #94a3b8;">Pending Admin</div>
+        <div class="stat-value" style="color: {{ $stats['pending_requests'] > 0 ? '#fbbf24' : '#ffffff' }}; display: flex; align-items: center; gap: 8px;">
+          {{ $stats['pending_requests'] }}
+          @if($stats['pending_requests'] > 0)
+            <span style="font-size: 10px; background: #f59e0b; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: 800;">PENDING</span>
+          @endif
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Administrators List Card -->
-  <div class="tactical-card" style="padding: 0; overflow: hidden;">
+  <!-- Tab Navigation -->
+  <div style="display: flex; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+    <button type="button" id="tabBtnRoster" onclick="switchAdminTab('roster')" class="btn-tactical" style="background: rgba(255,87,87,0.15); border: 1.5px solid #ff5757; color: #ffffff; padding: 9px 18px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+      <i class="fa-solid fa-users" style="color: #ff5757;"></i> Admin Account ({{ $admins->count() }})
+    </button>
+    <button type="button" id="tabBtnRequests" onclick="switchAdminTab('requests')" class="btn-tactical" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 9px 18px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+      <i class="fa-solid fa-user-clock" style="color: #f59e0b;"></i> Pending Admin ({{ $pendingRequests->count() }})
+      @if($pendingRequests->count() > 0)
+        <span style="background: #f59e0b; color: #000; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 800;">{{ $pendingRequests->count() }}</span>
+      @endif
+    </button>
+  </div>
+
+  <!-- SECTION 1: Admin Accounts -->
+  <div id="rosterSection" class="tactical-card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
     <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
       <div>
-        <h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-users-gear" style="color: #ef4444;"></i> Roster of Administrative Accounts
+        <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-users-gear" style="color: #ef4444;"></i> Admin Accounts
         </h3>
-        <p style="font-size: 12.5px; color: #64748b; margin: 0;">
-          All staff accounts configured to access the Command Deck. Each admin must match their login ID, registered phone number, and password to authenticate.
-        </p>
       </div>
 
       <!-- Search & Filters -->
       <form method="GET" action="{{ route('admin.admin_control.index') }}" style="display: flex; align-items: center; gap: 10px;">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, ID, phone..." class="input-tactical" style="width: 220px; font-size: 12.5px; padding: 7px 12px;">
-        <select name="role" class="input-tactical" style="width: 140px; font-size: 12.5px; padding: 7px 10px;" onchange="this.form.submit()">
+        <select name="role" class="input-tactical" style="width: 155px; font-size: 12.5px; padding: 7px 10px;" onchange="this.form.submit()">
           <option value="">All Roles</option>
           <option value="super_admin" {{ request('role') === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-          <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-          <option value="finance_manager" {{ request('role') === 'finance_manager' ? 'selected' : '' }}>Finance Manager</option>
+          <option value="pro_admin" {{ request('role') === 'pro_admin' ? 'selected' : '' }}>Pro Admin</option>
+          <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Normal Admin</option>
+          <option value="finance_manager" {{ request('role') === 'finance_manager' ? 'selected' : '' }}>Account Manager</option>
         </select>
         <button type="submit" class="btn-tactical btn-tactical-outline" style="padding: 7px 14px; font-size: 12.5px;">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -236,37 +265,85 @@
     <div style="overflow-x: auto;">
       <table class="table-tactical" style="width: 100%; border-collapse: collapse;">
         <thead>
-          <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0;">
-            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Administrator</th>
-            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Officer / Login ID</th>
-            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Registered Phone (Factor 2)</th>
-            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Authority / Role</th>
-            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Granted Permissions</th>
-            <th style="padding: 14px 20px; text-align: right; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Management Actions</th>
+          <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Administrator</th>
+            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Identity</th>
+            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Registered Phone</th>
+            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Authority / Role</th>
+            <th style="padding: 14px 20px; text-align: right; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Management Actions</th>
           </tr>
         </thead>
         <tbody>
           @forelse($admins as $adm)
             @php
-              $isDev = $adm->isDeveloperAdmin();
+              $isDev = ($adm->isDeveloperAdmin() || strtolower(trim($adm->account_id ?? '')) === 'argharoy' || $adm->id === 1);
               $userPerms = $adm->permissions ?? [];
+
+              if ($isDev) {
+                  $roleName = 'Developer';
+                  $roleGradient = 'linear-gradient(135deg, #ef4444 0%, #991b1b 100%)';
+                  $roleBorder = 'rgba(239, 68, 68, 0.5)';
+                  $roleShadow = '0 4px 14px rgba(239, 68, 68, 0.4)';
+                  $roleColor = '#f87171';
+                  $roleBg = 'rgba(239, 68, 68, 0.15)';
+                  $roleIcon = 'fa-solid fa-code';
+              } elseif ($adm->role === 'super_admin') {
+                  $roleName = 'Super Admin';
+                  $roleGradient = 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)';
+                  $roleBorder = 'rgba(245, 158, 11, 0.5)';
+                  $roleShadow = '0 4px 14px rgba(245, 158, 11, 0.35)';
+                  $roleColor = '#fbbf24';
+                  $roleBg = 'rgba(245, 158, 11, 0.15)';
+                  $roleIcon = 'fa-solid fa-crown';
+              } elseif ($adm->role === 'pro_admin') {
+                  $roleName = 'Pro Admin';
+                  $roleGradient = 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)';
+                  $roleBorder = 'rgba(99, 102, 241, 0.5)';
+                  $roleShadow = '0 4px 14px rgba(99, 102, 241, 0.35)';
+                  $roleColor = '#a5b4fc';
+                  $roleBg = 'rgba(99, 102, 241, 0.15)';
+                  $roleIcon = 'fa-solid fa-award';
+              } elseif ($adm->role === 'admin') {
+                  $roleName = 'Normal Admin';
+                  $roleGradient = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)';
+                  $roleBorder = 'rgba(2, 132, 199, 0.5)';
+                  $roleShadow = '0 4px 14px rgba(2, 132, 199, 0.35)';
+                  $roleColor = '#38bdf8';
+                  $roleBg = 'rgba(2, 132, 199, 0.15)';
+                  $roleIcon = 'fa-solid fa-user-shield';
+              } else {
+                  $roleName = 'Account Manager';
+                  $roleGradient = 'linear-gradient(135deg, #10b981 0%, #047857 100%)';
+                  $roleBorder = 'rgba(16, 185, 129, 0.5)';
+                  $roleShadow = '0 4px 14px rgba(16, 185, 129, 0.35)';
+                  $roleColor = '#34d399';
+                  $roleBg = 'rgba(16, 185, 129, 0.15)';
+                  $roleIcon = 'fa-solid fa-vault';
+              }
             @endphp
-            <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#fbfcfd'" onmouseout="this.style.background='transparent'">
-              <!-- Name & Email -->
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+              <!-- Name & Email with Dedicated Role Logo -->
               <td style="padding: 16px 20px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <div style="width: 40px; height: 40px; border-radius: 10px; background: {{ $isDev ? 'linear-gradient(135deg, #ef4444, #991b1b)' : '#eff6ff' }}; color: {{ $isDev ? '#ffffff' : '#3b82f6' }}; display: grid; place-items: center; font-weight: 800; font-size: 15px; flex-shrink: 0;">
-                    @if($isDev)
-                      <i class="fa-solid fa-crown" style="font-size: 14px;"></i>
-                    @else
-                      {{ strtoupper(substr($adm->name, 0, 1)) }}
-                    @endif
-                  </div>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  @if(!empty($adm->avatar))
+                    <div style="position: relative; width: 42px; height: 42px; flex-shrink: 0;">
+                      <img src="{{ asset($adm->avatar) }}" alt="{{ $adm->name }}" style="width: 42px; height: 42px; border-radius: 12px; object-fit: cover; border: 1.5px solid {{ $roleBorder }};">
+                      <div style="position: absolute; bottom: -3px; right: -3px; width: 20px; height: 20px; border-radius: 6px; background: {{ $roleGradient }}; display: grid; place-items: center; border: 2px solid #0f172a; font-size: 9px; color: #ffffff; box-shadow: {{ $roleShadow }};" title="{{ $roleName }}">
+                        <i class="{{ $roleIcon }}"></i>
+                      </div>
+                    </div>
+                  @else
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: {{ $roleGradient }}; border: 1.5px solid {{ $roleBorder }}; color: #ffffff; display: grid; place-items: center; font-size: 17px; flex-shrink: 0; box-shadow: {{ $roleShadow }};" title="{{ $roleName }}">
+                      <i class="{{ $roleIcon }}"></i>
+                    </div>
+                  @endif
                   <div>
-                    <div style="font-size: 14px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-                      {{ $adm->name }}
+                    <div style="font-size: 14.5px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                      <span>{{ $adm->name }}</span>
                       @if($isDev)
-                        <span class="dev-crown-badge">DEV MASTER</span>
+                        <span style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.45); color: #f87171; font-size: 8.5px; font-weight: 800; padding: 1.5px 5.5px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3.5px; letter-spacing: 0.5px; vertical-align: middle;">
+                          <i class="fa-solid fa-code" style="font-size: 7.5px;"></i> DEV
+                        </span>
                       @endif
                     </div>
                     <div style="font-size: 12px; color: #64748b;">{{ $adm->email }}</div>
@@ -274,55 +351,37 @@
                 </div>
               </td>
 
-              <!-- Account ID -->
+              <!-- Identity -->
               <td style="padding: 16px 20px;">
-                <code style="background: #f1f5f9; color: #0f172a; padding: 3px 8px; border-radius: 5px; font-size: 12.5px; font-weight: 700; border: 1px solid #e2e8f0;">
+                <code style="background: rgba(255,255,255,0.05); color: #ffffff; padding: 3px 8px; border-radius: 5px; font-size: 12.5px; font-weight: 700; border: 1px solid rgba(255,255,255,0.1);">
                   {{ $adm->account_id }}
                 </code>
               </td>
 
               <!-- Phone -->
               <td style="padding: 16px 20px;">
-                <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #334155;">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #cbd5e1;">
                   <i class="fa-solid fa-phone" style="color: #059669; font-size: 11px;"></i>
                   <span>{{ $adm->phone ?? 'Not Registered' }}</span>
                 </div>
               </td>
 
-              <!-- Role -->
+              <!-- Authority / Role with Graphic Icon & Badge -->
               <td style="padding: 16px 20px;">
-                @if($adm->role === 'super_admin')
-                  <span class="stat-badge-chip" style="background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;">
-                    <i class="fa-solid fa-shield-halved"></i> Super Admin
-                  </span>
-                @elseif($adm->role === 'admin')
-                  <span class="stat-badge-chip" style="background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe;">
-                    <i class="fa-solid fa-user-gear"></i> Admin
-                  </span>
-                @else
-                  <span class="stat-badge-chip" style="background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;">
-                    <i class="fa-solid fa-calculator"></i> Finance Manager
-                  </span>
-                @endif
-              </td>
-
-              <!-- Permissions -->
-              <td style="padding: 16px 20px;">
-                @if($adm->role === 'super_admin')
-                  <span class="perm-chip active" style="font-weight: 700; background: #ecfdf5; color: #047857; border-color: #a7f3d0;">
-                    <i class="fa-solid fa-unlock-keyhole"></i> Full Command Clearance (All Modules)
-                  </span>
-                @elseif(empty($userPerms))
-                  <span style="font-size: 12px; color: #94a3b8; font-style: italic;">No specific permissions granted</span>
-                @else
-                  <div style="display: flex; flex-wrap: wrap; gap: 4px; max-width: 280px;">
-                    @foreach($userPerms as $p)
-                      @if(isset($availablePermissions[$p]))
-                        <span class="perm-chip active">
-                          <i class="fa-solid fa-check" style="font-size: 9px;"></i> {{ $availablePermissions[$p]['label'] }}
-                        </span>
-                      @endif
-                    @endforeach
+                <span class="stat-badge-chip" style="background: {{ $roleBg }}; color: {{ $roleColor }}; border: 1px solid {{ $roleBorder }}; font-weight: 700; display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 6px; font-size: 12.5px;">
+                  <i class="{{ $roleIcon }}" style="font-size: 12px;"></i> {{ $roleName }}
+                </span>
+                @if($adm->role === 'pro_admin')
+                  <div style="margin-top: 5px;">
+                    @if($adm->canAccessCadetPasswords())
+                      <span style="font-size: 10.5px; color: #818cf8; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; font-weight: 700;">
+                        <i class="fa-solid fa-key" style="font-size: 9px;"></i> Cadet Passwords: Yes
+                      </span>
+                    @else
+                      <span style="font-size: 10.5px; color: #94a3b8; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600;">
+                        <i class="fa-solid fa-lock" style="font-size: 9px;"></i> Cadet Passwords: No
+                      </span>
+                    @endif
                   </div>
                 @endif
               </td>
@@ -330,19 +389,43 @@
               <!-- Actions -->
               <td style="padding: 16px 20px; text-align: right;">
                 <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                  <!-- Edit Permissions Button -->
-                  <button type="button" class="btn-tactical btn-tactical-outline" style="padding: 6px 12px; font-size: 12px;"
-                          onclick="openEditModal({{ json_encode($adm) }})">
-                    <i class="fa-solid fa-user-pen"></i> Permissions
-                  </button>
+                  @php
+                    $currentUser = auth()->user();
+                    $isTargetDev = $isDev;
+                    $canEditTarget = true;
+                    $lockTitle = '';
 
-                  <!-- Remove Button (Locked for Dev Admin) -->
-                  @if($isDev || $adm->id === auth()->id())
-                    <button type="button" class="btn-tactical" disabled style="padding: 6px 12px; font-size: 12px; opacity: 0.4; cursor: not-allowed; background: #f1f5f9; border: 1px solid #cbd5e1; color: #94a3b8;" title="Developer Super Admin cannot be deleted">
+                    // Rule 1: No super admin can edit the details of a developer (except developer himself)
+                    if ($isTargetDev && !$currentUser->isDeveloperAdmin()) {
+                        $canEditTarget = false;
+                        $lockTitle = 'Developer account details cannot be edited by any other administrator.';
+                    }
+                    // Rule 2: No one can edit the details of a super admin except a super admin
+                    elseif ($adm->role === 'super_admin' && $currentUser->role !== 'super_admin') {
+                        $canEditTarget = false;
+                        $lockTitle = 'Only a Super Administrator can edit a Super Administrator account.';
+                    }
+                  @endphp
+
+                  @if($canEditTarget)
+                    <!-- Edit Profile Button (Full Page) -->
+                    <a href="{{ route('admin.admin_control.edit', $adm->id) }}" class="btn-tactical btn-tactical-outline" style="padding: 6px 14px; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px;">
+                      <i class="fa-solid fa-user-pen"></i> Edit Profile
+                    </a>
+                  @else
+                    <!-- Locked / Protected Indicator -->
+                    <span class="btn-tactical" style="padding: 6px 12px; font-size: 12px; opacity: 0.45; cursor: not-allowed; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #94a3b8; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;" title="{{ $lockTitle }}">
+                      <i class="fa-solid fa-lock"></i> Locked
+                    </span>
+                  @endif
+
+                  <!-- Remove Button -->
+                  @if($isDev || $adm->id === auth()->id() || ($adm->role === 'super_admin' && $currentUser->role !== 'super_admin'))
+                    <button type="button" class="btn-tactical" disabled style="padding: 6px 12px; font-size: 12px; opacity: 0.4; cursor: not-allowed; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; border-radius: 6px;" title="{{ $isDev ? 'Developer account cannot be removed' : ($adm->id === auth()->id() ? 'Current account' : 'Only Super Administrators can remove a Super Administrator') }}">
                       <i class="fa-solid fa-lock"></i> Protected
                     </button>
                   @else
-                    <button type="button" class="btn-tactical btn-tactical-danger" style="padding: 6px 12px; font-size: 12px;"
+                    <button type="button" class="btn-tactical btn-tactical-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;"
                             onclick="confirmDeleteAdmin({{ $adm->id }}, '{{ addslashes($adm->name) }}', '{{ addslashes($adm->account_id) }}')">
                       <i class="fa-solid fa-trash-can"></i> Remove
                     </button>
@@ -354,6 +437,96 @@
             <tr>
               <td colspan="6" style="padding: 36px; text-align: center; color: #64748b;">
                 No administrators match your current filter.
+              </td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Account Creation Requests Deck -->
+  <div id="requestsSection" class="tactical-card" style="padding: 0; overflow: hidden; display: none; margin-bottom: 24px;">
+    <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <h3 style="font-size: 16px; font-weight: 800; color: #fbbf24; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-user-clock" style="color: #f59e0b;"></i> Pending Admin
+        </h3>
+      </div>
+      <div>
+        <span style="font-size: 12px; font-weight: 700; color: #f59e0b; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); padding: 5px 12px; border-radius: 6px;">
+          {{ $pendingRequests->count() }} Pending
+        </span>
+      </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table class="table-tactical" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Applicant Name</th>
+            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Requested Identity</th>
+            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Phone Number</th>
+            <th style="padding: 14px 20px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Submission Date</th>
+            <th style="padding: 14px 20px; text-align: right; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Super Admin Decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($pendingRequests as $req)
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(217,119,6,0.2)); border: 1px solid rgba(245,158,11,0.35); color: #fbbf24; display: grid; place-items: center; font-size: 14px; box-shadow: 0 4px 12px rgba(245,158,11,0.15);" title="Pending Admin">
+                    <i class="fa-solid fa-user-clock"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 14px; font-weight: 700; color: #ffffff;">{{ $req->name }}</div>
+                    <div style="font-size: 12px; color: #94a3b8;">{{ $req->email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td style="padding: 16px 20px;">
+                <code style="background: rgba(255,255,255,0.05); color: #ffffff; padding: 3px 8px; border-radius: 5px; font-size: 12.5px; font-weight: 700; border: 1px solid rgba(255,255,255,0.1);">
+                  {{ $req->account_id }}
+                </code>
+              </td>
+              <td style="padding: 16px 20px;">
+                <span style="font-size: 13px; color: #cbd5e1; font-weight: 600;">{{ $req->phone }}</span>
+              </td>
+              <td style="padding: 16px 20px; font-size: 12px; color: #94a3b8;">
+                {{ $req->created_at->format('d M Y, h:i A') }} ({{ $req->created_at->diffForHumans() }})
+              </td>
+              <td style="padding: 16px 20px; text-align: right;">
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                  <!-- Approve / Permit Form -->
+                  <form method="POST" action="{{ route('admin.admin_control.approve', $req->id) }}" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn-tactical" style="background: #10b981; color: #ffffff; padding: 7px 14px; font-size: 12px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                      <i class="fa-solid fa-check"></i> Permit Request
+                    </button>
+                  </form>
+
+                  <!-- Edit Profile to Change Any Details -->
+                  <a href="{{ route('admin.admin_control.edit', $req->id) }}" class="btn-tactical btn-tactical-outline" style="padding: 7px 14px; font-size: 12px; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-user-pen"></i> Edit Profile
+                  </a>
+
+                  <!-- Reject Form -->
+                  <form method="POST" action="{{ route('admin.admin_control.reject', $req->id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to reject and remove this account request?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn-tactical btn-tactical-danger" style="padding: 7px 12px; font-size: 12px; border-radius: 6px; cursor: pointer;">
+                      <i class="fa-solid fa-xmark"></i> Reject
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="5" style="padding: 40px; text-align: center; color: #64748b;">
+                <i class="fa-solid fa-clipboard-check" style="font-size: 28px; color: #475569; display: block; margin-bottom: 8px;"></i>
+                No pending administrator account creation requests at this time.
               </td>
             </tr>
           @endforelse
@@ -376,7 +549,6 @@
         </div>
         <div>
           <h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">Add New Administrator</h3>
-          <span style="font-size: 11.5px; color: #64748b;">Grant administrative clearance and assign access rights</span>
         </div>
       </div>
       <button type="button" onclick="closeModal('addAdminModal')" style="background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer;">
@@ -398,7 +570,7 @@
 
           <div>
             <label class="form-label" style="display: block; font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
-              Officer / Login ID *
+              Identity *
             </label>
             <input type="text" name="account_id" required placeholder="e.g. ADM-005 or TareqAdmin" class="input-tactical" style="width: 100%;">
           </div>
@@ -414,12 +586,9 @@
 
           <div>
             <label class="form-label" style="display: block; font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
-              Registered Phone Number (3-Match Rule) *
+              Registered Phone Number *
             </label>
             <input type="text" name="phone" required placeholder="e.g. 01711002233" class="input-tactical" style="width: 100%;">
-            <span style="font-size: 10.5px; color: #059669; margin-top: 3px; display: block;">
-              <i class="fa-solid fa-shield-halved"></i> Must match exactly when logging in.
-            </span>
           </div>
         </div>
 
@@ -428,23 +597,45 @@
             <label class="form-label" style="display: block; font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
               Initial Password *
             </label>
-            <input type="password" name="password" required minlength="8" placeholder="Min 8 characters" class="input-tactical" style="width: 100%;">
+            <div style="position: relative;">
+              <input type="password" id="add_admin_password" name="password" required minlength="6" autocomplete="new-password" value="" placeholder="Min 6 characters" class="input-tactical" style="width: 100%; padding-right: 40px;">
+              <button type="button" onclick="togglePasswordVisibility('add_admin_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer;">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
 
           <div>
             <label class="form-label" style="display: block; font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
               Account Role *
             </label>
-            <select name="role" required class="input-tactical" style="width: 100%;">
-              <option value="admin">Admin (Operational)</option>
-              <option value="finance_manager">Finance Manager</option>
+            <select name="role" id="add_admin_role" required onchange="toggleAddProAdminPw(this.value)" class="input-tactical" style="width: 100%;">
               <option value="super_admin">Super Admin</option>
+              <option value="pro_admin">Pro Admin</option>
+              <option value="admin">Normal Admin</option>
+              <option value="finance_manager">Account Manager</option>
             </select>
           </div>
         </div>
 
+        <div id="addProAdminPwCard" style="display: none; background: rgba(99, 102, 241, 0.08); border: 1.5px solid rgba(99, 102, 241, 0.35); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 800; color: #a5b4fc; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-key"></i> Cadet Password Access (Pro Admin)
+          </div>
+          <div style="display: flex; gap: 18px;">
+            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12.5px; color: #ffffff; font-weight: 700;">
+              <input type="radio" name="can_access_cadet_passwords_opt" value="1" style="accent-color: #6366f1; width: 15px; height: 15px;">
+              <span>Yes (Can Access)</span>
+            </label>
+            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12.5px; color: #94a3b8; font-weight: 600;">
+              <input type="radio" name="can_access_cadet_passwords_opt" value="0" checked style="accent-color: #6366f1; width: 15px; height: 15px;">
+              <span>No (Restricted)</span>
+            </label>
+          </div>
+        </div>
+
         <!-- Permissions Checkboxes -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+        <div style="background: #f8fafc; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px;">
           <label style="display: block; font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
             <i class="fa-solid fa-list-check" style="color: #ef4444; margin-right: 6px;"></i> Module Permissions
           </label>
@@ -484,7 +675,6 @@
         </div>
         <div>
           <h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">Edit Admin Clearance & Permissions</h3>
-          <span style="font-size: 11.5px; color: #64748b;" id="editModalSub">Update credentials, role, and granted operational permissions</span>
         </div>
       </div>
       <button type="button" onclick="closeModal('editAdminModal')" style="background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer;">
@@ -506,7 +696,7 @@
 
           <div>
             <label class="form-label" style="display: block; font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
-              Officer / Login ID *
+              Identity *
             </label>
             <input type="text" name="account_id" id="edit_account_id" required class="input-tactical" style="width: 100%;">
           </div>
@@ -522,7 +712,7 @@
 
           <div>
             <label class="form-label" style="display: block; font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
-              Registered Phone Number (3-Match Factor) *
+              Registered Phone Number *
             </label>
             <input type="text" name="phone" id="edit_phone" required class="input-tactical" style="width: 100%;">
           </div>
@@ -533,23 +723,40 @@
             <label class="form-label" style="display: block; font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
               Reset Security Password (leave blank to keep)
             </label>
-            <input type="password" name="password" minlength="8" placeholder="Enter new password if changing" class="input-tactical" style="width: 100%;">
+            <input type="password" name="password" id="modal_edit_password" value="" autocomplete="new-password" minlength="8" placeholder="Enter new password if changing" class="input-tactical" style="width: 100%;">
           </div>
 
           <div>
             <label class="form-label" style="display: block; font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
               Account Role *
             </label>
-            <select name="role" id="edit_role" required class="input-tactical" style="width: 100%;">
-              <option value="admin">Admin (Operational)</option>
-              <option value="finance_manager">Finance Manager</option>
+            <select name="role" id="edit_role" required onchange="toggleEditProAdminPw(this.value)" class="input-tactical" style="width: 100%;">
               <option value="super_admin">Super Admin</option>
+              <option value="pro_admin">Pro Admin</option>
+              <option value="admin">Normal Admin</option>
+              <option value="finance_manager">Account Manager</option>
             </select>
           </div>
         </div>
 
+        <div id="editProAdminPwCard" style="display: none; background: rgba(99, 102, 241, 0.08); border: 1.5px solid rgba(99, 102, 241, 0.35); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 800; color: #a5b4fc; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-key"></i> Cadet Password Access (Pro Admin)
+          </div>
+          <div style="display: flex; gap: 18px;">
+            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12.5px; color: #ffffff; font-weight: 700;">
+              <input type="radio" name="can_access_cadet_passwords_opt" id="edit_pw_opt_yes" value="1" style="accent-color: #6366f1; width: 15px; height: 15px;">
+              <span>Yes (Can Access)</span>
+            </label>
+            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12.5px; color: #94a3b8; font-weight: 600;">
+              <input type="radio" name="can_access_cadet_passwords_opt" id="edit_pw_opt_no" value="0" checked style="accent-color: #6366f1; width: 15px; height: 15px;">
+              <span>No (Restricted)</span>
+            </label>
+          </div>
+        </div>
+
         <!-- Permissions Checkboxes -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+        <div style="background: #f8fafc; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px;">
           <label style="display: block; font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
             <i class="fa-solid fa-list-check" style="color: #ef4444; margin-right: 6px;"></i> Module Permissions
           </label>
@@ -601,12 +808,12 @@
         <p style="font-size: 14px; color: #334155; margin-bottom: 14px; line-height: 1.5;">
           Are you sure you want to permanently revoke administrative access for:
         </p>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+        <div style="background: #f8fafc; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
           <strong style="font-size: 16px; color: #0f172a;" id="delAdminName"></strong><br>
           <span style="font-size: 12.5px; color: #64748b;" id="delAdminId"></span>
         </div>
         <p style="font-size: 12px; color: #ef4444; margin: 0;">
-          <i class="fa-solid fa-circle-exclamation"></i> This officer will no longer be able to authenticate or access the Command Deck.
+          <i class="fa-solid fa-circle-exclamation"></i> This administrator will no longer be able to authenticate or access the Command Deck.
         </p>
       </div>
       <div class="tactical-modal-footer">
@@ -624,45 +831,43 @@
     document.getElementById('addAdminModal').classList.add('active');
   }
 
+  function toggleAddProAdminPw(role) {
+    var card = document.getElementById('addProAdminPwCard');
+    if (card) {
+      card.style.display = (role === 'pro_admin') ? 'block' : 'none';
+    }
+  }
+
+  function toggleEditProAdminPw(role) {
+    var card = document.getElementById('editProAdminPwCard');
+    if (card) {
+      card.style.display = (role === 'pro_admin') ? 'block' : 'none';
+    }
+  }
+
   function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('active');
   }
 
-  function openEditModal(admin) {
-    document.getElementById('edit_name').value = admin.name || '';
-    document.getElementById('edit_account_id').value = admin.account_id || '';
-    document.getElementById('edit_email').value = admin.email || '';
-    document.getElementById('edit_phone').value = admin.phone || '';
-    document.getElementById('edit_role').value = admin.role || 'admin';
-
-    // Is this developer admin?
-    const isDev = (admin.account_id === 'ArghaRoy' || admin.name === 'ArghaRoy' || admin.id === 1);
-    if (isDev) {
-      document.getElementById('edit_account_id').readOnly = true;
-      document.getElementById('edit_role').disabled = true;
+  function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+      icon.style.color = '#ef4444';
     } else {
-      document.getElementById('edit_account_id').readOnly = false;
-      document.getElementById('edit_role').disabled = false;
+      input.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+      icon.style.color = '#64748b';
     }
-
-    // Reset checkboxes
-    const perms = admin.permissions || [];
-    ['can_manage_cms', 'can_manage_exams', 'can_manage_students', 'can_manage_finance', 'can_view_audit'].forEach(p => {
-      const cb = document.getElementById('edit_perm_' + p);
-      if (cb) {
-        cb.checked = perms.includes(p) || (admin.role === 'super_admin');
-      }
-    });
-
-    const form = document.getElementById('editAdminForm');
-    form.action = "{{ route('admin.admin_control.index') }}/" + admin.id + "/permissions";
-
-    document.getElementById('editAdminModal').classList.add('active');
   }
 
   function confirmDeleteAdmin(id, name, accountId) {
     document.getElementById('delAdminName').textContent = name;
-    document.getElementById('delAdminId').textContent = 'Account ID: ' + accountId;
+    document.getElementById('delAdminId').textContent = 'Identity: ' + accountId;
     const form = document.getElementById('deleteAdminForm');
     form.action = "{{ route('admin.admin_control.index') }}/" + id;
     document.getElementById('deleteAdminModal').classList.add('active');
@@ -673,6 +878,39 @@
     if (event.target.classList.contains('modal-overlay')) {
       event.target.classList.remove('active');
     }
+  }
+  function switchAdminTab(tab) {
+    const rosterSec = document.getElementById('rosterSection');
+    const reqSec = document.getElementById('requestsSection');
+    const tabRoster = document.getElementById('tabBtnRoster');
+    const tabReq = document.getElementById('tabBtnRequests');
+
+    if (tab === 'requests') {
+      rosterSec.style.display = 'none';
+      reqSec.style.display = 'block';
+      tabReq.style.background = 'rgba(245, 158, 11, 0.18)';
+      tabReq.style.borderColor = '#f59e0b';
+      tabReq.style.color = '#ffffff';
+
+      tabRoster.style.background = 'rgba(255,255,255,0.04)';
+      tabRoster.style.borderColor = 'rgba(255,255,255,0.1)';
+      tabRoster.style.color = '#94a3b8';
+    } else {
+      rosterSec.style.display = 'block';
+      reqSec.style.display = 'none';
+      tabRoster.style.background = 'rgba(255,87,87,0.15)';
+      tabRoster.style.borderColor = '#ff5757';
+      tabRoster.style.color = '#ffffff';
+
+      tabReq.style.background = 'rgba(255,255,255,0.04)';
+      tabReq.style.borderColor = 'rgba(255,255,255,0.1)';
+      tabReq.style.color = '#94a3b8';
+    }
+  }
+
+  // Auto switch to requests tab if url has #requests or ?tab=requests
+  if (window.location.hash === '#requests' || window.location.search.includes('tab=requests')) {
+    switchAdminTab('requests');
   }
 </script>
 @endsection

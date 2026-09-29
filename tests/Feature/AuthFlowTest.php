@@ -50,11 +50,12 @@ class AuthFlowTest extends TestCase
     {
         $response = $this->get('/admin/login');
         $response->assertStatus(200);
-        $response->assertSee('Admin Command Access');
-        $response->assertSee('Officer / Account ID or Email');
-        $response->assertDontSee('1-Click Super Admin Access');
-        $response->assertSee('Registered Phone Number');
-        $response->assertSee('Student Login');
+        $response->assertSee('Imperial Defence Academy');
+        $response->assertSee('Admin Section');
+        $response->assertSee('Sign in to access the admin panel');
+        $response->assertSee('Identity');
+        $response->assertDontSee('Phone Number');
+        $response->assertSee('Create an Admin Account');
     }
 
     /**
@@ -196,7 +197,6 @@ class AuthFlowTest extends TestCase
 
         $response = $this->post('/admin/login', [
             'login_id' => $admin->account_id,
-            'phone' => $admin->phone,
             'password' => 'ArghaArghaGTA6',
         ]);
 
@@ -332,7 +332,6 @@ class AuthFlowTest extends TestCase
 
         $response = $this->post('/admin/login', [
             'login_id' => 'ArghaRoy',
-            'phone' => $admin->phone,
             'password' => 'ArghaArghaGTA6',
         ]);
 
@@ -349,12 +348,47 @@ class AuthFlowTest extends TestCase
 
         $response = $this->post('/admin/login', [
             'login_id' => 'argharoy',
-            'phone' => $admin->phone,
             'password' => 'ArghaArghaGTA6',
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticatedAs($admin);
+    }
+
+    /**
+     * Test 14: Admin logout redirects to backend admin login page
+     */
+    public function test_admin_logout_redirects_to_admin_login(): void
+    {
+        $admin = User::where('role', 'super_admin')->first();
+        $this->assertNotNull($admin);
+
+        $response = $this->actingAs($admin)->post('/logout');
+
+        $response->assertRedirect(route('admin.login'));
+        $this->assertGuest();
+    }
+
+    /**
+     * Test 15: Student logout redirects to frontend student login page
+     */
+    public function test_student_logout_redirects_to_student_login(): void
+    {
+        $studentUser = User::where('role', 'academic_student')->first();
+        if (!$studentUser) {
+            $studentUser = User::create([
+                'name' => 'Logout Test Student',
+                'email' => 'logout_test_' . uniqid() . '@example.com',
+                'account_id' => 'IDA-LOGOUT-01',
+                'password' => Hash::make('password123'),
+                'role' => 'academic_student',
+            ]);
+        }
+
+        $response = $this->actingAs($studentUser)->post('/logout');
+
+        $response->assertRedirect(route('login'));
+        $this->assertGuest();
     }
 }
 

@@ -86,6 +86,15 @@ class Exam extends Model
         };
     }
 
+    public function isSoldier(): bool
+    {
+        if ($this->target_track === 'soldier') {
+            return true;
+        }
+        $text = strtolower(($this->target_track ?? '') . ' ' . $this->category . ' ' . $this->title);
+        return str_contains($text, 'soldier') || str_contains($text, 'sainik') || str_contains($text, 'sailor') || str_contains($text, 'airman');
+    }
+
     public function isPrelim(): bool
     {
         if ($this->target_track === 'prelim') {
@@ -112,12 +121,13 @@ class Exam extends Model
     public function trackLabel(): string
     {
         return match($this->target_track) {
-            'prelim' => 'Preliminary Examination',
-            'issb' => 'ISSB Special Masterclass',
+            'soldier' => 'Soldier / Non-Commissioned',
+            'prelim' => 'Officer - Preliminary',
+            'issb' => 'Officer - ISSB',
             'constable' => 'Police Constable',
             'si' => 'Sub-Inspector (SI)',
             'asi' => 'Assistant Sub-Inspector (ASI)',
-            default => $this->isIssb() ? 'ISSB Special Masterclass' : ($this->isPrelim() ? 'Preliminary Examination' : 'General Program'),
+            default => $this->isSoldier() ? 'Soldier / Non-Commissioned' : ($this->isIssb() ? 'Officer - ISSB' : ($this->isPrelim() ? 'Officer - Preliminary' : 'General Program')),
         };
     }
 
@@ -148,6 +158,12 @@ class Exam extends Model
 
         if (!$student) {
             return false;
+        }
+
+        // Rule 0: Soldier / Non-Commissioned Exams
+        if ($this->isSoldier()) {
+            $branch = $this->branch ?: 'army';
+            return $student->hasSoldierTrack($branch);
         }
 
         // Rule 1: ISSB Exams (Cross-branch Tri-Services privilege)

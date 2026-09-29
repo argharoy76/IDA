@@ -25,12 +25,12 @@
     @endforeach
   </div>
 
-  <!-- High-contrast Atmospheric Emerald Military Overlays (Vibrant & Photo-preserving) -->
-  <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 11, 20, 0.40) 0%, rgba(2, 44, 34, 0.28) 50%, rgba(5, 11, 20, 0.78) 100%); z-index: 1; pointer-events: none;"></div>
+  <!-- High-contrast Atmospheric Military Overlays (Vibrant & Photo-preserving) -->
+  <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 11, 20, 0.40) 0%, rgba(8, 45, 47, 0.35) 50%, rgba(5, 11, 20, 0.78) 100%); z-index: 1; pointer-events: none;"></div>
   <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(5, 11, 20, 0.05) 0%, rgba(5, 11, 20, 0.65) 90%); z-index: 1; pointer-events: none;"></div>
 
   <!-- Subtle Ambient Glow Orbs -->
-  <div style="position: absolute; top: -100px; left: 10%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%); filter: blur(50px); pointer-events: none; z-index: 2;"></div>
+  <div style="position: absolute; top: -100px; left: 10%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(133, 201, 204, 0.25) 0%, transparent 70%); filter: blur(50px); pointer-events: none; z-index: 2;"></div>
   <div style="position: absolute; bottom: -80px; right: 15%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(217, 119, 6, 0.15) 0%, transparent 70%); filter: blur(60px); pointer-events: none; z-index: 2;"></div>
 
   <div style="position: relative; z-index: 20; max-width: 1240px; margin: 0 auto;" class="hero-grid-responsive">
@@ -194,7 +194,7 @@
 
           @if(filled($box3Label))
           <div style="background: rgba(2, 6, 23, 0.32); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); border: 1px solid rgba(255, 255, 255, 0.14); padding: 14px 8px; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 14px rgba(0, 0, 0, 0.25);">
-            <strong style="display: block; font-size: 24px; color: #34d399; font-family: 'Roboto', sans-serif; font-weight: 800; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);">
+            <strong style="display: block; font-size: 24px; color: #85c9cc; font-family: 'Roboto', sans-serif; font-weight: 800; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);">
               <span class="counter-number" data-target="{{ $stats['active_batches'] }}" data-decimals="0">0</span>
             </strong>
             <small style="font-size: 11px; color: #cbd5e1; font-weight: 600; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);">{{ $box3Label }}</small>
@@ -240,11 +240,11 @@
     padding: 0 20px;
   }
   .ida-bulletin-card {
-    background: linear-gradient(135deg, #071522 0%, #072a1e 50%, #071522 100%);
-    border: 1px solid rgba(16, 185, 129, 0.45);
+    background: linear-gradient(135deg, #082d2f 0%, #0c3e41 50%, #082d2f 100%);
+    border: 1px solid rgba(133, 201, 204, 0.45);
     border-top: 2px solid var(--accent-gold);
     border-radius: 50px;
-    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.65), 0 0 24px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.65), 0 0 24px rgba(133, 201, 204, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.18);
     display: flex;
     align-items: center;
     padding: 9px 24px;
@@ -291,14 +291,14 @@
 <section id="courses" class="section-responsive-pad" style="max-width: 1240px; margin: 70px auto; padding: 0 24px;">
   <div data-aos="fade-up" style="text-align: center; max-width: 680px; margin: 0 auto 46px;">
     @if(filled($pillarsTag))
-    <span style="font-size: 11.5px; font-weight: 700; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1.5px; display: inline-block; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); padding: 4px 14px; border-radius: 20px; margin-bottom: 10px;">
+    <span style="font-size: 11.5px; font-weight: 800; color: #082d2f; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px; background: rgba(133, 201, 204, 0.22); border: 1px solid #85c9cc; padding: 5px 16px; border-radius: 9999px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(133, 201, 204, 0.25);">
       {{ $pillarsTag }}
     </span>
     @endif
-    <h2 style="font-size: 32px; font-weight: 800; color: var(--text-main); font-family: 'Roboto', sans-serif;">
+    <h2 style="font-size: clamp(28px, 4vw, 36px); font-weight: 900; color: #082d2f; font-family: 'Roboto', sans-serif; letter-spacing: -0.02em;">
       {{ $pillarsHeading }}
     </h2>
-    <div style="width: 60px; height: 2px; background: var(--accent-gold); margin: 12px auto 0;"></div>
+    <div style="width: 50px; height: 3px; background: #85c9cc; margin: 14px auto 0; border-radius: 2px;"></div>
   </div>
 
   <div class="grid-cols-4-responsive" style="grid-template-columns: repeat({{ min($pillarCount, 4) }}, 1fr);">
@@ -483,11 +483,11 @@
     <div data-aos="fade-up" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; flex-wrap: gap: 16px;">
       <div>
         @if(filled($courseTag))
-        <span style="font-size: 11.5px; font-weight: 700; color: var(--brand-emerald); text-transform: uppercase; letter-spacing: 0.8px; display: inline-block; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;">
+        <span style="font-size: 11.5px; font-weight: 800; color: #082d2f; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px; background: rgba(133, 201, 204, 0.22); border: 1px solid #85c9cc; padding: 5px 16px; border-radius: 9999px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(133, 201, 204, 0.25);">
           {{ $courseTag }}
         </span>
         @endif
-        <h2 style="font-size: 30px; font-weight: 800; color: var(--text-main); font-family: 'Roboto', sans-serif;">
+        <h2 style="font-size: clamp(26px, 3.5vw, 34px); font-weight: 900; color: #082d2f; font-family: 'Roboto', sans-serif; letter-spacing: -0.02em;">
           {{ $courseHeading }}
         </h2>
       </div>
@@ -553,11 +553,11 @@
   <div data-aos="fade-up" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
     <div>
       @if(filled($galleryTag))
-      <span style="font-size: 11.5px; font-weight: 700; color: var(--brand-emerald); text-transform: uppercase; letter-spacing: 0.8px; display: inline-block; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;">
+      <span style="font-size: 11.5px; font-weight: 800; color: #082d2f; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px; background: rgba(133, 201, 204, 0.22); border: 1px solid #85c9cc; padding: 5px 16px; border-radius: 9999px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(133, 201, 204, 0.25);">
         {{ $galleryTag }}
       </span>
       @endif
-      <h2 style="font-size: 30px; font-weight: 800; color: var(--text-main); font-family: 'Roboto', sans-serif;">
+      <h2 style="font-size: clamp(26px, 3.5vw, 34px); font-weight: 900; color: #082d2f; font-family: 'Roboto', sans-serif; letter-spacing: -0.02em;">
         {{ $galleryTitle }}
       </h2>
     </div>
@@ -567,7 +567,7 @@
   <div class="grid-cols-4-responsive">
     @foreach($gallery as $idx => $item)
       <div class="classical-card" data-aos="fade-up" data-aos-delay="{{ ($idx + 1) * 100 }}" style="background: var(--surface); border: 1px solid var(--border-soft); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-card);">
-        <div style="height: 220px; background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%); display: grid; place-items: center; color: rgba(255,255,255,0.7); font-size: 32px; overflow: hidden; position: relative;">
+        <div style="height: 220px; background: linear-gradient(135deg, #85c9cc 0%, #082d2f 100%); display: grid; place-items: center; color: rgba(255,255,255,0.7); font-size: 32px; overflow: hidden; position: relative;">
           @if($item->image_path)
             <img src="{{ str_starts_with($item->image_path, 'http') ? $item->image_path : asset($item->image_path) }}" alt="{{ $item->title }}" style="width: 100%; height: 100%; object-fit: cover;">
           @else
@@ -594,26 +594,26 @@
   $ctaBtn2 = cms('cta_btn2_text', 'Visit Khulna Campus');
 @endphp
 @if(filled($ctaHeading))
-<!-- Call to Action Banner (From Reference: data-aos="zoom-in" with animate-gold-glow) -->
-<section data-aos="zoom-in" data-aos-duration="1000" class="animate-gold-glow cta-responsive-pad" style="position: relative; background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.3) 0%, var(--brand-primary, #064e3b) 50%, var(--accent-navy, #090e1a) 100%); color: #ffffff; padding: 65px 24px; text-align: center; border-radius: 20px; max-width: 1240px; margin: 30px auto 40px; box-shadow: 0 20px 40px -10px rgba(6, 78, 59, 0.4); border: 1px solid var(--accent-gold); overflow: hidden;">
+<!-- Call to Action Banner (Luminous OneMedical Aesthetic) -->
+<section data-aos="zoom-in" data-aos-duration="1000" class="cta-responsive-pad" style="position: relative; background: linear-gradient(135deg, #f0f9fa 0%, #e6f4f5 50%, #eef8f8 100%); color: #082d2f; padding: 65px 24px; text-align: center; border-radius: 24px; max-width: 1240px; margin: 30px auto 40px; box-shadow: 0 20px 40px -10px rgba(8, 45, 47, 0.08), 0 0 24px rgba(133, 201, 204, 0.2); border: 1.5px solid #85c9cc; overflow: hidden;">
   <div style="position: relative; max-width: 720px; margin: 0 auto;">
-    <h2 style="font-size: 34px; font-weight: 900; margin-bottom: 14px; color: #ffffff; font-family: 'Roboto', sans-serif; letter-spacing: -0.02em;">
+    <h2 style="font-size: 34px; font-weight: 900; margin-bottom: 14px; color: #082d2f; font-family: 'Roboto', sans-serif; letter-spacing: -0.02em;">
       {{ $ctaHeading }}
     </h2>
     @if(filled($ctaSubheading))
-    <p style="font-size: 15px; color: #cbd5e1; line-height: 1.7; margin-bottom: 30px;">
+    <p style="font-size: 15.5px; color: #334155; line-height: 1.75; margin-bottom: 30px;">
       {{ $ctaSubheading }}
     </p>
     @endif
     @if(filled($ctaBtn1) || filled($ctaBtn2))
     <div class="cta-btn-wrap" style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
       @if(filled($ctaBtn1))
-      <a href="{{ cms('cta_btn1_url', route('register')) }}" class="btn-academy-primary" style="padding: 13px 28px; font-size: 14px; border-radius: 8px;">
+      <a href="{{ cms('cta_btn1_url', route('register')) }}" class="btn-primary" style="padding: 13px 28px; font-size: 14px; border-radius: 8px;">
         <i class="fa-solid fa-file-signature"></i> {{ $ctaBtn1 }}
       </a>
       @endif
       @if(filled($ctaBtn2))
-      <a href="{{ cms('cta_btn2_url', route('contact')) }}" class="btn-academy-outline" style="padding: 13px 24px; font-size: 14px; border-radius: 8px;">
+      <a href="{{ cms('cta_btn2_url', route('contact')) }}" class="btn-secondary" style="padding: 13px 24px; font-size: 14px; border-radius: 8px; border-color: #85c9cc; color: #082d2f; background: #ffffff;">
         <i class="fa-solid fa-compass"></i> {{ $ctaBtn2 }}
       </a>
       @endif

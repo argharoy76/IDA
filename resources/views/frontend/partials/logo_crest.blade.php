@@ -16,7 +16,7 @@
         <!-- 3D Shadow Layer -->
         <filter id="crest3dShadow_{{ $uid }}" x="-30%" y="-30%" width="160%" height="170%" filterUnits="userSpaceOnUse">
           <feDropShadow dx="0" dy="5" stdDeviation="4.5" flood-color="#000000" flood-opacity="0.4"/>
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#059669" flood-opacity="0.35"/>
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#85c9cc" flood-opacity="0.35"/>
         </filter>
         <!-- Metallic 3D Gold Gradient -->
         <linearGradient id="goldMetallic_{{ $uid }}" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -34,12 +34,12 @@
           <stop offset="60%" stop-color="#f59e0b"/>
           <stop offset="100%" stop-color="#92400e"/>
         </linearGradient>
-        <!-- Imperial 3D Emerald Enamel Core -->
+        <!-- Imperial 3D Teal Enamel Core (#85c9cc) -->
         <radialGradient id="emeraldRadial_{{ $uid }}" cx="50%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="#10b981"/>
-          <stop offset="35%" stop-color="#059669"/>
-          <stop offset="70%" stop-color="#064e3b"/>
-          <stop offset="100%" stop-color="#022c22"/>
+          <stop offset="0%" stop-color="#b6e7e9"/>
+          <stop offset="35%" stop-color="#85c9cc"/>
+          <stop offset="70%" stop-color="#5faab0"/>
+          <stop offset="100%" stop-color="#082d2f"/>
         </radialGradient>
         <!-- Specular Glass Curve Highlight -->
         <linearGradient id="glassShine_{{ $uid }}" x1="0%" y1="0%" x2="100%" y2="100%">

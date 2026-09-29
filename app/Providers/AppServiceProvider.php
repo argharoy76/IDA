@@ -72,8 +72,57 @@ class AppServiceProvider extends ServiceProvider
                     $table->string('target_tracks', 150)->nullable()->after('target_wing');
                 });
             }
+            if (Schema::hasTable('students') && !Schema::hasColumn('students', 'plain_password')) {
+                Schema::table('students', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('plain_password', 255)->nullable()->after('target_tracks');
+                });
+            }
+            if (Schema::hasTable('users') && !Schema::hasColumn('users', 'plain_password')) {
+                Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('plain_password', 255)->nullable()->after('password');
+                });
+            }
+            if (Schema::hasTable('courses') && !Schema::hasColumn('courses', 'course_code')) {
+                Schema::table('courses', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('course_code', 50)->nullable()->after('id');
+                });
+            }
+            if (Schema::hasTable('courses') && !Schema::hasColumn('courses', 'branch')) {
+                Schema::table('courses', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('branch', 50)->nullable()->index()->after('category');
+                });
+            }
+            if (Schema::hasTable('courses') && !Schema::hasColumn('courses', 'target_track')) {
+                Schema::table('courses', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('target_track', 50)->nullable()->index()->after('branch');
+                });
+            }
+            if (Schema::hasTable('course_student') && !Schema::hasColumn('course_student', 'paid_amount')) {
+                Schema::table('course_student', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->decimal('paid_amount', 10, 2)->default(0)->after('payment_status');
+                    $table->decimal('due_amount', 10, 2)->default(0)->after('paid_amount');
+                });
+            }
         } catch (\Throwable $e) {
             // Silently pass if DDL permissions restricted or table locked
+        }
+
+        try {
+            if (!Schema::hasTable('team_members')) {
+                Schema::create('team_members', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->id();
+                    $table->string('name', 255);
+                    $table->string('designation', 255)->nullable();
+                    $table->text('bio')->nullable();
+                    $table->string('photo', 500)->nullable();
+                    $table->tinyInteger('display_category')->default(1);
+                    $table->integer('display_order')->default(0);
+                    $table->boolean('is_active')->default(true);
+                    $table->timestamps();
+                });
+            }
+        } catch (\Throwable $e) {
+            // Silently pass
         }
 
         // Share CMS settings across all views

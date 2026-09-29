@@ -31,6 +31,7 @@ use App\Models\ExamAttemptAnswer;
 use App\Models\CmsSetting;
 use App\Models\CmsNotice;
 use App\Models\CmsGalleryItem;
+use App\Models\TeamMember;
 use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
@@ -1255,6 +1256,70 @@ class DatabaseSeeder extends Seeder
 
         foreach ($gallery as $g) {
             CmsGalleryItem::create($g);
+        }
+
+        // Team Members (OneMedical Leadership Architecture)
+        if (TeamMember::count() === 0) {
+            $team = [
+                [
+                    'name' => 'Argha Roy',
+                    'designation' => 'Founder & Chief Executive Officer (CEO)',
+                    'bio' => 'Visionary founder committed to modernizing military preparatory education in Bangladesh. Leading Imperial Defence Academy with cutting-edge psychometric testing laboratories, tactical obstacle grounds, and direct mentoring from decorated military officers.',
+                    'photo' => null,
+                    'display_category' => 1,
+                    'display_order' => 10,
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Major (Retd.) Farhan Ahmed',
+                    'designation' => 'Director of Academic & Operational Training',
+                    'bio' => 'Over two decades of distinguished service in the Bangladesh Army. Oversees curriculum design, physical stamina conditioning, and ISSB selection board preparation.',
+                    'photo' => null,
+                    'display_category' => 2,
+                    'display_order' => 20,
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Major (Retd.) Tariqul Islam',
+                    'designation' => 'Director of Ground Tasks & Leadership (GTO)',
+                    'bio' => 'Armoured Corps veteran specializing in Progressive Group Tasks (PGT), Half Group Tasks (HGT), and outdoor command leadership evaluation.',
+                    'photo' => null,
+                    'display_category' => 2,
+                    'display_order' => 30,
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Captain Sabrina Sultana (Retd.)',
+                    'designation' => 'Lead Military Psychologist',
+                    'bio' => 'Expert in projective personality assessment, PPDT, WAT, TAT, and psychological screening.',
+                    'photo' => null,
+                    'display_category' => 3,
+                    'display_order' => 40,
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Lt. Commander (Retd.) Enamul Haque',
+                    'designation' => 'Senior Naval Instructor & Viva Coach',
+                    'bio' => 'Focuses on officer-like qualities, board interview demeanor, current defence affairs, and speech delivery.',
+                    'photo' => null,
+                    'display_category' => 3,
+                    'display_order' => 50,
+                    'is_active' => true,
+                ],
+                [
+                    'name' => 'Master Warrant Officer (Retd.) Rafiqul Islam',
+                    'designation' => 'Chief Drill & Obstacle Master',
+                    'bio' => 'Field physical training and regulation obstacle trainer.',
+                    'photo' => null,
+                    'display_category' => 4,
+                    'display_order' => 60,
+                    'is_active' => true,
+                ],
+            ];
+
+            foreach ($team as $member) {
+                TeamMember::create($member);
+            }
         }
     }
 }

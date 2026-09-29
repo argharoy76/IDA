@@ -50,7 +50,8 @@ class CmsController extends Controller
     public function pageAbout()
     {
         $settings = CmsSetting::all()->keyBy('key');
-        return view('backend.cms.about', compact('settings'));
+        $teamMembers = \App\Models\TeamMember::orderBy('display_category')->orderBy('display_order')->get();
+        return view('backend.cms.about', compact('settings', 'teamMembers'));
     }
 
     public function pageClasses()
@@ -100,6 +101,7 @@ class CmsController extends Controller
             'hero_bg_image' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:10240',
             'about_image' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:10240',
             'cta_bg_image' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:10240',
+            'about_hero_image' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:10240',
         ]);
 
         $data = $request->except(['_token', '_method']);
@@ -112,7 +114,7 @@ class CmsController extends Controller
 
         // Handle File Uploads
         $allowedExtensions = ['jpeg', 'jpg', 'png', 'webp', 'svg'];
-        $fileFields = ['site_logo', 'site_crest', 'hero_bg_image', 'about_image', 'cta_bg_image'];
+        $fileFields = ['site_logo', 'site_crest', 'hero_bg_image', 'about_image', 'cta_bg_image', 'about_hero_image'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
                 $file = $request->file($field);
@@ -399,5 +401,144 @@ class CmsController extends Controller
         cms_clear_cache();
 
         return back()->with('success', 'Hero slides reset to the default 5 military carousel photos.');
+    }
+
+    public function storeTeamMember(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'bio' => 'nullable|string',
+            'photo' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:5120',
+            'display_category' => 'required|in:1,2,3,4',
+            'display_order' => 'nullable|integer',
+        ]);
+
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $uploadPath = public_path('uploads/cms/team');
+            if (!File::isDirectory($uploadPath)) {
+                File::makeDirectory($uploadPath, 0755, true, true);
+            }
+            $file = $request->file('photo');
+            $filename = 'team_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move($uploadPath, $filename);
+            $photoPath = 'uploads/cms/team/' . $filename;
+        }
+
+        \App\Models\TeamMember::create([
+            'name' => $validated['name'],
+            'designation' => $validated['designation'],
+            'bio' => $validated['bio'],
+            'photo' => $photoPath,
+            'display_category' => $validated['display_category'],
+            'display_order' => $validated['display_order'] ?? 0,
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', 'Team member added successfully.');
+    }
+
+    public function updateTeamMember(Request $request, $id)
+    {
+        $member = \App\Models\TeamMember::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'bio' => 'nullable|string',
+            'photo' => 'nullable|file|mimes:jpeg,png,jpg,webp|max:5120',
+            'display_category' => 'required|in:1,2,3,4',
+            'display_order' => 'nullable|integer',
+        ]);
+
+        $photoPath = $member->photo;
+        if ($request->hasFile('photo')) {
+            if ($photoPath && File::exists(public_path($photoPath))) {
+                @unlink(public_path($photoPath));
+            }
+            $uploadPath = public_path('uploads/cms/team');
+            if (!File::isDirectory($uploadPath)) {
+                File::makeDirectory($uploadPath, 0755, true, true);
+            }
+            $file = $request->file('photo');
+            $filename = 'team_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move($uploadPath, $filename);
+            $photoPath = 'uploads/cms/team/' . $filename;
+        } elseif ($request->boolean('remove_photo')) {
+            if ($photoPath && File::exists(public_path($photoPath))) {
+                @unlink(public_path($photoPath));
+            }
+            $photoPath = null;
+        }
+
+        $member->update([
+            'name' => $validated['name'],
+            'designation' => $validated['designation'],
+            'bio' => $validated['bio'],
+            'photo' => $photoPath,
+            'display_category' => $validated['display_category'],
+            'display_order' => $validated['display_order'] ?? $member->display_order,
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $member->is_active,
+        ]);
+
+        return back()->with('success', "Team member \"{$member->name}\" updated successfully.");
+    }
+
+    public function deleteTeamMember($id)
+    {
+        $member = \App\Models\TeamMember::findOrFail($id);
+        $name = $member->name;
+        if ($member->photo && File::exists(public_path($member->photo))) {
+            @unlink(public_path($member->photo));
+        }
+        $member->delete();
+
+        return back()->with('success', "Team member \"{$name}\" removed successfully.");
+    }
+
+    public function reorderTeamMember(Request $request, $id)
+    {
+        $member = \App\Models\TeamMember::findOrFail($id);
+        $direction = $request->input('direction');
+
+        // Fetch all members in this category in current sequence
+        $categoryMembers = \App\Models\TeamMember::where('display_category', $member->display_category)
+            ->orderBy('display_order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $currentIndex = $categoryMembers->search(fn($item) => $item->id === $member->id);
+
+        if ($currentIndex !== false) {
+            $targetIndex = ($direction === 'up') ? $currentIndex - 1 : $currentIndex + 1;
+            if ($targetIndex >= 0 && $targetIndex < $categoryMembers->count()) {
+                // Swap the two members in collection
+                $otherMember = $categoryMembers[$targetIndex];
+                
+                // Re-sequence all members with clean increments of 10
+                $seq = 10;
+                foreach ($categoryMembers as $idx => $m) {
+                    if ($idx === $currentIndex) {
+                        $newOrder = ($direction === 'up') ? ($targetIndex * 10) - 5 : ($targetIndex * 10) + 15;
+                    } elseif ($idx === $targetIndex) {
+                        $newOrder = $currentIndex * 10;
+                    } else {
+                        $newOrder = $idx * 10;
+                    }
+                    $m->update(['display_order' => $newOrder]);
+                }
+
+                // Final clean normalization
+                $freshList = \App\Models\TeamMember::where('display_category', $member->display_category)
+                    ->orderBy('display_order', 'asc')
+                    ->get();
+                foreach ($freshList as $pos => $m) {
+                    $m->update(['display_order' => ($pos + 1) * 10]);
+                }
+            }
+        }
+
+        return back()->with('success', "Order priority updated for \"{$member->name}\".");
     }
 }

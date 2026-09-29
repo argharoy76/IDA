@@ -244,7 +244,7 @@ class ExamController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|string',
-            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
+            'target_track' => 'nullable|in:soldier,prelim,issb,constable,si,asi,general',
             'exam_type' => 'required|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'duration_minutes' => 'required|integer|min:1|max:720',
             'question_count' => 'required|integer|min:1',
@@ -292,7 +292,7 @@ class ExamController extends Controller
         if (empty($targetTrack)) {
             $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
             if (in_array($branch, ['army', 'navy', 'air_force'], true)) {
-                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : 'prelim';
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : (str_contains($catLower, 'soldier') || str_contains($catLower, 'sainik') || str_contains($catLower, 'sailor') || str_contains($catLower, 'airman') ? 'soldier' : 'prelim');
             } elseif ($branch === 'police') {
                 if (str_contains($catLower, 'constable')) {
                     $targetTrack = 'constable';
@@ -501,7 +501,7 @@ class ExamController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|string',
-            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
+            'target_track' => 'nullable|in:soldier,prelim,issb,constable,si,asi,general',
             'exam_type' => 'required|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'duration_minutes' => 'required|integer|min:5|max:360',
             'question_count' => 'required|integer|min:1',
@@ -555,7 +555,7 @@ class ExamController extends Controller
         if (empty($targetTrack)) {
             $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
             if (in_array($branch, ['army', 'navy', 'air_force'], true)) {
-                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : 'prelim';
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : (str_contains($catLower, 'soldier') || str_contains($catLower, 'sainik') || str_contains($catLower, 'sailor') || str_contains($catLower, 'airman') ? 'soldier' : 'prelim');
             } elseif ($branch === 'police') {
                 if (str_contains($catLower, 'constable')) {
                     $targetTrack = 'constable';
@@ -622,6 +622,15 @@ class ExamController extends Controller
         $exam->save();
 
         $state = $exam->is_public_for_external ? 'PUBLIC on Frontend' : 'HIDDEN from Frontend';
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_public' => (bool)$exam->is_public_for_external,
+                'message' => "Exam '{$exam->title}' is now {$state}.",
+            ]);
+        }
+
         return back()->with('success', "Exam '{$exam->title}' is now {$state}.");
     }
 
@@ -632,6 +641,15 @@ class ExamController extends Controller
         $exam->schedule_start = Carbon::now();
         $exam->save();
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Exam '{$exam->title}' is now LIVE! Scheduled countdown timer unlocked.",
+                'exam' => $exam,
+                'status' => 'open',
+            ]);
+        }
+
         return back()->with('success', "Exam '{$exam->title}' is now LIVE! Scheduled countdown timer unlocked.");
     }
 
@@ -641,6 +659,15 @@ class ExamController extends Controller
         $exam->status = 'closed';
         $exam->schedule_end = Carbon::now();
         $exam->save();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Exam '{$exam->title}' has been ENDED & CLOSED. Students can no longer submit new attempts.",
+                'exam' => $exam,
+                'status' => 'closed',
+            ]);
+        }
 
         return back()->with('success', "Exam '{$exam->title}' has been ENDED & CLOSED. Students can no longer submit new attempts.");
     }
@@ -661,6 +688,14 @@ class ExamController extends Controller
         $exam->status = $validated['status'];
         $exam->is_public_for_external = $request->has('is_public_for_external');
         $exam->save();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Exam schedule & operational controls for '{$exam->title}' have been updated.",
+                'exam' => $exam,
+            ]);
+        }
 
         return back()->with('success', "Exam schedule & operational controls for '{$exam->title}' have been updated.");
     }
@@ -838,7 +873,7 @@ class ExamController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'branch' => 'nullable|in:army,navy,air_force,police',
-            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
+            'target_track' => 'nullable|in:soldier,prelim,issb,constable,si,asi,general',
             'exam_type' => 'required|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'category' => 'required|string',
             'duration_minutes' => 'required|integer|min:1',
@@ -863,7 +898,7 @@ class ExamController extends Controller
             $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
             $branch = $validated['branch'] ?? 'army';
             if (in_array($branch, ['army', 'navy', 'air_force'], true)) {
-                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : 'prelim';
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : (str_contains($catLower, 'soldier') || str_contains($catLower, 'sainik') || str_contains($catLower, 'sailor') || str_contains($catLower, 'airman') ? 'soldier' : 'prelim');
             } elseif ($branch === 'police') {
                 if (str_contains($catLower, 'constable')) {
                     $targetTrack = 'constable';
@@ -915,7 +950,7 @@ class ExamController extends Controller
             'title' => 'required|string|max:255',
             'branch' => 'nullable|in:army,navy,air_force,police',
             'category' => 'required|string',
-            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
+            'target_track' => 'nullable|in:soldier,prelim,issb,constable,si,asi,general',
             'exam_type' => 'nullable|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'duration_minutes' => 'required|integer|min:1',
             'total_marks' => 'required|numeric|min:1',
@@ -967,7 +1002,7 @@ class ExamController extends Controller
             $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
             $branch = $validated['branch'] ?? $exam->branch;
             if (in_array($branch, ['army', 'navy', 'air_force'], true)) {
-                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : ($exam->target_track ?: 'prelim');
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : (str_contains($catLower, 'soldier') || str_contains($catLower, 'sainik') || str_contains($catLower, 'sailor') || str_contains($catLower, 'airman') ? 'soldier' : ($exam->target_track ?: 'prelim'));
             } elseif ($branch === 'police') {
                 if (str_contains($catLower, 'constable')) {
                     $targetTrack = 'constable';
@@ -1041,6 +1076,14 @@ class ExamController extends Controller
                 $exam->random_question_count = Question::where('exam_id', $exam->id)->count();
                 $exam->save();
             }
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Assessment module '{$exam->title}' updated successfully.",
+                'exam' => $exam->fresh(['questions']),
+            ]);
         }
 
         if ($request->filled('return_to')) {

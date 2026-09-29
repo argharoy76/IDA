@@ -67,6 +67,8 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.post');
 Route::get('/admin/login', [AuthController::class, 'showAdminLogin'])->name('admin.login');
 Route::post('/admin/login', [AuthController::class, 'adminLogin'])->middleware('throttle:10,1')->name('admin.login.post');
+Route::get('/admin/register', [AuthController::class, 'showAdminRegister'])->name('admin.register');
+Route::post('/admin/register', [AuthController::class, 'adminRegister'])->middleware('throttle:10,1')->name('admin.register.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('register.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -112,7 +114,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('aut
 */
 Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () {
     // Shared between Super Admin, Admin, and Finance Manager
-    Route::middleware('role:super_admin,admin,finance_manager')->group(function () {
+    Route::middleware('role:super_admin,pro_admin,admin,finance_manager')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Fees & Payments
@@ -132,8 +134,8 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::get('/finance/reports', [AdminFinanceController::class, 'reports'])->name('finance.reports');
     });
 
-    // Restricted strictly to Super Admin and Admin (Core Executive Clearance)
-    Route::middleware('role:super_admin,admin')->group(function () {
+    // Restricted strictly to Super Admin, Pro Admin and Admin (Core Executive Clearance)
+    Route::middleware('role:super_admin,pro_admin,admin')->group(function () {
         // Students
         Route::resource('students', AdminStudentController::class);
         Route::post('/students/{id}/transfer-batch', [AdminStudentController::class, 'transferBatch'])->name('students.transfer_batch');
@@ -191,6 +193,10 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::get('/cms/courses', [AdminCmsController::class, 'pageCourses'])->name('cms.courses');
         Route::get('/cms/online-tests', [AdminCmsController::class, 'pageOnlineTests'])->name('cms.online_tests');
         Route::get('/cms/about', [AdminCmsController::class, 'pageAbout'])->name('cms.about');
+        Route::post('/cms/about/team', [AdminCmsController::class, 'storeTeamMember'])->name('cms.team.store');
+        Route::put('/cms/about/team/{id}', [AdminCmsController::class, 'updateTeamMember'])->name('cms.team.update');
+        Route::delete('/cms/about/team/{id}', [AdminCmsController::class, 'deleteTeamMember'])->name('cms.team.delete');
+        Route::post('/cms/about/team/{id}/reorder', [AdminCmsController::class, 'reorderTeamMember'])->name('cms.team.reorder');
         Route::get('/cms/classes', [AdminCmsController::class, 'pageClasses'])->name('cms.classes');
         Route::get('/cms/contact', [AdminCmsController::class, 'pageContact'])->name('cms.contact');
         Route::get('/cms/gallery', [AdminCmsController::class, 'pageGallery'])->name('cms.gallery');
@@ -245,11 +251,14 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::post('/exam-management/store', [AdminExamManagementController::class, 'store'])->name('exam_management.store');
         Route::post('/system/sync-database-tracks', [AdminExamManagementController::class, 'syncDatabaseTracks'])->name('system.sync_database_tracks');
         
-        // Developer Super Admin Control Center (Strictly ArghaRoy Only)
+        // Admin Control Center (Super Admin Only)
         Route::get('/admin-control', [AdminControlController::class, 'index'])->name('admin_control.index');
+        Route::get('/admin-control/{id}/edit', [AdminControlController::class, 'edit'])->name('admin_control.edit');
         Route::post('/admin-control', [AdminControlController::class, 'store'])->name('admin_control.store');
-        Route::put('/admin-control/{id}', [AdminControlController::class, 'updatePermissions'])->name('admin_control.update');
+        Route::put('/admin-control/{id}', [AdminControlController::class, 'update'])->name('admin_control.update');
         Route::post('/admin-control/{id}/permissions', [AdminControlController::class, 'updatePermissions'])->name('admin_control.update_permissions');
+        Route::post('/admin-control/{id}/approve', [AdminControlController::class, 'approve'])->name('admin_control.approve');
+        Route::delete('/admin-control/{id}/reject', [AdminControlController::class, 'reject'])->name('admin_control.reject');
         Route::delete('/admin-control/{id}', [AdminControlController::class, 'destroy'])->name('admin_control.destroy');
     });
 });

@@ -41,13 +41,12 @@ class DeveloperAdminControlTest extends TestCase
     }
 
     /**
-     * Test 1: Developer Admin can authenticate with 3 matching factors: ID, phone, and password
+     * Test 1: Developer Admin can authenticate with Identity and password (phone not required)
      */
     public function test_developer_admin_can_login_with_all_three_factors_matching(): void
     {
         $response = $this->post('/admin/login', [
             'login_id' => 'ArghaRoy',
-            'phone' => '01711001122',
             'password' => 'ArghaArghaGTA6',
         ]);
 
@@ -57,18 +56,17 @@ class DeveloperAdminControlTest extends TestCase
     }
 
     /**
-     * Test 2: Admin login fails if phone does not match registered phone
+     * Test 2: Admin login succeeds without providing phone number
      */
     public function test_admin_login_rejects_when_phone_does_not_match(): void
     {
         $response = $this->post('/admin/login', [
             'login_id' => 'ArghaRoy',
-            'phone' => '01999999999', // Wrong phone
             'password' => 'ArghaArghaGTA6',
         ]);
 
-        $response->assertSessionHasErrors('login_id');
-        $this->assertGuest();
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertAuthenticated();
     }
 
     /**
@@ -78,7 +76,6 @@ class DeveloperAdminControlTest extends TestCase
     {
         $response = $this->post('/admin/login', [
             'login_id' => 'ArghaRoy',
-            'phone' => '01711001122',
             'password' => 'WrongPassword123',
         ]);
 
@@ -87,13 +84,12 @@ class DeveloperAdminControlTest extends TestCase
     }
 
     /**
-     * Test 4: Admin login fails if account ID does not match
+     * Test 4: Admin login fails if identity does not match
      */
     public function test_admin_login_rejects_when_id_does_not_match(): void
     {
         $response = $this->post('/admin/login', [
             'login_id' => 'NonExistentAdmin',
-            'phone' => '01711001122',
             'password' => 'ArghaArghaGTA6',
         ]);
 
@@ -164,8 +160,7 @@ class DeveloperAdminControlTest extends TestCase
 
         $indexResponse = $this->actingAs($devAdmin)->get('/admin/admin-control');
         $indexResponse->assertStatus(200);
-        $indexResponse->assertSee('Admin Control Command Center');
-        $indexResponse->assertSee('Master Developer Console');
+        $indexResponse->assertSee('Admin Control Panel');
 
         $newAdminId = 'ADM-NEW-' . rand(100, 999);
         $postResponse = $this->actingAs($devAdmin)->post('/admin/admin-control', [
@@ -310,5 +305,129 @@ class DeveloperAdminControlTest extends TestCase
         // Cadet Exams
         $examsResponse = $this->actingAs($devAdmin)->get('/cadet/exams');
         $examsResponse->assertStatus(200);
+    }
+
+    /**
+     * Test 13: Another Super Admin CANNOT edit the details of a Developer Admin
+     */
+    public function test_no_super_admin_can_edit_developer_details(): void
+    {
+        $devAdmin = User::where('account_id', 'ArghaRoy')->first();
+
+        // Create a secondary Super Admin (who is NOT developer)
+        $secondSuperAdmin = User::create([
+            'name' => 'Secondary Super Admin',
+            'email' => 'second_super_' . uniqid() . '@ida.com',
+            'account_id' => 'SEC-SUP-' . rand(100, 999),
+            'password' => Hash::make('password123'),
+            'role' => 'super_admin',
+            'status' => 'active',
+        ]);
+
+        // Attempt to access Developer edit page
+        $editResponse = $this->actingAs($secondSuperAdmin)->get("/admin/admin-control/{$devAdmin->id}/edit");
+        $editResponse->assertStatus(403);
+
+        // Attempt to update Developer details
+        $updateResponse = $this->actingAs($secondSuperAdmin)->put("/admin/admin-control/{$devAdmin->id}", [
+            'name' => 'Hacked Name',
+            'account_id' => 'HackedID',
+            'email' => 'hacked@ida.com',
+            'phone' => '01700000000',
+            'role' => 'admin',
+        ]);
+        $updateResponse->assertStatus(403);
+
+        // Verify in roster table that the developer account has the locked indicator for secondSuperAdmin
+        $indexResponse = $this->actingAs($secondSuperAdmin)->get('/admin/admin-control');
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee('Locked');
+    }
+
+    /**
+     * Test 14: Developer Admin CAN edit their own profile
+     */
+    public function test_developer_can_edit_own_details(): void
+    {
+        $devAdmin = User::where('account_id', 'ArghaRoy')->first();
+
+        $editResponse = $this->actingAs($devAdmin)->get("/admin/admin-control/{$devAdmin->id}/edit");
+        $editResponse->assertStatus(200);
+        $editResponse->assertSee('ArghaRoy');
+    }
+
+    /**
+     * Test 15: Non-super admin CANNOT edit a Super Admin's details
+     */
+    public function test_non_super_admin_cannot_edit_super_admin(): void
+    {
+        $superAdmin = User::create([
+            'name' => 'General Super Admin',
+            'email' => 'gen_super_' . uniqid() . '@ida.com',
+            'account_id' => 'GEN-SUP-' . rand(100, 999),
+            'password' => Hash::make('password123'),
+            'role' => 'super_admin',
+            'status' => 'active',
+        ]);
+
+        $proAdmin = User::create([
+            'name' => 'Pro Admin Officer',
+            'email' => 'pro_admin_' . uniqid() . '@ida.com',
+            'account_id' => 'PRO-' . rand(100, 999),
+            'password' => Hash::make('password123'),
+            'role' => 'pro_admin',
+            'status' => 'active',
+        ]);
+
+        $editResponse = $this->actingAs($proAdmin)->get("/admin/admin-control/{$superAdmin->id}/edit");
+        $editResponse->assertStatus(403);
+
+        $updateResponse = $this->actingAs($proAdmin)->put("/admin/admin-control/{$superAdmin->id}", [
+            'name' => 'Modified Name',
+            'account_id' => $superAdmin->account_id,
+            'email' => $superAdmin->email,
+            'phone' => '01700000000',
+            'role' => 'pro_admin',
+        ]);
+        $updateResponse->assertStatus(403);
+    }
+
+    /**
+     * Test 16: Super Admin CAN edit other non-developer Super Admins
+     */
+    public function test_super_admin_can_edit_other_super_admin_if_not_developer(): void
+    {
+        $superAdminA = User::create([
+            'name' => 'Super Admin Alpha',
+            'email' => 'super_a_' . uniqid() . '@ida.com',
+            'account_id' => 'SUP-A-' . rand(100, 999),
+            'password' => Hash::make('password123'),
+            'role' => 'super_admin',
+            'status' => 'active',
+        ]);
+
+        $superAdminB = User::create([
+            'name' => 'Super Admin Beta',
+            'email' => 'super_b_' . uniqid() . '@ida.com',
+            'account_id' => 'SUP-B-' . rand(100, 999),
+            'password' => Hash::make('password123'),
+            'role' => 'super_admin',
+            'status' => 'active',
+        ]);
+
+        // SuperAdminA can edit SuperAdminB
+        $editResponse = $this->actingAs($superAdminA)->get("/admin/admin-control/{$superAdminB->id}/edit");
+        $editResponse->assertStatus(200);
+
+        $updateResponse = $this->actingAs($superAdminA)->put("/admin/admin-control/{$superAdminB->id}", [
+            'name' => 'Super Admin Beta Updated',
+            'account_id' => $superAdminB->account_id,
+            'email' => $superAdminB->email,
+            'phone' => '01711223344',
+            'role' => 'super_admin',
+        ]);
+        $updateResponse->assertRedirect(route('admin.admin_control.index'));
+
+        $this->assertEquals('Super Admin Beta Updated', $superAdminB->fresh()->name);
     }
 }

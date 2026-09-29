@@ -3,23 +3,24 @@
 @section('title', 'Online Assessment Platform | Imperial Defence Academy')
 
 @section('content')
-<!-- Page Header (Atmospheric Emerald & Obsidian) -->
-<section style="position: relative; background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15) 0%, var(--brand-deep, #022c22) 50%, var(--accent-navy, #050b14) 100%); border-bottom: 1px solid rgba(16, 185, 129, 0.2); padding: 65px 24px; text-align: center; overflow: hidden;">
-  <div style="position: relative; max-width: 800px; margin: 0 auto;">
+<!-- Page Header (Luminous Seafoam #85c9cc & Slate Aesthetic) -->
+<section style="position: relative; background: linear-gradient(135deg, #f0f9fa 0%, #e6f4f5 50%, #f8fafc 100%); border-bottom: 1px solid rgba(133, 201, 204, 0.35); padding: 75px 24px 65px; text-align: center; overflow: hidden;">
+  <div style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 20%, rgba(133, 201, 204, 0.25) 0%, transparent 70%); pointer-events: none;"></div>
+  <div style="position: relative; z-index: 2; max-width: 800px; margin: 0 auto;">
     @if(filled(cms('online_tests_badge', 'DEFENCE ASSESSMENT GATEWAY')))
-    <span data-aos="fade-down" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(52, 211, 153, 0.3); padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; color: #a7f3d0; margin-bottom: 16px; letter-spacing: 0.8px;">
+    <span data-aos="fade-down" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(133, 201, 204, 0.22); border: 1px solid #85c9cc; padding: 5px 16px; border-radius: 9999px; font-size: 11.5px; font-weight: 800; color: #082d2f; margin-bottom: 16px; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 2px 8px rgba(133, 201, 204, 0.25);">
       {{ cms('online_tests_badge', 'DEFENCE ASSESSMENT GATEWAY') }}
     </span>
     @endif
 
     @if(filled(cms('online_tests_title', 'IDA Online Assessment Platform')))
-    <h1 data-aos="zoom-in" data-aos-delay="150" style="font-size: 40px; font-weight: 800; color: #ffffff; font-family: 'Roboto', sans-serif; letter-spacing: -0.02em; margin-bottom: 12px;">
+    <h1 data-aos="zoom-in" data-aos-delay="150" style="font-size: clamp(30px, 4.5vw, 42px); font-weight: 900; color: #082d2f; font-family: 'Roboto', sans-serif; letter-spacing: -0.02em; margin-bottom: 14px;">
       {{ cms('online_tests_title', 'IDA Online Assessment Platform') }}
     </h1>
     @endif
 
     @if(filled(cms('online_tests_subtitle', 'A high-precision, server-timed examination engine open to enrolled academic cadets and external aspirants across Bangladesh.')))
-    <p data-aos="fade-up" data-aos-delay="250" style="color: #cbd5e1; font-size: 15.5px; line-height: 1.7; margin: 0 auto; max-width: 700px;">
+    <p data-aos="fade-up" data-aos-delay="250" style="color: #475569; font-size: 16px; line-height: 1.75; margin: 0 auto; max-width: 700px; font-weight: 400;">
       {{ cms('online_tests_subtitle', 'A high-precision, server-timed examination engine open to enrolled academic cadets and external aspirants across Bangladesh.') }}
     </p>
     @endif
@@ -33,23 +34,23 @@
     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
       <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-right: 6px;">Select Branch:</span>
       
-      <a href="{{ route('online_tests') }}" class="badge {{ empty($activeBranch) ? 'badge-emerald' : 'badge-navy' }}" style="text-decoration: none; padding: 7px 14px; font-size: 12px;">
+      <a href="{{ route('online_tests') }}" class="btn-secondary {{ empty($activeBranch) ? 'active' : '' }}" style="text-decoration: none; padding: 8px 18px; font-size: 13px; font-weight: 700; border-radius: 9999px; {{ empty($activeBranch) ? 'background: #85c9cc; color: #082d2f !important; border-color: #72bcc0; box-shadow: 0 4px 12px rgba(133, 201, 204, 0.35);' : 'background: #ffffff; color: #334155; border-color: #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.04);' }}">
         All Branches ({{ $branchCounts['all'] ?? count($exams) }})
       </a>
 
-      <a href="{{ route('online_tests', ['branch' => 'army']) }}" class="badge {{ $activeBranch === 'army' ? 'badge-emerald' : 'badge-navy' }}" style="text-decoration: none; padding: 7px 14px; font-size: 12px;">
+      <a href="{{ route('online_tests', ['branch' => 'army']) }}" class="btn-secondary {{ $activeBranch === 'army' ? 'active' : '' }}" style="text-decoration: none; padding: 8px 18px; font-size: 13px; font-weight: 700; border-radius: 9999px; {{ $activeBranch === 'army' ? 'background: #85c9cc; color: #082d2f !important; border-color: #72bcc0; box-shadow: 0 4px 12px rgba(133, 201, 204, 0.35);' : 'background: #ffffff; color: #334155; border-color: #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.04);' }}">
         <i class="fa-solid fa-shield-halved"></i> Bangladesh Army ({{ $branchCounts['army'] ?? 0 }})
       </a>
 
-      <a href="{{ route('online_tests', ['branch' => 'navy']) }}" class="badge {{ $activeBranch === 'navy' ? 'badge-emerald' : 'badge-navy' }}" style="text-decoration: none; padding: 7px 14px; font-size: 12px;">
+      <a href="{{ route('online_tests', ['branch' => 'navy']) }}" class="btn-secondary {{ $activeBranch === 'navy' ? 'active' : '' }}" style="text-decoration: none; padding: 8px 18px; font-size: 13px; font-weight: 700; border-radius: 9999px; {{ $activeBranch === 'navy' ? 'background: #85c9cc; color: #082d2f !important; border-color: #72bcc0; box-shadow: 0 4px 12px rgba(133, 201, 204, 0.35);' : 'background: #ffffff; color: #334155; border-color: #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.04);' }}">
         <i class="fa-solid fa-anchor"></i> Bangladesh Navy ({{ $branchCounts['navy'] ?? 0 }})
       </a>
 
-      <a href="{{ route('online_tests', ['branch' => 'air_force']) }}" class="badge {{ $activeBranch === 'air_force' ? 'badge-emerald' : 'badge-navy' }}" style="text-decoration: none; padding: 7px 14px; font-size: 12px;">
+      <a href="{{ route('online_tests', ['branch' => 'air_force']) }}" class="btn-secondary {{ $activeBranch === 'air_force' ? 'active' : '' }}" style="text-decoration: none; padding: 8px 18px; font-size: 13px; font-weight: 700; border-radius: 9999px; {{ $activeBranch === 'air_force' ? 'background: #85c9cc; color: #082d2f !important; border-color: #72bcc0; box-shadow: 0 4px 12px rgba(133, 201, 204, 0.35);' : 'background: #ffffff; color: #334155; border-color: #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.04);' }}">
         <i class="fa-solid fa-jet-fighter"></i> Air Force ({{ $branchCounts['air_force'] ?? 0 }})
       </a>
 
-      <a href="{{ route('online_tests', ['branch' => 'police']) }}" class="badge {{ $activeBranch === 'police' ? 'badge-emerald' : 'badge-navy' }}" style="text-decoration: none; padding: 7px 14px; font-size: 12px;">
+      <a href="{{ route('online_tests', ['branch' => 'police']) }}" class="btn-secondary {{ $activeBranch === 'police' ? 'active' : '' }}" style="text-decoration: none; padding: 8px 18px; font-size: 13px; font-weight: 700; border-radius: 9999px; {{ $activeBranch === 'police' ? 'background: #85c9cc; color: #082d2f !important; border-color: #72bcc0; box-shadow: 0 4px 12px rgba(133, 201, 204, 0.35);' : 'background: #ffffff; color: #334155; border-color: #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.04);' }}">
         <i class="fa-solid fa-user-shield"></i> Bangladesh Police ({{ $branchCounts['police'] ?? 0 }})
       </a>
     </div>
@@ -59,28 +60,28 @@
   @if(filled(cms('online_tests_step_heading', 'Four-Step Assessment Protocol for External Candidates')))
   <div class="content-panel classical-card" data-aos="fade-up" data-aos-delay="100" style="margin-bottom: 44px; padding: 26px;">
     <div style="text-align: center; margin-bottom: 22px;">
-      <span style="font-size: 11px; font-weight: 700; color: var(--brand-emerald); text-transform: uppercase; letter-spacing: 0.8px; display: inline-block; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 20px; margin-bottom: 6px;">How It Works</span>
-      <h2 style="font-size: 22px; font-weight: 800; color: var(--text-main); font-family: 'Roboto', sans-serif;">{{ cms('online_tests_step_heading', 'Four-Step Assessment Protocol for External Candidates') }}</h2>
+      <span style="font-size: 11px; font-weight: 800; color: #082d2f; text-transform: uppercase; letter-spacing: 0.8px; display: inline-block; background: rgba(133, 201, 204, 0.25); border: 1px solid #85c9cc; padding: 4px 12px; border-radius: 20px; margin-bottom: 6px;">How It Works</span>
+      <h2 style="font-size: 22px; font-weight: 800; color: #082d2f; font-family: 'Roboto', sans-serif;">{{ cms('online_tests_step_heading', 'Four-Step Assessment Protocol for External Candidates') }}</h2>
     </div>
     <div class="grid-cols-4-responsive" style="text-align: center; gap: 16px;">
       <div style="background: var(--surface-subtle); padding: 18px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-soft);">
-        <div style="width: 36px; height: 36px; border-radius: 50%; background: #ecfdf5; color: #059669; display: grid; place-items: center; font-weight: 800; font-size: 15px; margin: 0 auto 10px; border: 1px solid #a7f3d0;">1</div>
-        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; font-family: 'Roboto', sans-serif;">{{ cms('online_tests_step1_title', 'Free Registration') }}</h4>
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: #85c9cc; color: #082d2f; display: grid; place-items: center; font-weight: 900; font-size: 15px; margin: 0 auto 10px; border: 1px solid #72bcc0; box-shadow: 0 2px 6px rgba(133, 201, 204, 0.4);">1</div>
+        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; font-family: 'Roboto', sans-serif; color: #082d2f;">{{ cms('online_tests_step1_title', 'Free Registration') }}</h4>
         <small style="color: var(--text-muted); font-size: 11.5px; line-height: 1.4; display: block;">{{ cms('online_tests_step1_desc', 'Create your profile in 60 seconds') }}</small>
       </div>
       <div style="background: var(--surface-subtle); padding: 18px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-soft);">
-        <div style="width: 36px; height: 36px; border-radius: 50%; background: #ecfdf5; color: #059669; display: grid; place-items: center; font-weight: 800; font-size: 15px; margin: 0 auto 10px; border: 1px solid #a7f3d0;">2</div>
-        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; font-family: 'Roboto', sans-serif;">{{ cms('online_tests_step2_title', 'Select Mock Test') }}</h4>
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: #85c9cc; color: #082d2f; display: grid; place-items: center; font-weight: 900; font-size: 15px; margin: 0 auto 10px; border: 1px solid #72bcc0; box-shadow: 0 2px 6px rgba(133, 201, 204, 0.4);">2</div>
+        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; font-family: 'Roboto', sans-serif; color: #082d2f;">{{ cms('online_tests_step2_title', 'Select Mock Test') }}</h4>
         <small style="color: var(--text-muted); font-size: 11.5px; line-height: 1.4; display: block;">{{ cms('online_tests_step2_desc', 'Choose Army, Navy, Air Force, or Police') }}</small>
       </div>
       <div style="background: var(--surface-subtle); padding: 18px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-soft);">
-        <div style="width: 36px; height: 36px; border-radius: 50%; background: #ecfdf5; color: #059669; display: grid; place-items: center; font-weight: 800; font-size: 15px; margin: 0 auto 10px; border: 1px solid #a7f3d0;">3</div>
-        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; font-family: 'Roboto', sans-serif;">{{ cms('online_tests_step3_title', 'Wait for Start Timer') }}</h4>
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: #85c9cc; color: #082d2f; display: grid; place-items: center; font-weight: 900; font-size: 15px; margin: 0 auto 10px; border: 1px solid #72bcc0; box-shadow: 0 2px 6px rgba(133, 201, 204, 0.4);">3</div>
+        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; font-family: 'Roboto', sans-serif; color: #082d2f;">{{ cms('online_tests_step3_title', 'Wait for Start Timer') }}</h4>
         <small style="color: var(--text-muted); font-size: 11.5px; line-height: 1.4; display: block;">{{ cms('online_tests_step3_desc', 'Countdown unlocks test access at scheduled time') }}</small>
       </div>
       <div style="background: var(--surface-subtle); padding: 18px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-soft);">
-        <div style="width: 36px; height: 36px; border-radius: 50%; background: #ecfdf5; color: #059669; display: grid; place-items: center; font-weight: 800; font-size: 15px; margin: 0 auto 10px; border: 1px solid #a7f3d0;">4</div>
-        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; font-family: 'Roboto', sans-serif;">{{ cms('online_tests_step4_title', 'Live Timed Test') }}</h4>
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: #85c9cc; color: #082d2f; display: grid; place-items: center; font-weight: 900; font-size: 15px; margin: 0 auto 10px; border: 1px solid #72bcc0; box-shadow: 0 2px 6px rgba(133, 201, 204, 0.4);">4</div>
+        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 4px; font-family: 'Roboto', sans-serif; color: #082d2f;">{{ cms('online_tests_step4_title', 'Live Timed Test') }}</h4>
         <small style="color: var(--text-muted); font-size: 11.5px; line-height: 1.4; display: block;">{{ cms('online_tests_step4_desc', 'Instant scorecards & detailed solutions') }}</small>
       </div>
     </div>
@@ -110,6 +111,9 @@
                 <i class="fa-solid fa-unlock-keyhole"></i> Free Exam
               </span>
               <span class="badge badge-navy" style="font-size: 10.5px;">{{ $exam->category }}</span>
+              <span class="badge" style="background: rgba(8, 45, 47, 0.05); color: #082d2f; border: 1px solid rgba(133, 201, 204, 0.3); font-size: 10.5px;">
+                <i class="fa-solid fa-layer-group" style="color: #85c9cc;"></i> {{ $exam->trackLabel() }}
+              </span>
             </div>
 
             <span id="badge-status-{{ $exam->id }}">
@@ -119,13 +123,13 @@
                 </span>
               @else
                 <span class="badge badge-emerald" style="font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px;">
-                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block; animation: pulse 1.5s infinite;"></span> LIVE NOW
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #082d2f; display: inline-block; animation: pulse 1.5s infinite;"></span> LIVE NOW
                 </span>
               @endif
             </span>
           </div>
 
-          <h3 style="font-size: 17.5px; font-weight: 800; color: var(--brand-deep); margin-bottom: 8px; font-family: 'Roboto', sans-serif;">
+          <h3 style="font-size: 17.5px; font-weight: 800; color: #082d2f; margin-bottom: 8px; font-family: 'Roboto', sans-serif;">
             {{ $exam->title }}
           </h3>
 
@@ -164,7 +168,7 @@
             </div>
             <div style="display: flex; justify-content: space-between;">
               <span style="color: var(--text-muted);">Pass Mark:</span>
-              <strong style="color: #059669;">{{ $exam->pass_marks }}</strong>
+              <strong style="color: #082d2f;">{{ $exam->pass_marks }}</strong>
             </div>
           </div>
         </div>
@@ -173,8 +177,8 @@
         <div style="border-top: 1px solid var(--border-soft); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
           <div>
             <small style="display: block; font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">TEST ACCESS</small>
-            <strong style="font-size: 15px; color: #059669; font-family: 'Roboto', sans-serif; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
-              <i class="fa-solid fa-circle-check"></i> Free Exam
+            <strong style="font-size: 15px; color: #082d2f; font-family: 'Roboto', sans-serif; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+              <i class="fa-solid fa-circle-check" style="color: #85c9cc;"></i> Free Exam
             </strong>
           </div>
 
@@ -206,7 +210,7 @@
     @empty
       <div style="grid-column: span 3; text-align: center; padding: 50px 20px;" class="content-panel classical-card">
         <i class="fa-solid fa-clipboard-list" style="font-size: 40px; color: var(--text-muted); opacity: 0.4; margin-bottom: 12px; display: block;"></i>
-        <h4 style="font-size: 16px; margin-bottom: 6px;">No Active Tests in This Branch</h4>
+        <h4 style="font-size: 16px; margin-bottom: 6px; color: #082d2f;">No Active Tests in This Branch</h4>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Check back shortly or select another branch category above.</p>
         <a href="{{ route('online_tests') }}" class="btn-primary" style="padding: 8px 16px; font-size: 12.5px;">
           View All Branches
@@ -230,18 +234,18 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateTimer() {
       if (secondsLeft <= 0) {
         // Time has arrived! Automatically unlock the exam
-        timerDisplay.innerHTML = '<span style="color: #059669;"><i class="fa-solid fa-circle-check"></i> STARTING NOW!</span>';
+        timerDisplay.innerHTML = '<span style="color: #082d2f; font-weight: 800;"><i class="fa-solid fa-circle-check" style="color: #85c9cc;"></i> STARTING NOW!</span>';
         
         // Update badge
         const badgeElem = document.getElementById('badge-status-' + examId);
         if (badgeElem) {
-          badgeElem.innerHTML = '<span class="badge badge-emerald" style="font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span> LIVE NOW</span>';
+          badgeElem.innerHTML = '<span class="badge badge-emerald" style="font-size: 10.5px; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #082d2f; display: inline-block;"></span> LIVE NOW</span>';
         }
 
         // Swap button
         const btnContainer = document.getElementById('btn-container-' + examId);
         if (btnContainer) {
-          btnContainer.innerHTML = '<a href="' + examUrl + '" class="btn-primary" style="padding: 8px 18px; font-size: 12.5px; background: #059669; border-color: #059669; animation: pulse 2s infinite;">Start Exam Now <i class="fa-solid fa-play"></i></a>';
+          btnContainer.innerHTML = '<a href="' + examUrl + '" class="btn-primary" style="padding: 8px 18px; font-size: 12.5px; background: #85c9cc; color: #082d2f; border-color: #72bcc0; font-weight: 800; animation: pulse 2s infinite;">Start Exam Now <i class="fa-solid fa-play"></i></a>';
         }
 
         return; // stop decrementing

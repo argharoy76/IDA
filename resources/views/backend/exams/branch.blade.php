@@ -245,16 +245,18 @@
 
                 {{-- Public Frontend Toggle --}}
                 <td style="padding: 14px 10px;">
-                  <form action="{{ route('admin.exams.toggle_public', $exam->id) }}" method="POST" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="badge {{ $exam->is_public_for_external ? 'badge-emerald' : 'badge-navy' }}" style="cursor: pointer; border: none; font-size: 11px; padding: 5px 12px;" title="Click to toggle frontend publication">
-                      @if($exam->is_public_for_external)
-                        <i class="fa-solid fa-eye"></i> Public on Frontend
-                      @else
-                        <i class="fa-solid fa-eye-slash"></i> Hidden / Private
-                      @endif
-                    </button>
-                  </form>
+                  <button type="button" 
+                    id="branch-toggle-pub-{{ $exam->id }}"
+                    onclick="togglePublicBranchAjax({{ $exam->id }}, '{{ route('admin.exams.toggle_public', $exam->id) }}', this)"
+                    class="badge {{ $exam->is_public_for_external ? 'badge-emerald' : 'badge-navy' }}" 
+                    style="cursor: pointer; border: none; font-size: 11px; padding: 5px 12px;" 
+                    title="Click to toggle frontend publication">
+                    @if($exam->is_public_for_external)
+                      <i class="fa-solid fa-eye"></i> Public on Frontend
+                    @else
+                      <i class="fa-solid fa-eye-slash"></i> Hidden / Private
+                    @endif
+                  </button>
                 </td>
 
                 {{-- Live Operational Controls --}}
@@ -266,22 +268,22 @@
                       <i class="fa-solid fa-pen-to-square"></i> Edit Exam
                     </a>
 
-                    {{-- START NOW / END NOW --}}
-                    @if($exam->status !== 'open')
-                      <form action="{{ route('admin.exams.start_now', $exam->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Immediately start this exam now? All candidates can begin.');">
-                        @csrf
-                        <button type="submit" class="btn-tactical btn-tactical-primary" style="padding: 6px 12px; font-size: 11.5px;">
+                    {{-- START NOW / END NOW (AJAX without reload) --}}
+                    <span id="start-end-btn-wrap-{{ $exam->id }}">
+                      @if($exam->status !== 'open')
+                        <button type="button" 
+                          onclick="startNowBranchAjax({{ $exam->id }}, '{{ route('admin.exams.start_now', $exam->id) }}', this)"
+                          class="btn-tactical btn-tactical-primary" style="padding: 6px 12px; font-size: 11.5px;">
                           <i class="fa-solid fa-play"></i> Start Now
                         </button>
-                      </form>
-                    @else
-                      <form action="{{ route('admin.exams.end_now', $exam->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('End and close this exam now? No new attempts will be allowed.');">
-                        @csrf
-                        <button type="submit" class="btn-tactical btn-tactical-outline" style="padding: 6px 12px; font-size: 11.5px; border-color: #ef4444; color: #ef4444;">
+                      @else
+                        <button type="button" 
+                          onclick="endNowBranchAjax({{ $exam->id }}, '{{ route('admin.exams.end_now', $exam->id) }}', this)"
+                          class="btn-tactical btn-tactical-outline" style="padding: 6px 12px; font-size: 11.5px; border-color: #ef4444; color: #ef4444;">
                           <i class="fa-solid fa-stop"></i> End Now
                         </button>
-                      </form>
-                    @endif
+                      @endif
+                    </span>
 
                     {{-- ADJUST SCHEDULE MODAL BUTTON --}}
                     <button type="button" class="btn-tactical btn-tactical-outline" style="padding: 6px 10px; font-size: 11.5px;" onclick="openScheduleModal(this)" data-exam-id="{{ $exam->id }}" data-exam-title="{{ addslashes($exam->title) }}" data-schedule-start="{{ $exam->schedule_start ? $exam->schedule_start->format('Y-m-d\TH:i') : '' }}" data-schedule-end="{{ $exam->schedule_end ? $exam->schedule_end->format('Y-m-d\TH:i') : '' }}" data-status="{{ $exam->status }}" data-is-public="{{ $exam->is_public_for_external ? 1 : 0 }}" data-update-url="{{ route('admin.exams.update_schedule', $exam->id) }}">
@@ -673,7 +675,7 @@
 
         <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid var(--border-soft); padding-top: 16px;">
           <button type="button" onclick="document.getElementById('scheduleModal').style.display='none'" class="btn-tactical btn-tactical-outline">Cancel</button>
-          <button type="submit" class="btn-tactical btn-tactical-primary">
+          <button type="submit" id="btnSaveSchedule" class="btn-tactical btn-tactical-primary">
             <i class="fa-solid fa-check"></i> Save Schedule
           </button>
         </div>
@@ -927,6 +929,237 @@ function openScheduleModal(btn) {
   document.getElementById('modal-status').value = btn.dataset.status;
   document.getElementById('modal-public-cb').checked = btn.dataset.isPublic === '1';
   document.getElementById('scheduleModal').style.display = 'flex';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const schedForm = document.getElementById('scheduleForm');
+  if (schedForm) {
+    schedForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const saveBtn = document.getElementById('btnSaveSchedule');
+      const origHtml = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+      }
+
+      const formData = new FormData(schedForm);
+
+      fetch(schedForm.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json'
+        },
+        body: formData
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(data => {
+        if (saveBtn) {
+          saveBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Saved!';
+        }
+        setTimeout(() => {
+          document.getElementById('scheduleModal').style.display = 'none';
+          if (saveBtn) {
+            saveBtn.innerHTML = origHtml;
+            saveBtn.disabled = false;
+          }
+        }, 500);
+
+        if (data.success && data.exam) {
+          const exam = data.exam;
+          const row = document.getElementById('exam-row-' + exam.id);
+          if (row) {
+            const statusCell = row.cells[0];
+            if (statusCell) {
+              if (exam.status === 'open') {
+                statusCell.innerHTML = `<span class="badge badge-emerald" style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span> LIVE NOW</span>`;
+              } else if (exam.status === 'scheduled') {
+                statusCell.innerHTML = `<span class="badge badge-gold" style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px;"><i class="fa-regular fa-clock"></i> SCHEDULED</span>`;
+              } else if (exam.status === 'closed') {
+                statusCell.innerHTML = `<span class="badge badge-navy" style="font-size: 11px; background: rgba(100, 116, 139, 0.2); color: #94a3b8;"><i class="fa-solid fa-lock"></i> CLOSED / ENDED</span>`;
+              } else {
+                statusCell.innerHTML = `<span class="badge badge-navy" style="font-size: 11px;">${(exam.status || '').toUpperCase()}</span>`;
+              }
+            }
+
+            const schedBtn = row.querySelector('button[onclick="openScheduleModal(this)"]');
+            if (schedBtn) {
+              schedBtn.dataset.scheduleStart = exam.schedule_start ? exam.schedule_start.substring(0, 16) : '';
+              schedBtn.dataset.scheduleEnd = exam.schedule_end ? exam.schedule_end.substring(0, 16) : '';
+              schedBtn.dataset.status = exam.status;
+              schedBtn.dataset.isPublic = exam.is_public_for_external ? '1' : '0';
+            }
+
+            const pubBtn = document.getElementById('branch-toggle-pub-' + exam.id);
+            if (pubBtn) {
+              if (exam.is_public_for_external) {
+                pubBtn.className = 'badge badge-emerald';
+                pubBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Public on Frontend';
+              } else {
+                pubBtn.className = 'badge badge-navy';
+                pubBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Hidden / Private';
+              }
+            }
+          }
+
+          if (window.showToast) {
+            window.showToast(data.message || 'Schedule updated successfully.', 'success');
+          }
+        }
+      })
+      .catch(err => {
+        if (saveBtn) {
+          saveBtn.innerHTML = origHtml;
+          saveBtn.disabled = false;
+        }
+        alert('An error occurred while saving the schedule.');
+      });
+    });
+  }
+});
+
+function togglePublicBranchAjax(examId, url, btn) {
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  btn.disabled = true;
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': '{{ csrf_token() }}',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(data => {
+    btn.disabled = false;
+    if (data.success) {
+      if (data.is_public) {
+        btn.className = 'badge badge-emerald';
+        btn.innerHTML = '<i class="fa-solid fa-eye"></i> Public on Frontend';
+      } else {
+        btn.className = 'badge badge-navy';
+        btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Hidden / Private';
+      }
+      if (window.showToast) {
+        window.showToast(data.message || 'Visibility updated.', 'success');
+      }
+    } else {
+      btn.innerHTML = origHtml;
+      alert(data.message || 'Failed to update visibility.');
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+    alert('An error occurred while updating visibility.');
+  });
+}
+
+function startNowBranchAjax(examId, url, btn) {
+  if (!confirm('Immediately start this exam now? All candidates can begin.')) return;
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  btn.disabled = true;
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': '{{ csrf_token() }}',
+      'Accept': 'application/json'
+    }
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(data => {
+    btn.disabled = false;
+    if (data.success) {
+      const wrap = document.getElementById('start-end-btn-wrap-' + examId);
+      if (wrap) {
+        wrap.innerHTML = `
+          <button type="button" 
+            onclick="endNowBranchAjax(${examId}, '{{ url('admin/exams') }}/${examId}/end-now', this)"
+            class="btn-tactical btn-tactical-outline" style="padding: 6px 12px; font-size: 11.5px; border-color: #ef4444; color: #ef4444;">
+            <i class="fa-solid fa-stop"></i> End Now
+          </button>
+        `;
+      }
+      const row = document.getElementById('exam-row-' + examId);
+      if (row && row.cells[0]) {
+        row.cells[0].innerHTML = `<span class="badge badge-emerald" style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span> LIVE NOW</span>`;
+      }
+      if (window.showToast) {
+        window.showToast(data.message || 'Exam started successfully.', 'success');
+      }
+    } else {
+      btn.innerHTML = origHtml;
+      alert(data.message || 'Failed to start exam.');
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+    alert('An error occurred while starting the exam.');
+  });
+}
+
+function endNowBranchAjax(examId, url, btn) {
+  if (!confirm('End and close this exam now? No new attempts will be allowed.')) return;
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  btn.disabled = true;
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': '{{ csrf_token() }}',
+      'Accept': 'application/json'
+    }
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(data => {
+    btn.disabled = false;
+    if (data.success) {
+      const wrap = document.getElementById('start-end-btn-wrap-' + examId);
+      if (wrap) {
+        wrap.innerHTML = `
+          <button type="button" 
+            onclick="startNowBranchAjax(${examId}, '{{ url('admin/exams') }}/${examId}/start-now', this)"
+            class="btn-tactical btn-tactical-primary" style="padding: 6px 12px; font-size: 11.5px;">
+            <i class="fa-solid fa-play"></i> Start Now
+          </button>
+        `;
+      }
+      const row = document.getElementById('exam-row-' + examId);
+      if (row && row.cells[0]) {
+        row.cells[0].innerHTML = `<span class="badge badge-navy" style="font-size: 11px; background: rgba(100, 116, 139, 0.2); color: #94a3b8;"><i class="fa-solid fa-lock"></i> CLOSED / ENDED</span>`;
+      }
+      if (window.showToast) {
+        window.showToast(data.message || 'Exam closed successfully.', 'success');
+      }
+    } else {
+      btn.innerHTML = origHtml;
+      alert(data.message || 'Failed to close exam.');
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+    alert('An error occurred while closing the exam.');
+  });
 }
 
 function deleteExamAjax(examId, examTitle, examStatus, deleteUrl, btn) {

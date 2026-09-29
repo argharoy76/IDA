@@ -319,11 +319,9 @@
     <div class="portal-box">
 
       <div class="portal-header">
-        <span class="badge-secure">
-          <i class="fa-solid fa-lock"></i> Secure Portal &bull; 256-Bit SSL
-        </span>
-        <h2 class="portal-title">Admin Command Access</h2>
-        <p class="portal-subtitle">Authorized academy officers, instructors, and administrative staff login</p>
+        <h1 class="portal-brand-title" style="font-size: 21px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; line-height: 1.2;">Imperial Defence Academy</h1>
+        <div class="portal-section-tag" style="display: inline-block; font-size: 11.5px; font-weight: 800; color: #ff5757; text-transform: uppercase; letter-spacing: 1.2px; padding: 3px 10px; background: rgba(255, 87, 87, 0.1); border: 1px solid rgba(255, 87, 87, 0.25); border-radius: 6px; margin-bottom: 6px;">Admin Section</div>
+        <p class="portal-subtitle" style="font-size: 13px; color: #94a3b8; margin: 0;">Sign in to access the admin panel</p>
       </div>
 
       <!-- Errors -->
@@ -344,40 +342,26 @@
       <form method="POST" action="{{ route('admin.login.post') }}">
         @csrf
 
-        <!-- Account ID or Email -->
+        <!-- Identity -->
         <div class="form-group">
-          <label class="form-label">Admin Name, Officer / Account ID or Email</label>
+          <label class="form-label">Identity</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-id-badge input-icon"></i>
             <input type="text" name="login_id" required autofocus
                    value="{{ old('login_id', old('email')) }}"
                    class="input-control"
-                   placeholder="e.g. ArghaRoy, ADM-001 or admin@ida.com">
+                   placeholder="Enter your user identity, username or email">
           </div>
         </div>
 
-        <!-- Registered Phone Number -->
+        <!-- Password -->
         <div class="form-group">
-          <label class="form-label">Registered Phone Number</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-phone input-icon"></i>
-            <input type="text" name="phone" required
-                   value="{{ old('phone') }}"
-                   class="input-control"
-                   placeholder="e.g. 01711001122 or +880 1711-001122">
-          </div>
-        </div>
-
-        <!-- Security Password -->
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="form-label" style="margin-bottom: 0;">Security Password</label>
-          </div>
+          <label class="form-label">Password</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-key input-icon"></i>
             <input type="password" name="password" id="adminPasswordInput" required
                    class="input-control"
-                   placeholder="Enter your security password">
+                   placeholder="Enter your password">
             <button type="button" class="password-toggle" onclick="toggleAdminPassword()">
               <i class="fa-regular fa-eye" id="toggleAdminEye"></i>
             </button>
@@ -392,13 +376,22 @@
           </label>
         </div>
 
+        <!-- Sign In / Start Session Button -->
         <button type="submit" class="btn-submit">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span>Authenticate Command Clearance</span>
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          <span>Sign In / Start Session</span>
         </button>
 
+        <!-- Create an Admin Account Option -->
+        <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08); text-align: center;">
+          <a href="{{ route('admin.register') }}" class="btn-create-admin" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; color: #cbd5e1; font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.2s;">
+            <i class="fa-solid fa-user-plus" style="color: #ff5757;"></i>
+            <span>Create an Admin Account</span>
+          </a>
+        </div>
+
         <!-- Candidate / Student redirect hint -->
-        <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #64748b;">
+        <div style="text-align: center; margin-top: 16px; font-size: 12px; color: #64748b;">
           Are you a student or candidate? 
           <a href="{{ route('login') }}" style="color: #38bdf8; text-decoration: none; font-weight: 600;">Go to Student Login</a>
         </div>

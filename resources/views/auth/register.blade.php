@@ -3,7 +3,7 @@
 @section('title', 'Join Us — Create Student Account | Imperial Defence Academy')
 
 @section('content')
-<section style="min-height: calc(100vh - 200px); background: radial-gradient(circle at 50% 0%, rgba(5, 150, 105, 0.08) 0%, #f8fafc 70%); display: flex; align-items: center; justify-content: center; padding: 60px 20px; position: relative;">
+<section style="min-height: calc(100vh - 200px); background: radial-gradient(circle at 50% 0%, rgba(133, 201, 204, 0.15) 0%, #f8fafc 70%); display: flex; align-items: center; justify-content: center; padding: 60px 20px; position: relative;">
   <style>
     .register-form-grid {
       display: grid;
@@ -15,7 +15,7 @@
       border: 1px solid #e2e8f0;
       border-radius: 22px;
       padding: 42px 38px;
-      box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+      box-shadow: 0 20px 45px -15px rgba(8, 45, 47, 0.08), 0 1px 3px rgba(8, 45, 47, 0.04);
       font-family: 'Poppins', sans-serif;
     }
     .reg-input {
@@ -24,15 +24,15 @@
       border: 1.5px solid #cbd5e1;
       border-radius: 10px;
       padding: 12px 14px 12px 40px;
-      color: #0f172a;
+      color: #082d2f;
       font-size: 13.5px;
       font-family: 'Poppins', sans-serif;
       outline: none;
       transition: all 0.2s ease;
     }
     .reg-input:focus {
-      border-color: #059669 !important;
-      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.14) !important;
+      border-color: #85c9cc !important;
+      box-shadow: 0 0 0 3px rgba(133, 201, 204, 0.25) !important;
     }
     @media (max-width: 640px) {
       .register-form-grid {
@@ -55,13 +55,13 @@
       
       <!-- Academy Header -->
       <div style="text-align: center; margin-bottom: 24px;">
-        <div style="width: 60px; height: 60px; border-radius: 16px; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: grid; place-items: center; font-size: 26px; color: #059669; margin: 0 auto 14px;">
+        <div style="width: 60px; height: 60px; border-radius: 16px; background: #eef8f8; border: 1.5px solid #85c9cc; display: grid; place-items: center; font-size: 26px; color: #082d2f; margin: 0 auto 14px;">
           <i class="fa-solid fa-user-plus"></i>
         </div>
-        <span style="display: inline-block; font-size: 11px; font-weight: 700; color: #047857; letter-spacing: 0.8px; text-transform: uppercase; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 12px; border-radius: 20px; margin-bottom: 8px;">
+        <span style="display: inline-block; font-size: 11px; font-weight: 700; color: #082d2f; letter-spacing: 0.8px; text-transform: uppercase; background: #eef8f8; border: 1px solid #85c9cc; padding: 3px 12px; border-radius: 20px; margin-bottom: 8px;">
           <i class="fa-solid fa-gift" style="margin-right: 4px;"></i> Free Registration &bull; No Upfront Payment
         </span>
-        <h1 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">
+        <h1 style="font-size: 24px; font-weight: 800; color: #082d2f; margin: 0 0 6px 0;">
           Join Us — Create Student Account
         </h1>
         <p style="font-size: 13px; color: #64748b; margin: 0;">
@@ -70,8 +70,8 @@
       </div>
 
       <!-- Info Banner: No Course Assigned Initially -->
-      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; margin-bottom: 22px; font-size: 12.5px; color: #166534; display: flex; align-items: center; gap: 10px;">
-        <i class="fa-solid fa-circle-info" style="font-size: 16px; color: #059669; flex-shrink: 0;"></i>
+      <div style="background: #eef8f8; border: 1px solid #85c9cc; border-radius: 10px; padding: 12px 14px; margin-bottom: 22px; font-size: 12.5px; color: #082d2f; display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-circle-info" style="font-size: 16px; color: #082d2f; flex-shrink: 0;"></i>
         <span>Free account creation. You can register now, and our administration will assign your enrolled course(s) whenever you choose.</span>
       </div>
 
@@ -235,13 +235,13 @@
 
         <!-- Submit Button -->
         <button type="submit" 
-                style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #059669; color: #ffffff; font-weight: 700; font-size: 14.5px; padding: 14px; border-radius: 10px; border: 1px solid #047857; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.25); cursor: pointer; margin-top: 24px; transition: all 0.2s ease;">
+                style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #85c9cc; color: #082d2f; font-weight: 700; font-size: 14.5px; padding: 14px; border-radius: 10px; border: 1px solid #72bcc0; box-shadow: 0 4px 15px rgba(133, 201, 204, 0.35); cursor: pointer; margin-top: 24px; transition: all 0.2s ease;">
           <i class="fa-solid fa-user-plus"></i> Join Us — Create Free Account
         </button>
 
         <p style="text-align: center; font-size: 13px; color: #64748b; margin: 20px 0 0 0;">
           Already have a cadet account? 
-          <a href="{{ route('login') }}" style="color: #059669; font-weight: 700; text-decoration: none; margin-left: 4px;">
+          <a href="{{ route('login') }}" style="color: #082d2f; font-weight: 700; text-decoration: underline; text-decoration-color: #85c9cc; margin-left: 4px;">
             Sign In here &rarr;
           </a>
         </p>

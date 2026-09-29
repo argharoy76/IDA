@@ -25,38 +25,65 @@ class ExamManagementController extends Controller
         $type = $request->query('type'); // 'free', 'paid', 'all', or null (landing)
         $isLanding = empty($type);
         $selectedBranch = $request->query('branch');
+        $selectedCadre = $request->query('cadre');
         $selectedTrack = $request->query('track');
         $search = $request->query('search');
+
+        // Handle cadre and track inferences
+        if ($selectedTrack === 'officer') {
+            $selectedCadre = 'officer';
+            $selectedTrack = null;
+        } elseif (in_array($selectedTrack, ['prelim', 'issb']) && empty($selectedCadre)) {
+            $selectedCadre = 'officer';
+        } elseif ($selectedTrack === 'soldier' && empty($selectedCadre)) {
+            $selectedCadre = 'soldier';
+        }
 
         // Global Stats
         $freeCount = Exam::where('is_paid_for_external', false)->where('status', '!=', 'archived')->count();
         $paidCount = Exam::where('is_paid_for_external', true)->where('status', '!=', 'archived')->count();
         $totalCount = Exam::where('status', '!=', 'archived')->count();
 
+        $typeScopedBase = Exam::where('status', '!=', 'archived');
+        if ($type === 'free') {
+            $typeScopedBase->where('is_paid_for_external', false);
+        } elseif ($type === 'paid') {
+            $typeScopedBase->where('is_paid_for_external', true);
+        }
+
         $stats = [
             'free' => $freeCount,
             'paid' => $paidCount,
             'cadet' => $paidCount,
             'total' => $totalCount,
-            'army' => Exam::where('branch', 'army')->where('status', '!=', 'archived')->count(),
-            'navy' => Exam::where('branch', 'navy')->where('status', '!=', 'archived')->count(),
-            'air_force' => Exam::where('branch', 'air_force')->where('status', '!=', 'archived')->count(),
-            'police' => Exam::where('branch', 'police')->where('status', '!=', 'archived')->count(),
+            'navy' => (clone $typeScopedBase)->where('branch', 'navy')->count(),
+            'police' => (clone $typeScopedBase)->where('branch', 'police')->count(),
+            'army' => (clone $typeScopedBase)->where('branch', 'army')->count(),
+            'air_force' => (clone $typeScopedBase)->where('branch', 'air_force')->count(),
         ];
+
+        $trackBaseQuery = clone $typeScopedBase;
+        if ($selectedBranch && in_array($selectedBranch, ['navy', 'police', 'army', 'air_force'])) {
+            $trackBaseQuery->where('branch', $selectedBranch);
+        }
 
         $hasTargetTrack = \Illuminate\Support\Facades\Schema::hasColumn('exams', 'target_track');
         if ($hasTargetTrack) {
-            $stats['prelim'] = Exam::where('target_track', 'prelim')->where('status', '!=', 'archived')->count();
-            $stats['issb'] = Exam::where('target_track', 'issb')->where('status', '!=', 'archived')->count();
-            $stats['constable'] = Exam::where('target_track', 'constable')->where('status', '!=', 'archived')->count();
-            $stats['si'] = Exam::where('target_track', 'si')->where('status', '!=', 'archived')->count();
-            $stats['asi'] = Exam::where('target_track', 'asi')->where('status', '!=', 'archived')->count();
+            $stats['soldier'] = (clone $trackBaseQuery)->where('target_track', 'soldier')->count();
+            $stats['prelim'] = (clone $trackBaseQuery)->where('target_track', 'prelim')->count();
+            $stats['issb'] = (clone $trackBaseQuery)->where('target_track', 'issb')->count();
+            $stats['officer'] = (clone $trackBaseQuery)->whereIn('target_track', ['prelim', 'issb'])->count();
+            $stats['constable'] = (clone $trackBaseQuery)->where('target_track', 'constable')->count();
+            $stats['si'] = (clone $trackBaseQuery)->where('target_track', 'si')->count();
+            $stats['asi'] = (clone $trackBaseQuery)->where('target_track', 'asi')->count();
         } else {
-            $stats['prelim'] = Exam::where(function($q){ $q->where('category', 'like', '%prelim%')->orWhere('title', 'like', '%prelim%'); })->where('status', '!=', 'archived')->count();
-            $stats['issb'] = Exam::where(function($q){ $q->where('category', 'like', '%issb%')->orWhere('title', 'like', '%issb%'); })->where('status', '!=', 'archived')->count();
-            $stats['constable'] = Exam::where(function($q){ $q->where('category', 'like', '%constable%')->orWhere('title', 'like', '%constable%'); })->where('status', '!=', 'archived')->count();
-            $stats['si'] = Exam::where(function($q){ $q->where('category', 'like', '%si%')->orWhere('title', 'like', '%si%'); })->where('status', '!=', 'archived')->count();
-            $stats['asi'] = Exam::where(function($q){ $q->where('category', 'like', '%asi%')->orWhere('title', 'like', '%asi%'); })->where('status', '!=', 'archived')->count();
+            $stats['soldier'] = (clone $trackBaseQuery)->where(function($q){ $q->where('category', 'like', '%soldier%')->orWhere('title', 'like', '%soldier%'); })->count();
+            $stats['prelim'] = (clone $trackBaseQuery)->where(function($q){ $q->where('category', 'like', '%prelim%')->orWhere('title', 'like', '%prelim%'); })->count();
+            $stats['issb'] = (clone $trackBaseQuery)->where(function($q){ $q->where('category', 'like', '%issb%')->orWhere('title', 'like', '%issb%'); })->count();
+            $stats['officer'] = (clone $trackBaseQuery)->where(function($q){ $q->where('category', 'like', '%prelim%')->orWhere('title', 'like', '%prelim%')->orWhere('category', 'like', '%issb%')->orWhere('title', 'like', '%issb%'); })->count();
+            $stats['constable'] = (clone $trackBaseQuery)->where(function($q){ $q->where('category', 'like', '%constable%')->orWhere('title', 'like', '%constable%'); })->count();
+            $stats['si'] = (clone $trackBaseQuery)->where(function($q){ $q->where('category', 'like', '%si%')->orWhere('title', 'like', '%si%'); })->count();
+            $stats['asi'] = (clone $trackBaseQuery)->where(function($q){ $q->where('category', 'like', '%asi%')->orWhere('title', 'like', '%asi%'); })->count();
         }
 
         $exams = collect();
@@ -75,7 +102,38 @@ class ExamManagementController extends Controller
                 $query->where('branch', $selectedBranch);
             }
 
-            if ($selectedTrack && in_array($selectedTrack, ['prelim', 'issb', 'constable', 'si', 'asi', 'general'])) {
+            if ($selectedCadre === 'officer' || $selectedTrack === 'officer') {
+                if ($selectedTrack && in_array($selectedTrack, ['prelim', 'issb'])) {
+                    if ($hasTargetTrack) {
+                        $query->where('target_track', $selectedTrack);
+                    } else {
+                        $query->where(function ($q) use ($selectedTrack) {
+                            $q->where('category', 'like', "%{$selectedTrack}%")
+                              ->orWhere('title', 'like', "%{$selectedTrack}%");
+                        });
+                    }
+                } else {
+                    if ($hasTargetTrack) {
+                        $query->whereIn('target_track', ['prelim', 'issb']);
+                    } else {
+                        $query->where(function ($q) {
+                            $q->where('category', 'like', '%prelim%')
+                              ->orWhere('title', 'like', '%prelim%')
+                              ->orWhere('category', 'like', '%issb%')
+                              ->orWhere('title', 'like', '%issb%');
+                        });
+                    }
+                }
+            } elseif ($selectedCadre === 'soldier' || $selectedTrack === 'soldier') {
+                if ($hasTargetTrack) {
+                    $query->where('target_track', 'soldier');
+                } else {
+                    $query->where(function ($q) {
+                        $q->where('category', 'like', '%soldier%')
+                          ->orWhere('title', 'like', '%soldier%');
+                    });
+                }
+            } elseif ($selectedTrack && in_array($selectedTrack, ['prelim', 'issb', 'constable', 'si', 'asi', 'general'])) {
                 if ($hasTargetTrack) {
                     $query->where('target_track', $selectedTrack);
                 } else {
@@ -109,6 +167,7 @@ class ExamManagementController extends Controller
             'isLanding',
             'type',
             'selectedBranch',
+            'selectedCadre',
             'selectedTrack',
             'search',
             'stats',
@@ -140,6 +199,15 @@ class ExamManagementController extends Controller
         $exam->save();
 
         $label = $newPaidState ? 'Paid Assessment' : 'Free Exam';
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_paid_for_external' => $newPaidState,
+                'fee' => $exam->fee,
+                'message' => "Exam \"{$exam->title}\" has been updated to {$label} successfully.",
+            ]);
+        }
+
         return back()->with('success', "Exam \"{$exam->title}\" has been updated to {$label} successfully.");
     }
 
@@ -155,6 +223,15 @@ class ExamManagementController extends Controller
         $exam->fee = $fee;
         $exam->is_paid_for_external = ($fee > 0);
         $exam->save();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'fee' => $fee,
+                'is_paid_for_external' => $exam->is_paid_for_external,
+                'message' => "Fee for \"{$exam->title}\" updated to ৳" . number_format($fee, 2),
+            ]);
+        }
 
         return back()->with('success', "Fee for \"{$exam->title}\" updated to ৳" . number_format($fee, 2));
     }
@@ -183,7 +260,7 @@ class ExamManagementController extends Controller
             'title' => 'required|string|max:255',
             'branch' => 'required|in:army,navy,air_force,police',
             'category' => 'required|string|max:100',
-            'target_track' => 'nullable|in:prelim,issb,constable,si,asi,general',
+            'target_track' => 'nullable|in:soldier,prelim,issb,constable,si,asi,general',
             'exam_type' => 'required|in:iq_mcq,word_association,non_verbal_iq,general_aptitude',
             'duration_minutes' => 'required|integer|min:1|max:300',
             'total_marks' => 'required|numeric|min:1',
@@ -292,7 +369,7 @@ class ExamManagementController extends Controller
         if (empty($targetTrack)) {
             $catLower = strtolower($validated['category'] . ' ' . $validated['title']);
             if (in_array($validated['branch'], ['army', 'navy', 'air_force'], true)) {
-                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : 'prelim';
+                $targetTrack = str_contains($catLower, 'issb') ? 'issb' : (str_contains($catLower, 'soldier') || str_contains($catLower, 'sainik') || str_contains($catLower, 'sailor') || str_contains($catLower, 'airman') ? 'soldier' : 'prelim');
             } elseif ($validated['branch'] === 'police') {
                 if (str_contains($catLower, 'constable')) {
                     $targetTrack = 'constable';

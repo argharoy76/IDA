@@ -22,8 +22,8 @@ class CheckRole
 
         $user = auth()->user();
 
-        // Super admin and Admin have universal access
-        if (in_array($user->role, ['super_admin', 'admin'])) {
+        // Super admin, Pro admin and Admin have universal access
+        if (in_array($user->role, ['super_admin', 'pro_admin', 'admin'])) {
             return $next($request);
         }
 

@@ -12,11 +12,22 @@
     <a href="{{ route('admin.exams.questions', $exam->id) }}" class="btn-tactical" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 8px 16px; font-size: 13px; font-weight: 700; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 7px;">
       <i class="fa-solid fa-list-ol"></i> Manage Questions ({{ $exam->questions_count ?? $exam->questions()->count() }})
     </a>
+    <button type="button" onclick="submitExamFormAjax()" id="topSaveExamBtn" class="btn-primary" style="background: #ff5757; color: #ffffff; border: none; padding: 8px 20px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 4px 12px rgba(255, 87, 87, 0.35);">
+      <i class="fa-solid fa-floppy-disk"></i> Update &amp; Save
+    </button>
   </div>
 @endsection
 
 @section('content')
 <div style="max-width: 1200px; margin: 0 auto; width: 100%;">
+
+  <!-- Floating Toast Notification (Without taking a load) -->
+  <div id="tacticalToast" style="position: fixed; top: 24px; right: 24px; z-index: 999999; transform: translateY(-80px); opacity: 0; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none;">
+    <div id="tacticalToastInner" style="background: #0f172a; border: 1.5px solid #10b981; border-radius: 12px; padding: 14px 22px; color: #34d399; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+      <i id="tacticalToastIcon" class="fa-solid fa-circle-check" style="font-size: 18px; color: #10b981;"></i>
+      <span id="tacticalToastText">Details updated in system successfully!</span>
+    </div>
+  </div>
 
   <!-- Breadcrumb & Quick Action Bar -->
   <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
@@ -25,7 +36,7 @@
       <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
       <a href="{{ route('admin.exam_management.index') }}" style="color: #94a3b8; text-decoration: none;">Exam Management</a>
       <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
-      <span style="color: #ff5757; font-weight: 700;">Edit: {{ Str::limit($exam->title, 40) }}</span>
+      <span id="breadcrumbExamTitle" style="color: #ff5757; font-weight: 700;">Edit: {{ Str::limit($exam->title, 40) }}</span>
     </div>
 
     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -40,6 +51,9 @@
       </a>
     </div>
   </div>
+
+  {{-- Dynamic Live Alert Container (Updated via AJAX without page reload) --}}
+  <div id="liveAlertContainer" style="margin-bottom: 20px;"></div>
 
   {{-- Notification Alerts --}}
   @if(isset($errors) && $errors->any())
@@ -585,8 +599,8 @@
       </div>
 
       <div style="display: flex; align-items: center; gap: 12px;">
-        <button type="submit" class="btn-primary" style="background: #ff5757; color: #ffffff; padding: 11px 32px; font-size: 14px; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(255, 87, 87, 0.35);">
-          <i class="fa-solid fa-check"></i> Save Question Paper
+        <button type="submit" id="bottomSaveExamBtn" class="btn-primary" style="background: #ff5757; color: #ffffff; padding: 11px 32px; font-size: 14px; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 9px; box-shadow: 0 4px 14px rgba(255, 87, 87, 0.35); transition: all 0.2s ease;">
+          <i class="fa-solid fa-floppy-disk"></i> Update &amp; Save Question Paper
         </button>
       </div>
     </div>
@@ -596,6 +610,234 @@
 
 <script>
   let newLoadedQuestions = [];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const editForm = document.getElementById('editExamForm');
+    if (editForm) {
+      editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitExamFormAjax();
+      });
+    }
+  });
+
+  async function submitExamFormAjax() {
+    const form = document.getElementById('editExamForm');
+    if (!form) return;
+
+    const bottomBtn = document.getElementById('bottomSaveExamBtn');
+    const topBtn = document.getElementById('topSaveExamBtn');
+    const alertContainer = document.getElementById('liveAlertContainer');
+
+    // 1. If newly ingested/staged questions exist, serialize them into questions_json
+    const qJsonInput = document.getElementById('questionsJsonInput');
+    if (qJsonInput && typeof newLoadedQuestions !== 'undefined' && newLoadedQuestions.length > 0) {
+      qJsonInput.value = JSON.stringify(newLoadedQuestions);
+    }
+
+    // 2. Client-side native HTML5 validation check
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    // 3. Set loading state on submit buttons without full page load
+    const origBottomHtml = bottomBtn ? bottomBtn.innerHTML : '<i class="fa-solid fa-floppy-disk"></i> Update &amp; Save Exam';
+    const origTopHtml = topBtn ? topBtn.innerHTML : '<i class="fa-solid fa-floppy-disk"></i> Update &amp; Save';
+
+    if (bottomBtn) {
+      bottomBtn.disabled = true;
+      bottomBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating System...';
+      bottomBtn.style.opacity = '0.85';
+    }
+    if (topBtn) {
+      topBtn.disabled = true;
+      topBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+      topBtn.style.opacity = '0.85';
+    }
+
+    try {
+      const formData = new FormData(form);
+
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Success feedback
+        if (bottomBtn) {
+          bottomBtn.style.background = '#10b981';
+          bottomBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Updated Successfully!';
+          bottomBtn.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.4)';
+        }
+        if (topBtn) {
+          topBtn.style.background = '#10b981';
+          topBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Saved!';
+          topBtn.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.4)';
+        }
+
+        // Show floating tactical toast
+        showTacticalToast(data.message || 'Assessment details updated in system successfully!', 'success');
+
+        // Show smooth inline confirmation banner
+        if (alertContainer) {
+          alertContainer.innerHTML = `
+            <div style="background: rgba(16,185,129,0.12); border: 1.5px solid rgba(16,185,129,0.4); border-radius: 12px; padding: 14px 18px; color: #34d399; font-size: 13.5px; display: flex; align-items: center; justify-content: space-between; gap: 10px; animation: slideDown 0.3s ease;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-circle-check" style="font-size: 17px; color: #10b981;"></i>
+                <span><strong>System Updated:</strong> ${escapeHtml(data.message || 'Exam parameters successfully updated.')}</span>
+              </div>
+              <button type="button" onclick="this.parentElement.remove()" style="background: none; border: none; color: #34d399; cursor: pointer; font-size: 18px;">&times;</button>
+            </div>
+          `;
+        }
+
+        // Dynamically update DOM details in the system without reload
+        const newTitle = form.querySelector('[name="title"]')?.value;
+        if (newTitle) {
+          document.title = 'Edit Assessment: ' + newTitle + ' | IDA Portal';
+          const breadcrumbTitle = document.getElementById('breadcrumbExamTitle');
+          if (breadcrumbTitle) {
+            breadcrumbTitle.textContent = 'Edit: ' + (newTitle.length > 40 ? newTitle.substring(0, 37) + '...' : newTitle);
+          }
+        }
+
+        // If new questions were submitted and saved, clear the staged box and update counts
+        if (typeof newLoadedQuestions !== 'undefined' && newLoadedQuestions.length > 0) {
+          newLoadedQuestions = [];
+          if (qJsonInput) qJsonInput.value = '';
+          const placeholder = document.getElementById('emptyNewQuestionsPlaceholder');
+          const previewContainer = document.getElementById('newQuestionsPreviewContainer');
+          if (previewContainer && placeholder) {
+            previewContainer.innerHTML = '';
+            previewContainer.appendChild(placeholder);
+            placeholder.style.display = 'block';
+          }
+          const badge = document.getElementById('stagedQuestionsBadge');
+          if (badge) badge.textContent = '0 Staged';
+          const summary = document.getElementById('stagedSummaryText');
+          if (summary) summary.textContent = 'No questions staged for ingestion.';
+        }
+
+        // Restore button state after 2.2 seconds
+        setTimeout(() => {
+          if (bottomBtn) {
+            bottomBtn.disabled = false;
+            bottomBtn.style.background = '#ff5757';
+            bottomBtn.style.boxShadow = '0 4px 14px rgba(255, 87, 87, 0.35)';
+            bottomBtn.style.opacity = '1';
+            bottomBtn.innerHTML = origBottomHtml;
+          }
+          if (topBtn) {
+            topBtn.disabled = false;
+            topBtn.style.background = '#ff5757';
+            topBtn.style.boxShadow = '0 4px 12px rgba(255, 87, 87, 0.35)';
+            topBtn.style.opacity = '1';
+            topBtn.innerHTML = origTopHtml;
+          }
+        }, 2200);
+
+      } else {
+        // Validation errors (422) or server failure
+        let errorMessages = [];
+        if (data && data.errors) {
+          for (const key in data.errors) {
+            if (Array.isArray(data.errors[key])) {
+              data.errors[key].forEach(msg => errorMessages.push(msg));
+            } else {
+              errorMessages.push(data.errors[key]);
+            }
+          }
+        } else if (data && data.message) {
+          errorMessages.push(data.message);
+        } else {
+          errorMessages.push('An unexpected error occurred while saving.');
+        }
+
+        if (alertContainer) {
+          alertContainer.innerHTML = `
+            <div style="background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.35); border-radius: 12px; padding: 16px 20px; color: #fca5a5; font-size: 13px;">
+              <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
+                <span>Please resolve the following errors before saving:</span>
+              </div>
+              <ul style="margin: 0; padding-left: 22px; font-size: 12.5px; line-height: 1.6;">
+                ${errorMessages.map(m => `<li>${escapeHtml(m)}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+          alertContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        showTacticalToast('Please correct errors before saving.', 'error');
+
+        if (bottomBtn) {
+          bottomBtn.disabled = false;
+          bottomBtn.style.opacity = '1';
+          bottomBtn.innerHTML = origBottomHtml;
+        }
+        if (topBtn) {
+          topBtn.disabled = false;
+          topBtn.style.opacity = '1';
+          topBtn.innerHTML = origTopHtml;
+        }
+      }
+
+    } catch (err) {
+      console.error(err);
+      showTacticalToast('Network error while saving: ' + err.message, 'error');
+      if (bottomBtn) {
+        bottomBtn.disabled = false;
+        bottomBtn.style.opacity = '1';
+        bottomBtn.innerHTML = origBottomHtml;
+      }
+      if (topBtn) {
+        topBtn.disabled = false;
+        topBtn.style.opacity = '1';
+        topBtn.innerHTML = origTopHtml;
+      }
+    }
+  }
+
+  function showTacticalToast(msg, type = 'success') {
+    const toast = document.getElementById('tacticalToast');
+    const toastInner = document.getElementById('tacticalToastInner');
+    const toastIcon = document.getElementById('tacticalToastIcon');
+    const toastText = document.getElementById('tacticalToastText');
+    if (!toast || !toastInner || !toastText) return;
+
+    toastText.textContent = msg;
+    if (type === 'success') {
+      toastInner.style.borderColor = '#10b981';
+      toastInner.style.color = '#34d399';
+      toastIcon.className = 'fa-solid fa-circle-check';
+      toastIcon.style.color = '#10b981';
+    } else {
+      toastInner.style.borderColor = '#ef4444';
+      toastInner.style.color = '#f87171';
+      toastIcon.className = 'fa-solid fa-triangle-exclamation';
+      toastIcon.style.color = '#ef4444';
+    }
+
+    toast.style.transform = 'translateY(0)';
+    toast.style.opacity = '1';
+    toast.style.pointerEvents = 'auto';
+
+    clearTimeout(window.tacticalToastTimer);
+    window.tacticalToastTimer = setTimeout(() => {
+      toast.style.transform = 'translateY(-80px)';
+      toast.style.opacity = '0';
+      toast.style.pointerEvents = 'none';
+    }, 3500);
+  }
 
   async function deleteExistingQuestion(qId) {
     if (!confirm('Are you sure you want to permanently remove this question from this exam module?')) {
@@ -1502,18 +1744,21 @@ Ans: A`;
 
   const branchTracks = {
     army: [
-      { value: 'prelim', label: 'Army Preliminary Examination (Army Exclusive)', hint: '🪖 Exclusive: Only cadets enrolled in Bangladesh Army course can conduct this prelim exam.', badge: 'Army Prelim' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
+      { value: 'soldier', label: 'Soldier / Sainik (Army Exclusive)', hint: '🪖 Exclusive: Only cadets enrolled in Bangladesh Army Soldier track.', badge: 'Army Soldier' },
+      { value: 'prelim', label: 'Army Preliminary Examination (Officer Exclusive)', hint: '🛡️ Exclusive: Only cadets enrolled in Bangladesh Army Officer Prelim track.', badge: 'Army Prelim' },
+      { value: 'issb', label: 'ISSB Special Masterclass (Officer Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or Officer military course can conduct this exam!', badge: 'ISSB Universal' },
       { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Army candidates.', badge: 'Army General' }
     ],
     navy: [
-      { value: 'prelim', label: 'Navy Preliminary Examination (Navy Exclusive)', hint: '⚓ Exclusive: Only cadets enrolled in Bangladesh Navy course can conduct this prelim exam.', badge: 'Navy Prelim' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
+      { value: 'soldier', label: 'Sailor (Navy Exclusive)', hint: '⚓ Exclusive: Only cadets enrolled in Bangladesh Navy Sailor track.', badge: 'Navy Sailor' },
+      { value: 'prelim', label: 'Navy Preliminary Examination (Officer Exclusive)', hint: '⚓ Exclusive: Only cadets enrolled in Bangladesh Navy Officer Prelim track.', badge: 'Navy Prelim' },
+      { value: 'issb', label: 'ISSB Special Masterclass (Officer Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or Officer military course can conduct this exam!', badge: 'ISSB Universal' },
       { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Navy candidates.', badge: 'Navy General' }
     ],
     air_force: [
-      { value: 'prelim', label: 'Air Force Preliminary Examination (Air Force Exclusive)', hint: '✈️ Exclusive: Only cadets enrolled in Bangladesh Air Force course can conduct this prelim exam.', badge: 'Air Force Prelim' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Army, Navy, or Air Force) can conduct this exam!', badge: 'ISSB Universal' },
+      { value: 'soldier', label: 'Airman (Air Force Exclusive)', hint: '✈️ Exclusive: Only cadets enrolled in Bangladesh Air Force Airman track.', badge: 'Air Force Airman' },
+      { value: 'prelim', label: 'Air Force Preliminary Examination (Officer Exclusive)', hint: '✈️ Exclusive: Only cadets enrolled in Bangladesh Air Force Officer Prelim track.', badge: 'Air Force Prelim' },
+      { value: 'issb', label: 'ISSB Special Masterclass (Officer Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or Officer military course can conduct this exam!', badge: 'ISSB Universal' },
       { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Air Force candidates.', badge: 'Air Force General' }
     ],
     police: [
@@ -1563,6 +1808,9 @@ Ans: A`;
         } else if (matched.value === 'prelim') {
           badgeEl.style.background = 'rgba(59, 130, 246, 0.2)';
           badgeEl.style.color = '#60a5fa';
+        } else if (matched.value === 'soldier') {
+          badgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
+          badgeEl.style.color = '#10b981';
         } else if (['constable', 'si', 'asi'].includes(matched.value)) {
           badgeEl.style.background = 'rgba(168, 85, 247, 0.2)';
           badgeEl.style.color = '#c084fc';

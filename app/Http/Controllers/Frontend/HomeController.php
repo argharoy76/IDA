@@ -55,7 +55,11 @@ class HomeController extends Controller
     public function about()
     {
         $instructors = Instructor::with('user')->where('status', 'active')->get();
-        return view('frontend.about.index', compact('instructors'));
+        $teamMembers = \App\Models\TeamMember::where('is_active', true)
+            ->orderBy('display_category')
+            ->orderBy('display_order')
+            ->get();
+        return view('frontend.about.index', compact('instructors', 'teamMembers'));
     }
 
     public function courses(Request $request)

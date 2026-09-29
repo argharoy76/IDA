@@ -64,6 +64,7 @@
   <form method="POST" action="{{ route('admin.student_accounts.update', $student->id) }}" id="updateStudentForm">
     @csrf
     @method('PUT')
+    <input type="hidden" name="submit_action" id="form_submit_action" value="save_update">
 
     <!-- Account Identity -->
     <div class="content-panel" style="margin-bottom: 24px;">
@@ -96,6 +97,12 @@
             <option value="external" {{ old('student_type', $student->student_type) === 'external' ? 'selected' : '' }}>External Candidate</option>
           </select>
         </div>
+      </div>
+
+      <div style="text-align: right; margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px;">
+        <button type="submit" name="submit_action" value="save_update" onclick="submitAjaxSaveUpdate(event, this)" class="btn-tactical btn-tactical-primary" style="font-size: 13px; font-weight: 700; padding: 8px 18px; cursor: pointer;">
+          <i class="fa-solid fa-save" style="margin-right: 6px;"></i> Save Update
+        </button>
       </div>
     </div>
 
@@ -157,25 +164,26 @@
           <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">Full Address *</label>
           <textarea name="address" required rows="2" class="form-control" placeholder="House, Road, Area, Thana, District">{{ old('address', $student->address) }}</textarea>
         </div>
-      </div>
-    </div>
+      </div>    
+        <div style="text-align: right; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;" class="injected-save-btn">
+            <button type="submit" name="submit_action" value="save_update" onclick="submitAjaxSaveUpdate(event, this)" class="btn-tactical btn-tactical-primary" style="font-size: 13px; font-weight: 700; padding: 8px 16px; cursor: pointer;">
+                <i class="fa-solid fa-save" style="margin-right: 6px;"></i> Save Update
+            </button>
+        </div>
 
+      </div>
     <!-- Service Wing & Examination Category Allocation Panel -->
     <div class="content-panel" style="margin-bottom: 24px;">
       <div class="panel-header" style="margin-bottom: 18px;">
         <h3 style="font-size: 15px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-sitemap" style="color: #ff5757;"></i>
-          <span>Service Wing &amp; Category Track Allocation</span>
+          <i class="fa-solid fa-layer-group" style="color: #ff5757;"></i>
+          <span>Cadet Category</span>
         </h3>
-        <span style="font-size: 11px; color: #8c96a8;">Configure course branch and examination categories (Prelim, ISSB, Police sub-tracks)</span>
       </div>
 
       <!-- Step 1: Select Service Course / Branch -->
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; font-size: 11.5px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px;">
-          Step 1: Select Course / Branch *
-        </label>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px;">
+      <div style="margin-bottom: 16px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           @foreach([
             'Army' => ['label' => 'Bangladesh Army', 'icon' => 'fa-person-military-rifle', 'color' => '#f97316'],
             'Navy' => ['label' => 'Bangladesh Navy', 'icon' => 'fa-anchor', 'color' => '#38bdf8'],
@@ -185,13 +193,13 @@
           ] as $wingKey => $wingMeta)
             @php $isSelectedWing = ($activeWing === $wingKey); @endphp
             <label class="wing-radio-card" id="wing_card_{{ Str::slug($wingKey) }}"
-                   style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: all 0.2s; border: 1.5px solid {{ $isSelectedWing ? '#ff5757' : 'rgba(255,255,255,0.08)' }}; background: {{ $isSelectedWing ? 'rgba(255,87,87,0.1)' : 'rgba(255,255,255,0.02)' }};">
+                   style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 1.5px solid {{ $isSelectedWing ? '#ff5757' : 'rgba(255,255,255,0.08)' }}; background: {{ $isSelectedWing ? 'rgba(255,87,87,0.1)' : 'rgba(255,255,255,0.02)' }};">
               <input type="radio" name="branch_wing" value="{{ $wingKey }}"
                      {{ $isSelectedWing ? 'checked' : '' }}
                      onchange="onBranchWingChanged('{{ $wingKey }}')"
-                     style="accent-color: #ff5757; width: 16px; height: 16px;">
+                     style="accent-color: #ff5757; width: 14px; height: 14px; margin: 0;">
               <div>
-                <strong style="display: block; font-size: 12.5px; color: {{ $isSelectedWing ? '#ffffff' : '#cbd5e1' }};">
+                <strong style="display: block; font-size: 12px; color: {{ $isSelectedWing ? '#ffffff' : '#cbd5e1' }};">
                   <i class="fa-solid {{ $wingMeta['icon'] }}" style="color: {{ $wingMeta['color'] }}; margin-right: 4px;"></i> {{ $wingMeta['label'] }}
                 </strong>
               </div>
@@ -201,190 +209,138 @@
         <input type="hidden" name="target_wing" id="composedTargetWingHidden" value="{{ $student->target_wing }}">
       </div>
 
-      <!-- Step 2: Dynamic Category / Track Place Selection -->
+            <!-- Dynamic Category / Track Place Selection -->
       <div id="categoryTracksContainer" style="padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.06);">
         
         <!-- A. Military Tracks Container (Army, Navy, Air Force, General) -->
         <div id="militaryTracksSection" style="{{ $activeWing === 'Police' ? 'display: none;' : 'display: block;' }}">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <div>
-              <label style="display: block; font-size: 11.5px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px; margin: 0;">
-                Step 2: Select Examination Category / Track:
-              </label>
-              <span style="font-size: 11.5px; color: #94a3b8;">
-                Candidate can be placed in <strong style="color: #60a5fa;">Preliminary</strong>, <strong style="color: #facc15;">ISSB</strong>, or <strong style="color: #34d399;">both can be selected</strong>:
-              </span>
-            </div>
-            <!-- Quick Preset Pills -->
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button type="button" onclick="setMilitaryPreset('prelim')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); border-radius: 6px;">
-                <i class="fa-solid fa-file-pen"></i> Prelim Only
-              </button>
-              <button type="button" onclick="setMilitaryPreset('issb')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(234,179,8,0.12); color: #facc15; border: 1px solid rgba(234,179,8,0.3); border-radius: 6px;">
-                <i class="fa-solid fa-star"></i> ISSB Only
-              </button>
-              <button type="button" onclick="setMilitaryPreset('both')" class="btn-tactical" style="padding: 4px 12px; font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.35); border-radius: 6px;">
-                <i class="fa-solid fa-check-double"></i> Both (Prelim + ISSB)
-              </button>
-            </div>
+          
+          <label style="display: block; font-size: 11.5px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px;">
+            Select Cadet Rank Level
+          </label>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 18px;">
+             @php
+                $isSoldierChecked = in_array('soldier', $activeTracks);
+                $isPrelimChecked = in_array('prelim', $activeTracks);
+                $isIssbChecked = in_array('issb', $activeTracks);
+                $isOfficer = $isPrelimChecked || $isIssbChecked;
+             @endphp
+
+             <!-- Soldier Rank Card -->
+             <label style="display: block; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 12px; padding: 14px; transition: all 0.2s;" id="ui_rank_soldier">
+               <div style="display: flex; align-items: flex-start; gap: 12px;">
+                 <input type="radio" name="military_rank_level" value="soldier" onchange="toggleMilitaryRank()" style="accent-color: #10b981; width: 18px; height: 18px; margin-top: 2px;" {{ $isSoldierChecked ? 'checked' : '' }}>
+                 <div>
+                   <strong style="display: block; font-size: 13.5px; color: #ffffff; margin-bottom: 2px;">
+                     <i class="fa-solid fa-person-rifle" style="color: #10b981; margin-right: 4px;"></i> Soldier / Sainik
+                   </strong>
+                   <span style="font-size: 11.5px; color: #94a3b8;">Non-Commissioned Track</span>
+                 </div>
+               </div>
+             </label>
+
+             <!-- Officer Rank Card -->
+             <label style="display: block; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 12px; padding: 14px; transition: all 0.2s;" id="ui_rank_officer">
+               <div style="display: flex; align-items: flex-start; gap: 12px;">
+                 <input type="radio" name="military_rank_level" value="officer" onchange="toggleMilitaryRank()" style="accent-color: #60a5fa; width: 18px; height: 18px; margin-top: 2px;" {{ $isOfficer ? 'checked' : '' }}>
+                 <div>
+                   <strong style="display: block; font-size: 13.5px; color: #ffffff; margin-bottom: 2px;">
+                     <i class="fa-solid fa-star" style="color: #60a5fa; margin-right: 4px;"></i> Officer Cadet
+                   </strong>
+                   <span style="font-size: 11.5px; color: #94a3b8;">Commissioned Track</span>
+                 </div>
+               </div>
+             </label>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
-            <!-- Preliminary Card -->
-            @php $hasPrelimChecked = in_array('prelim', $activeTracks); @endphp
-            <label id="card_track_prelim" class="track-card"
-                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasPrelimChecked ? '#3b82f6' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasPrelimChecked ? 'rgba(59,130,246,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
-              <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <input type="checkbox" name="category_tracks[]" value="prelim" id="input_track_prelim"
-                       {{ $hasPrelimChecked ? 'checked' : '' }}
-                       onchange="onTrackCheckboxChanged()"
-                       style="accent-color: #3b82f6; width: 18px; height: 18px; margin-top: 2px;">
-                <div style="flex: 1;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <strong style="font-size: 13px; color: #ffffff;">Preliminary (Prelim)</strong>
-                    <span style="font-size: 9.5px; font-weight: 700; color: #60a5fa; background: rgba(59,130,246,0.18); border: 1px solid rgba(59,130,246,0.35); padding: 1px 6px; border-radius: 4px;">Branch Exclusive</span>
-                  </div>
-                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
-                    Authorized to conduct Preliminary written, IQ, and branch-specific academic exam modules for <strong id="prelimBranchText" style="color: #cbd5e1;">{{ $activeWing }}</strong>.
-                  </p>
-                </div>
-              </div>
-            </label>
+          <div style="display: none;">
+            <input type="checkbox" name="category_tracks[]" value="soldier" id="input_track_soldier" {{ $isSoldierChecked ? 'checked' : '' }}>
+          </div>
 
-            <!-- ISSB Card -->
-            @php $hasIssbChecked = in_array('issb', $activeTracks); @endphp
-            <label id="card_track_issb" class="track-card"
-                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasIssbChecked ? '#eab308' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasIssbChecked ? 'rgba(234,179,8,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
-              <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <input type="checkbox" name="category_tracks[]" value="issb" id="input_track_issb"
-                       {{ $hasIssbChecked ? 'checked' : '' }}
-                       onchange="onTrackCheckboxChanged()"
-                       style="accent-color: #eab308; width: 18px; height: 18px; margin-top: 2px;">
-                <div style="flex: 1;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <strong style="font-size: 13px; color: #ffffff;">ISSB Masterclass</strong>
-                    <span style="font-size: 9.5px; font-weight: 700; color: #facc15; background: rgba(234,179,8,0.18); border: 1px solid rgba(234,179,8,0.35); padding: 1px 6px; border-radius: 4px;">Tri-Services Unlocked</span>
-                  </div>
-                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
-                    Full clearance to conduct <strong style="color: #facc15;">ANY exam set for ISSB</strong> across Bangladesh Army, Navy, and Air Force.
-                  </p>
-                </div>
-              </div>
+          <!-- Officer Sub-Tracks (Prelim vs ISSB) -->
+          <div id="officerTracksSection" style="display: {{ $isOfficer ? 'block' : 'none' }}; margin-bottom: 20px; border-left: 2px solid #60a5fa; padding-left: 16px; margin-left: 8px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px;">
+              Officer Examinations &amp; Clearances
             </label>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+               <!-- Prelim Checkbox Card -->
+               <label style="display: block; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 10px; padding: 12px 14px; transition: all 0.2s;" id="ui_track_prelim">
+                 <div style="display: flex; align-items: flex-start; gap: 12px;">
+                   <input type="checkbox" name="category_tracks[]" value="prelim" id="input_track_prelim" {{ $isPrelimChecked ? 'checked' : '' }} style="accent-color: #60a5fa; width: 16px; height: 16px; margin-top: 2px;" onchange="onOfficerTrackChanged()">
+                   <div style="flex: 1;">
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                       <strong style="font-size: 13px; color: #ffffff;">Preliminary</strong>
+                       <span style="font-size: 9.5px; font-weight: 700; color: #60a5fa; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); padding: 1px 6px; border-radius: 4px;">Branch Exclusive</span>
+                     </div>
+                     <span style="font-size: 11px; color: #94a3b8;">Written &amp; IQ for specific branch</span>
+                   </div>
+                 </div>
+               </label>
+
+               <!-- ISSB Checkbox Card -->
+               <label style="display: block; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 10px; padding: 12px 14px; transition: all 0.2s;" id="ui_track_issb">
+                 <div style="display: flex; align-items: flex-start; gap: 12px;">
+                   <input type="checkbox" name="category_tracks[]" value="issb" id="input_track_issb" {{ $isIssbChecked ? 'checked' : '' }} style="accent-color: #facc15; width: 16px; height: 16px; margin-top: 2px;" onchange="onOfficerTrackChanged()">
+                   <div style="flex: 1;">
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                       <strong style="font-size: 13px; color: #ffffff;">ISSB Masterclass</strong>
+                       <span style="font-size: 9.5px; font-weight: 700; color: #facc15; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); padding: 1px 6px; border-radius: 4px;">Universal Tri-Service</span>
+                     </div>
+                     <span style="font-size: 11px; color: #94a3b8;">One clearance unlocks all 3 forces</span>
+                   </div>
+                 </div>
+               </label>
+            </div>
           </div>
         </div>
 
         <!-- B. Police Tracks Container (Constable, SI, ASI) -->
         <div id="policeTracksSection" style="{{ $activeWing === 'Police' ? 'display: block;' : 'display: none;' }}">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <div>
-              <label style="display: block; font-size: 11.5px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px; margin: 0;">
-                Step 2: Select Police Examination Track(s):
-              </label>
-              <span style="font-size: 11.5px; color: #94a3b8;">
-                Select <strong style="color: #c084fc;">Sub-Inspector (SI)</strong>, <strong style="color: #a855f7;">Assistant SI (ASI)</strong>, or <strong style="color: #818cf8;">Constable</strong> (combinations allowed):
-              </span>
-            </div>
-            <!-- Quick Preset Pills -->
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button type="button" onclick="setPolicePreset('si')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(192,132,252,0.12); color: #c084fc; border: 1px solid rgba(192,132,252,0.3); border-radius: 6px;">
-                SI Only
-              </button>
-              <button type="button" onclick="setPolicePreset('asi')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(168,85,247,0.12); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); border-radius: 6px;">
-                ASI Only
-              </button>
-              <button type="button" onclick="setPolicePreset('si_asi')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; font-weight: 700; background: rgba(192,132,252,0.18); color: #c084fc; border: 1.5px solid rgba(192,132,252,0.4); border-radius: 6px;">
-                SI &amp; ASI
-              </button>
-              <button type="button" onclick="setPolicePreset('constable')" class="btn-tactical" style="padding: 4px 10px; font-size: 11px; background: rgba(129,140,248,0.12); color: #818cf8; border: 1px solid rgba(129,140,248,0.3); border-radius: 6px;">
-                Constable
-              </button>
-              <button type="button" onclick="setPolicePreset('all')" class="btn-tactical" style="padding: 4px 12px; font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.35); border-radius: 6px;">
-                All 3 Tracks
-              </button>
-            </div>
+          <label style="display: block; font-size: 11.5px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px;">
+            Select Police Track Level(s)
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+             @php
+                $hasConstableChecked = in_array('constable', $activeTracks);
+                $hasSiChecked = in_array('si', $activeTracks);
+                $hasAsiChecked = in_array('asi', $activeTracks);
+             @endphp
+             <label style="display: block; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 10px; padding: 12px 14px; transition: all 0.2s;" id="ui_track_constable">
+               <div style="display: flex; align-items: center; gap: 10px;">
+                 <input type="checkbox" name="category_tracks[]" value="constable" id="input_track_constable" {{ $hasConstableChecked ? 'checked' : '' }} style="accent-color: #818cf8; width: 16px; height: 16px;" onchange="onPoliceTrackChanged()">
+                 <strong style="font-size: 13px; color: #ffffff;">Constable</strong>
+               </div>
+             </label>
+
+             <label style="display: block; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 10px; padding: 12px 14px; transition: all 0.2s;" id="ui_track_si">
+               <div style="display: flex; align-items: center; gap: 10px;">
+                 <input type="checkbox" name="category_tracks[]" value="si" id="input_track_si" {{ $hasSiChecked ? 'checked' : '' }} style="accent-color: #c084fc; width: 16px; height: 16px;" onchange="onPoliceTrackChanged()">
+                 <strong style="font-size: 13px; color: #ffffff;">Sub-Inspector (SI)</strong>
+               </div>
+             </label>
+
+             <label style="display: block; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); border-radius: 10px; padding: 12px 14px; transition: all 0.2s;" id="ui_track_asi">
+               <div style="display: flex; align-items: center; gap: 10px;">
+                 <input type="checkbox" name="category_tracks[]" value="asi" id="input_track_asi" {{ $hasAsiChecked ? 'checked' : '' }} style="accent-color: #a855f7; width: 16px; height: 16px;" onchange="onPoliceTrackChanged()">
+                 <strong style="font-size: 13px; color: #ffffff;">Assistant SI (ASI)</strong>
+               </div>
+             </label>
           </div>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
-            <!-- Constable Card -->
-            @php $hasConstableChecked = in_array('constable', $activeTracks); @endphp
-            <label id="card_track_constable" class="track-card"
-                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasConstableChecked ? '#818cf8' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasConstableChecked ? 'rgba(129,140,248,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
-              <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <input type="checkbox" name="category_tracks[]" value="constable" id="input_track_constable"
-                       {{ $hasConstableChecked ? 'checked' : '' }}
-                       onchange="onTrackCheckboxChanged()"
-                       style="accent-color: #818cf8; width: 18px; height: 18px; margin-top: 2px;">
-                <div style="flex: 1;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <strong style="font-size: 13px; color: #ffffff;">Police Constable</strong>
-                    <span style="font-size: 9.5px; font-weight: 700; color: #818cf8; background: rgba(129,140,248,0.18); border: 1px solid rgba(129,140,248,0.35); padding: 1px 6px; border-radius: 4px;">Constable Track</span>
-                  </div>
-                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
-                    Authorized for Police Constable recruitment tests, physical aptitude &amp; preliminary exams.
-                  </p>
-                </div>
-              </div>
-            </label>
-
-            <!-- Sub-Inspector (SI) Card -->
-            @php $hasSiChecked = in_array('si', $activeTracks); @endphp
-            <label id="card_track_si" class="track-card"
-                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasSiChecked ? '#c084fc' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasSiChecked ? 'rgba(192,132,252,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
-              <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <input type="checkbox" name="category_tracks[]" value="si" id="input_track_si"
-                       {{ $hasSiChecked ? 'checked' : '' }}
-                       onchange="onTrackCheckboxChanged()"
-                       style="accent-color: #c084fc; width: 18px; height: 18px; margin-top: 2px;">
-                <div style="flex: 1;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <strong style="font-size: 13px; color: #ffffff;">Sub-Inspector (SI)</strong>
-                    <span style="font-size: 9.5px; font-weight: 700; color: #c084fc; background: rgba(192,132,252,0.18); border: 1px solid rgba(192,132,252,0.35); padding: 1px 6px; border-radius: 4px;">SI Track</span>
-                  </div>
-                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
-                    Authorized for Police Sub-Inspector (SI) cadet recruitment, IQ, psychometric and specialized exams.
-                  </p>
-                </div>
-              </div>
-            </label>
-
-            <!-- Assistant Sub-Inspector (ASI) Card -->
-            @php $hasAsiChecked = in_array('asi', $activeTracks); @endphp
-            <label id="card_track_asi" class="track-card"
-                   style="display: block; cursor: pointer; border: 1.5px solid {{ $hasAsiChecked ? '#a855f7' : 'rgba(255,255,255,0.08)' }}; background: {{ $hasAsiChecked ? 'rgba(168,85,247,0.09)' : 'rgba(255,255,255,0.02)' }}; border-radius: 10px; padding: 14px; transition: all 0.2s;">
-              <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <input type="checkbox" name="category_tracks[]" value="asi" id="input_track_asi"
-                       {{ $hasAsiChecked ? 'checked' : '' }}
-                       onchange="onTrackCheckboxChanged()"
-                       style="accent-color: #a855f7; width: 18px; height: 18px; margin-top: 2px;">
-                <div style="flex: 1;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <strong style="font-size: 13px; color: #ffffff;">Assistant Sub-Inspector (ASI)</strong>
-                    <span style="font-size: 9.5px; font-weight: 700; color: #a855f7; background: rgba(168,85,247,0.18); border: 1px solid rgba(168,85,247,0.35); padding: 1px 6px; border-radius: 4px;">ASI Track</span>
-                  </div>
-                  <p style="font-size: 11.5px; color: #94a3b8; margin: 0; line-height: 1.45;">
-                    Authorized for Police Assistant Sub-Inspector (ASI) departmental, IQ, and recruitment assessments.
-                  </p>
-                </div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- Live Entitlement Status Card -->
-        <div id="liveEntitlementPreview" style="margin-top: 14px; padding: 12px 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12); border-radius: 8px; font-size: 12px; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-certificate" style="color: #ff5757; font-size: 15px;"></i>
-            <span id="liveClearanceSummaryText">Candidate will be cleared for testing based on selected category tracks.</span>
-          </div>
-          <button type="button" onclick="autoSelectMatchingCourses()" class="btn-tactical" style="padding: 5px 12px; font-size: 11px; background: rgba(255,87,87,0.12); color: #ff8585; border: 1px solid rgba(255,87,87,0.3); border-radius: 6px;">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Select Matching Courses Below
-          </button>
         </div>
 
       </div>
-    </div>
 
+    
+
+        <div style="text-align: right; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;" class="injected-save-btn">
+            <button type="submit" name="submit_action" value="save_update" onclick="submitAjaxSaveUpdate(event, this)" class="btn-tactical btn-tactical-primary" style="font-size: 13px; font-weight: 700; padding: 8px 16px; cursor: pointer;">
+                <i class="fa-solid fa-save" style="margin-right: 6px;"></i> Save Update
+            </button>
+        </div>
+
+      </div>
     <!-- Enrolled Courses -->
     <div class="content-panel" style="margin-bottom: 24px;">
       <div class="panel-header" style="margin-bottom: 14px;">
@@ -394,51 +350,59 @@
         </h3>
       </div>
 
-      <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 12px 16px; margin-top: 10px; margin-bottom: 14px; font-size: 12px; color: #cbd5e1; line-height: 1.5;">
-        <strong style="color: #ff8585; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          <i class="fa-solid fa-shield-halved"></i> Automated Testing Entitlement Rules:
-        </strong>
-        <ul style="margin: 0; padding-left: 20px; font-size: 11.5px; color: #94a3b8; line-height: 1.6;">
-          <li><strong>Preliminary Track:</strong> Branch-locked (Army course unlocks Army Prelims, Navy course unlocks Navy Prelims, Air Force unlocks AF Prelims).</li>
-          <li><strong>ISSB Track:</strong> Enrolling in <span style="color: #facc15;">ANY</span> military course (Army, Navy, or Air Force) gives the cadet complete clearance for <span style="color: #facc15;">ALL ISSB examinations</span> across all branches!</li>
-          <li><strong>Police Track:</strong> Clears testing in Constable, Sub-Inspector (SI), and Assistant Sub-Inspector (ASI) tracks.</li>
-        </ul>
+      <!-- Branch Filter Dropdown -->
+      <div style="margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 16px;">
+        <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">Filter by Branch</label>
+        <select id="courseFilterDropdown" onchange="filterCourses(this.value)" class="form-control" style="background-color: #0f121a; border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 10px 14px; border-radius: 8px; font-size: 13.5px; font-weight: 600; width: 100%; max-width: 350px; cursor: pointer; appearance: auto;">
+          <option value="none" selected>Select Branch...</option>
+          <option value="all">🌐 Show All Courses</option>
+          <option value="Army">🪖 Bangladesh Army</option>
+          <option value="Navy">⚓ Bangladesh Navy</option>
+          <option value="Air Force">✈️ Bangladesh Air Force</option>
+          <option value="Police">🛡️ Bangladesh Police</option>
+        </select>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 14px;">
+      <!-- Compact Courses List -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;" id="coursesGridList">
         @foreach($courses as $course)
           @php
             $isEnrolled = in_array($course->id, $enrolledCourseIds);
+            
+            // Map category to a cleaner branch string if branch_key isn't strictly set
+            $catLower = strtolower($course->category ?? '');
+            $titleLower = strtolower($course->title ?? '');
+            $filterTag = 'General';
+            if (str_contains($catLower, 'army') || str_contains($titleLower, 'army')) $filterTag = 'Army';
+            elseif (str_contains($catLower, 'navy') || str_contains($titleLower, 'navy')) $filterTag = 'Navy';
+            elseif (str_contains($catLower, 'air') || str_contains($titleLower, 'air') || str_contains($titleLower, 'bafa')) $filterTag = 'Air Force';
+            elseif (str_contains($catLower, 'police') || str_contains($titleLower, 'police')) $filterTag = 'Police';
           @endphp
-          <label style="display: block; cursor: pointer; border: 1.5px solid {{ $isEnrolled ? '#ff5757' : 'rgba(255,255,255,0.08)' }}; background: {{ $isEnrolled ? 'rgba(255,87,87,0.08)' : 'rgba(255,255,255,0.02)' }}; border-radius: 12px; padding: 16px; transition: all 0.2s;"
+          <label class="course-item" data-branch="{{ $filterTag }}"
                  id="course_card_{{ $course->id }}"
-                 class="student-course-card"
-                 data-branch="{{ $course->branch_key }}"
-                 data-track="{{ $course->program_track }}"
-                 data-course-id="{{ $course->id }}">
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-              <input type="checkbox" name="course_ids[]" value="{{ $course->id }}"
-                     {{ $isEnrolled ? 'checked' : '' }}
-                     style="accent-color: #ff5757; width: 18px; height: 18px; margin-top: 2px;"
-                     onchange="toggleCourseCardStyle(this, 'course_card_{{ $course->id }}')">
-              <div style="flex: 1;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-                  <strong style="font-size: 13.5px; color: #ffffff; display: block; margin-bottom: 2px;">{{ $course->title }}</strong>
-                </div>
-                <div style="display: flex; gap: 10px; font-size: 11.5px; color: #94a3b8; margin-top: 6px;">
-                  <span style="color: #ffffff; font-weight: 700;">৳{{ number_format($course->course_fee, 0) }}</span>
-                  <span>&bull;</span>
-                  <span>{{ $course->duration_weeks ?? 12 }} weeks</span>
-                  <span>&bull;</span>
-                  <span style="text-transform: capitalize; color: #cbd5e1;">{{ $course->branch_key }}</span>
-                </div>
-              </div>
+                 style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1.5px solid {{ $isEnrolled ? '#ff5757' : 'rgba(255,255,255,0.08)' }}; background: {{ $isEnrolled ? 'rgba(255,87,87,0.08)' : 'rgba(255,255,255,0.02)' }}; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+            <input type="checkbox" name="course_ids[]" value="{{ $course->id }}"
+                   {{ $isEnrolled ? 'checked' : '' }}
+                   style="accent-color: #ff5757; width: 16px; height: 16px; margin: 0;"
+                   onchange="toggleCourseCardStyleCompact(this, 'course_card_{{ $course->id }}')">
+            <div style="flex: 1; min-width: 0;">
+              <strong style="display: block; font-size: 13px; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;" title="{{ $course->title }}">{{ $course->title }}</strong>
+              <span style="font-size: 10.5px; color: #cbd5e1; font-family: monospace; font-weight: 700; background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; display: inline-block;">
+                <i class="fa-solid fa-barcode" style="color: #94a3b8; margin-right: 3px;"></i> {{ $course->course_code ?? 'CODE-TBA' }}
+              </span>
             </div>
           </label>
         @endforeach
       </div>
-    </div>
+    
 
+        <div style="text-align: right; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;" class="injected-save-btn">
+            <button type="submit" name="submit_action" value="save_update" onclick="submitAjaxSaveUpdate(event, this)" class="btn-tactical btn-tactical-primary" style="font-size: 13px; font-weight: 700; padding: 8px 18px; cursor: pointer;">
+                <i class="fa-solid fa-save" style="margin-right: 6px;"></i> Save Update
+            </button>
+        </div>
+
+      </div>
     <!-- Payment Details -->
     <div class="content-panel" id="payment_section" style="margin-bottom: 24px;">
       <div class="panel-header" style="margin-bottom: 16px;">
@@ -448,179 +412,151 @@
         </h3>
       </div>
 
-      <!-- Financial Metric Strip -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
-        <div style="background: #0f121a; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px;">
-          <div style="font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Total Billed</div>
-          <div style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 2px;">৳{{ number_format($totalBilled, 2) }}</div>
-        </div>
-        <div style="background: #0f121a; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px;">
-          <div style="font-size: 10.5px; font-weight: 700; color: #8c96a8; text-transform: uppercase; letter-spacing: 0.5px;">Total Paid</div>
-          <div style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 2px;">৳{{ number_format($totalPaid, 2) }}</div>
-        </div>
-        <div style="background: #0f121a; border: 1px solid {{ $totalDue > 0 ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.06)' }}; border-radius: 10px; padding: 12px 14px;">
-          <div style="font-size: 10.5px; font-weight: 700; color: {{ $totalDue > 0 ? '#f87171' : '#64748b' }}; text-transform: uppercase; letter-spacing: 0.5px;">Outstanding Dues</div>
-          <div style="font-size: 18px; font-weight: 800; color: {{ $totalDue > 0 ? '#f87171' : '#64748b' }}; margin-top: 2px;">৳{{ number_format($totalDue, 2) }}</div>
-        </div>
-      </div>
-
-      <!-- Subsection A: Course Payment Clearance -->
-      <div style="margin-bottom: 22px;">
-        <label style="display: block; font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
-          Course Payment Clearance Status
-        </label>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px;">
-          @foreach($courses as $c)
-            @php
-              $pivotCourse = $student->courses->firstWhere('id', $c->id);
-              $currentPayStatus = old('course_payment_status.' . $c->id, $pivotCourse ? ($pivotCourse->pivot->payment_status ?? 'paid') : 'paid');
-            @endphp
-            <div style="background: #0f121a; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-              <div style="min-width: 0; flex: 1;">
-                <div style="font-size: 12px; font-weight: 700; color: #ffffff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $c->title }}</div>
-                <div style="font-size: 10.5px; color: #cbd5e1; font-weight: 600;">Fee: ৳{{ number_format($c->course_fee, 0) }}</div>
-              </div>
-              <div style="width: 130px; flex-shrink: 0;">
-                <select name="course_payment_status[{{ $c->id }}]" class="form-control" style="font-size: 11.5px; padding: 6px 8px; height: auto;">
-                  <option value="paid" {{ $currentPayStatus === 'paid' ? 'selected' : '' }}>Paid in Full</option>
-                  <option value="partial" {{ $currentPayStatus === 'partial' ? 'selected' : '' }}>Partial Paid</option>
-                  <option value="unpaid" {{ $currentPayStatus === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
-                  <option value="exempt" {{ $currentPayStatus === 'exempt' ? 'selected' : '' }}>Exempt</option>
-                </select>
-              </div>
-            </div>
-          @endforeach
-        </div>
-      </div>
-
-      <!-- Subsection B: Issued Invoices & Status Adjustments -->
-      @if($invoices->isNotEmpty())
-        <div style="margin-bottom: 22px;">
-          <label style="display: block; font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
-            Issued Fee Invoices (Edit Dues & Status)
-          </label>
-          <div style="background: #0f121a; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 580px;">
-              <thead>
-                <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left; color: #64748b; font-size: 10px; text-transform: uppercase;">
-                  <th style="padding: 8px 12px;">Invoice #</th>
-                  <th style="padding: 8px 12px;">Category</th>
-                  <th style="padding: 8px 12px;">Net Total</th>
-                  <th style="padding: 8px 12px;">Paid Amount</th>
-                  <th style="padding: 8px 12px;">Due Balance</th>
-                  <th style="padding: 8px 12px;">Invoice Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach($invoices as $inv)
-                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                    <td style="padding: 8px 12px;">
-                      <code style="font-family: monospace; color: #cbd5e1; font-size: 11px;">{{ $inv->invoice_number }}</code>
-                    </td>
-                    <td style="padding: 8px 12px; color: #fff;">
-                      {{ $inv->title }}
-                    </td>
-                    <td style="padding: 8px 12px; font-family: monospace; color: #94a3b8;">
-                      ৳{{ number_format($inv->net_amount, 2) }}
-                    </td>
-                    <td style="padding: 8px 12px;">
-                      <input type="number" step="0.01" min="0" name="invoice_paid_amount[{{ $inv->id }}]" value="{{ old('invoice_paid_amount.' . $inv->id, $inv->paid_amount) }}"
-                             class="form-control" style="font-size: 11.5px; padding: 4px 8px; height: auto; max-width: 100px; font-family: monospace;">
-                    </td>
-                    <td style="padding: 8px 12px;">
-                      <input type="number" step="0.01" min="0" name="invoice_due_amount[{{ $inv->id }}]" value="{{ old('invoice_due_amount.' . $inv->id, $inv->due_amount) }}"
-                             class="form-control" style="font-size: 11.5px; padding: 4px 8px; height: auto; max-width: 100px; font-family: monospace; color: {{ $inv->due_amount > 0 ? '#f87171' : '#cbd5e1' }};">
-                    </td>
-                    <td style="padding: 8px 12px;">
-                      <select name="invoice_status[{{ $inv->id }}]" class="form-control" style="font-size: 11px; padding: 4px 8px; height: auto;">
-                        <option value="paid" {{ old('invoice_status.' . $inv->id, $inv->status) === 'paid' ? 'selected' : '' }}>Paid</option>
-                        <option value="partially_paid" {{ old('invoice_status.' . $inv->id, $inv->status) === 'partially_paid' ? 'selected' : '' }}>Partially Paid</option>
-                        <option value="pending" {{ old('invoice_status.' . $inv->id, $inv->status) === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="overdue" {{ old('invoice_status.' . $inv->id, $inv->status) === 'overdue' ? 'selected' : '' }}>Overdue</option>
-                      </select>
-                    </td>
-                  </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-        </div>
-      @endif
-
-      <!-- Subsection C: Record New Payment Voucher (Optional) -->
-      <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 10px; padding: 16px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-          <strong style="font-size: 12.5px; color: #fff; display: flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-circle-plus" style="color: #ff5757;"></i> Record New Payment Voucher (Optional)
-          </strong>
-          <small style="color: #64748b;">Instant payment credit</small>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-          <div>
-            <label style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Payment Amount (৳)</label>
-            <input type="number" step="0.01" min="1" name="new_payment_amount" value="{{ old('new_payment_amount') }}"
-                   class="form-control" placeholder="e.g. 5000" style="font-family: monospace;">
-          </div>
-          <div>
-            <label style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Payment Method</label>
-            <select name="new_payment_method" class="form-control">
-              <option value="Cash / Office Receipt">Cash / Office Receipt</option>
-              <option value="bKash">bKash</option>
-              <option value="Nagad">Nagad</option>
-              <option value="Bank Deposit">Bank Deposit</option>
-              <option value="Online Gateway">Online Gateway</option>
-            </select>
-          </div>
-          <div>
-            <label style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Transaction ID / Receipt #</label>
-            <input type="text" name="new_payment_trx" value="{{ old('new_payment_trx') }}"
-                   class="form-control" placeholder="e.g. BKASH-TX123, REC-0098">
-          </div>
-          <div>
-            <label style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Verification Status</label>
-            <select name="new_payment_status" class="form-control">
-              <option value="approved">Approved / Verified</option>
-              <option value="pending">Pending Review</option>
-            </select>
-          </div>
-          @if($invoices->isNotEmpty())
-            <div style="grid-column: span 2;">
-              <label style="display: block; font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Apply to Invoice (Optional)</label>
-              <select name="new_payment_invoice_id" class="form-control">
-                <option value="">-- Apply as General Cadet Payment --</option>
-                @foreach($invoices as $inv)
-                  <option value="{{ $inv->id }}">
-                    Invoice {{ $inv->invoice_number }} — {{ $inv->title }} (Due: ৳{{ number_format($inv->due_amount, 2) }})
-                  </option>
-                @endforeach
+      @if($student->courses->count() > 0)
+          <!-- Dropdown Menu for Enrolled Courses -->
+          <div style="margin-bottom: 24px;">
+              <select id="enrolled_course_payment_selector" class="form-control" onchange="switchPaymentCourse(this.value)" style="background-color: #0f121a; border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 12px 14px; border-radius: 8px; font-size: 14px; font-weight: 700; width: 100%; max-width: 450px; cursor: pointer; appearance: auto;">
+                  <option value="none" selected disabled>-- Choose Enrolled Course --</option>
+                  @foreach($student->courses as $c)
+                      <option value="pay_card_{{ $c->id }}">{{ $c->title }} ({{ $c->course_code ?? 'TBA' }})</option>
+                  @endforeach
               </select>
-            </div>
-          @endif
+          </div>
+
+          <!-- Course Details Cards Container -->
+          <div id="payment_cards_container">
+              @foreach($student->courses as $c)
+                  @php
+                      $currentPayStatus = old('course_payment_status.' . $c->id, $c->pivot->payment_status ?? 'paid');
+                      $coursePrice = $c->fee ?? 0;
+                      $paidAmount = old('course_paid_amount.' . $c->id, $c->pivot->paid_amount ?? 0);
+                      $dueAmount = old('course_due_amount.' . $c->id, $c->pivot->due_amount ?? 0);
+                  @endphp
+                  <div id="pay_card_{{ $c->id }}" class="payment-course-card" style="display: none; border: 1px solid rgba(255,255,255,0.08); padding: 24px; border-radius: 12px; background: rgba(255,255,255,0.02);">
+                      
+                      <!-- Display Fields (Read-only overview) -->
+                      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                          <div style="background: #0f121a; padding: 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+                              <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">Course Price</div>
+                              <div style="font-size: 22px; color: #ffffff; font-weight: 800;">৳{{ number_format($coursePrice, 0) }}</div>
+                          </div>
+                          <div style="background: #0f121a; padding: 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+                              <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">Paid Amount</div>
+                              <div style="font-size: 22px; color: #10b981; font-weight: 800;">৳{{ number_format($paidAmount, 0) }}</div>
+                          </div>
+                          <div style="background: #0f121a; padding: 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+                              <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">Payable / Due</div>
+                              <div style="font-size: 22px; color: #ef4444; font-weight: 800;">৳{{ number_format($dueAmount, 0) }}</div>
+                          </div>
+                      </div>
+                      
+                      <!-- Editable Section -->
+                      <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 20px;">
+                          <label style="display: block; font-size: 13.5px; font-weight: 800; color: #ffffff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                              <i class="fa-solid fa-pen-to-square" style="color: #60a5fa;"></i> Edit Payment Today
+                          </label>
+                          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                              <div>
+                                  <label style="font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 8px; display: block; text-transform: uppercase;">Update Paid Amount (৳)</label>
+                                  <input type="number" step="0.01" min="0" name="course_paid_amount[{{ $c->id }}]" value="{{ $paidAmount }}" class="form-control" style="font-family: monospace; font-size: 15px; font-weight: 700; background: #0f121a; border-color: rgba(255,255,255,0.1); padding: 12px;">
+                              </div>
+                              <div>
+                                  <label style="font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 8px; display: block; text-transform: uppercase;">Update Due Amount (৳)</label>
+                                  <input type="number" step="0.01" min="0" name="course_due_amount[{{ $c->id }}]" value="{{ $dueAmount }}" class="form-control" style="font-family: monospace; font-size: 15px; font-weight: 700; color: #f87171; background: #0f121a; border-color: rgba(255,255,255,0.1); padding: 12px;">
+                              </div>
+                              <div>
+                                  <label style="font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 8px; display: block; text-transform: uppercase;">Clearance Status</label>
+                                  <select name="course_payment_status[{{ $c->id }}]" class="form-control" style="font-size: 14px; font-weight: 700; background: #0f121a; border-color: rgba(255,255,255,0.1); padding: 12px; appearance: auto;">
+                                      <option value="paid" {{ $currentPayStatus === 'paid' ? 'selected' : '' }}>Paid in Full</option>
+                                      <option value="partial" {{ $currentPayStatus === 'partial' ? 'selected' : '' }}>Partial Paid</option>
+                                      <option value="unpaid" {{ $currentPayStatus === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                                      <option value="exempt" {{ $currentPayStatus === 'exempt' ? 'selected' : '' }}>Exempt</option>
+                                  </select>
+                              </div>
+                          </div>
+                      </div>
+                      
+                  </div>
+              @endforeach
+          </div>
+      @else
+          <!-- Empty State -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 40px; text-align: center;">
+              <i class="fa-solid fa-box-open" style="font-size: 32px; color: #64748b; margin-bottom: 16px;"></i>
+              <div style="font-size: 15px; color: #cbd5e1; font-weight: 700;">No Enrolled Courses Saved Yet</div>
+              <div style="font-size: 13px; color: #64748b; margin-top: 8px;">Select courses from the section above and click Save. Payment details will appear here.</div>
+          </div>
+      @endif
+    
+        <div style="text-align: right; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;" class="injected-save-btn">
+            <button type="submit" name="submit_action" value="save_update" onclick="submitAjaxSaveUpdate(event, this)" class="btn-tactical btn-tactical-primary" style="font-size: 13px; font-weight: 700; padding: 8px 16px; cursor: pointer;">
+                <i class="fa-solid fa-save" style="margin-right: 6px;"></i> Save Update
+            </button>
         </div>
+
       </div>
-
-    </div>
-
     <!-- Reset Password -->
     <div class="content-panel" style="margin-bottom: 24px;">
       <div class="panel-header" style="margin-bottom: 14px;">
         <h3 style="font-size: 15px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-key" style="color: #8c96a8;"></i>
-          <span>Reset Password (Optional)</span>
+          <span>Reset Password</span>
         </h3>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        @php
+          $canWatchCadetPassword = auth()->check() && auth()->user()->canAccessCadetPasswords();
+        @endphp
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">Current / Previous Password</label>
+          @if($canWatchCadetPassword)
+            @php
+              $currentCadetPlainPassword = $student->plain_password ?: ($student->user->plain_password ?: 'password');
+            @endphp
+            <div style="position: relative;">
+              <input type="password" id="cadet_current_password_input" readonly
+                     value="{{ $currentCadetPlainPassword }}"
+                     class="form-control"
+                     style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1; padding: 10px 42px 10px 14px; border-radius: 6px; font-family: monospace; font-size: 14px; height: 42px; width: 100%; box-sizing: border-box;"
+                     placeholder="{{ empty($currentCadetPlainPassword) ? 'Encrypted / Not Recorded' : '' }}">
+              <button type="button" onclick="togglePasswordVisibility('cadet_current_password_input', this)"
+                      style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 15px;"
+                      title="Watch Password">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          @else
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); color: #64748b; padding: 10px 14px; border-radius: 6px; font-family: monospace; font-size: 13px; height: 42px; box-sizing: border-box; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-lock" style="color: #64748b;"></i>
+              <span>•••••••• (Restricted)</span>
+            </div>
+          @endif
+        </div>
         <div>
           <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">New Password</label>
-          <input type="password" name="password" minlength="6" class="form-control" placeholder="Enter new password (min 6 chars)">
+          <div style="position: relative;">
+              <input type="password" id="new_password_input" name="password" minlength="6" class="form-control" placeholder="Enter new password (min 6 chars)" style="padding-right: 40px; height: 42px;">
+              <button type="button" onclick="togglePasswordVisibility('new_password_input', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer;">
+                  <i class="fa-solid fa-eye"></i>
+              </button>
+          </div>
         </div>
         <div>
           <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">Confirm New Password</label>
-          <input type="password" name="password_confirmation" minlength="6" class="form-control" placeholder="Re-enter new password">
+          <div style="position: relative;">
+              <input type="password" id="confirm_password_input" name="password_confirmation" minlength="6" class="form-control" placeholder="Re-enter new password" style="padding-right: 40px; height: 42px;">
+              <button type="button" onclick="togglePasswordVisibility('confirm_password_input', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer;">
+                  <i class="fa-solid fa-eye"></i>
+              </button>
+          </div>
         </div>
+      </div>
+
+      <div style="text-align: right; margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px;">
+        <button type="submit" name="submit_action" value="save_update" onclick="submitAjaxSaveUpdate(event, this)" class="btn-tactical btn-tactical-primary" style="font-size: 13px; font-weight: 700; padding: 8px 18px; cursor: pointer;">
+          <i class="fa-solid fa-save" style="margin-right: 6px;"></i> Save Update
+        </button>
       </div>
     </div>
 
@@ -629,7 +565,10 @@
       <a href="{{ route('admin.student_accounts.index') }}" class="btn-tactical" style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); padding: 9px 18px; font-size: 13px; text-decoration: none; border-radius: 8px;">
         Cancel
       </a>
-      <button type="submit" class="btn-tactical" style="background: #ff5757; color: #ffffff; padding: 9px 24px; font-size: 13px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer;">
+      <button type="submit" name="submit_action" value="save_update" onclick="submitAjaxSaveUpdate(event, this)" class="btn-tactical" style="background: rgba(255,255,255,0.08); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 9px 20px; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-save"></i> Save Update
+      </button>
+      <button type="submit" name="submit_action" value="save_changes" onclick="document.getElementById('form_submit_action').value='save_changes'" class="btn-tactical" style="background: #ff5757; color: #ffffff; padding: 9px 24px; font-size: 13px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
         <i class="fa-solid fa-check"></i> Save Changes
       </button>
     </div>
@@ -692,288 +631,325 @@
   }
 
   // Dynamic Service Wing & Category Track Handling
-  function onBranchWingChanged(selectedWing) {
-    // 1. Highlight active wing card
-    var wingCards = document.querySelectorAll('.wing-radio-card');
-    wingCards.forEach(function(card) {
-      var radio = card.querySelector('input[type="radio"]');
-      if (radio && radio.value === selectedWing) {
-        card.style.borderColor = '#ff5757';
-        card.style.background = 'rgba(255, 87, 87, 0.1)';
-        var strong = card.querySelector('strong');
-        if (strong) strong.style.color = '#ffffff';
-      } else {
-        card.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-        card.style.background = 'rgba(255, 255, 255, 0.02)';
-        var strong = card.querySelector('strong');
-        if (strong) strong.style.color = '#cbd5e1';
-      }
+      function onBranchWingChanged(selectedWing) {
+    document.getElementById('composedTargetWingHidden').value = selectedWing;
+    var allCards = document.querySelectorAll('.wing-radio-card');
+    allCards.forEach(function(card) {
+      card.style.borderColor = 'rgba(255,255,255,0.08)';
+      card.style.background = 'rgba(255,255,255,0.02)';
+      var strong = card.querySelector('strong');
+      if (strong) strong.style.color = '#cbd5e1';
     });
 
-    // 2. Toggle Military vs Police sections
-    var milSec = document.getElementById('militaryTracksSection');
-    var polSec = document.getElementById('policeTracksSection');
-    var prelimText = document.getElementById('prelimBranchText');
+    var activeId = 'wing_card_' + selectedWing.toLowerCase().replace(/\s+/g, '-');
+    var activeCard = document.getElementById(activeId);
+    if (activeCard) {
+      activeCard.style.borderColor = '#ff5757';
+      activeCard.style.background = 'rgba(255,87,87,0.1)';
+      var aStrong = activeCard.querySelector('strong');
+      if (aStrong) aStrong.style.color = '#ffffff';
+    }
 
     if (selectedWing === 'Police') {
-      if (milSec) milSec.style.display = 'none';
-      if (polSec) polSec.style.display = 'block';
+      document.getElementById('militaryTracksSection').style.display = 'none';
+      document.getElementById('policeTracksSection').style.display = 'block';
     } else {
-      if (milSec) milSec.style.display = 'block';
-      if (polSec) polSec.style.display = 'none';
-      if (prelimText) {
-        var wingNameMap = {
-          'Army': 'Bangladesh Army',
-          'Navy': 'Bangladesh Navy',
-          'Air Force': 'Bangladesh Air Force',
-          'General': 'Tri-Services / General'
-        };
-        prelimText.textContent = wingNameMap[selectedWing] || selectedWing;
-      }
+      document.getElementById('militaryTracksSection').style.display = 'block';
+      document.getElementById('policeTracksSection').style.display = 'none';
     }
-
-    onTrackCheckboxChanged();
   }
 
-  function onTrackCheckboxChanged() {
-    var trackMap = {
-      'prelim': { id: 'card_track_prelim', border: '#3b82f6', bg: 'rgba(59, 130, 246, 0.09)' },
-      'issb': { id: 'card_track_issb', border: '#eab308', bg: 'rgba(234, 179, 8, 0.09)' },
-      'constable': { id: 'card_track_constable', border: '#818cf8', bg: 'rgba(129, 140, 248, 0.09)' },
-      'si': { id: 'card_track_si', border: '#c084fc', bg: 'rgba(192, 132, 252, 0.09)' },
-      'asi': { id: 'card_track_asi', border: '#a855f7', bg: 'rgba(168, 85, 247, 0.09)' }
-    };
+  function toggleMilitaryRank() {
+    var rank = document.querySelector('input[name="military_rank_level"]:checked');
+    if (!rank) return;
 
-    for (var key in trackMap) {
-      var item = trackMap[key];
-      var input = document.getElementById('input_track_' + key);
-      var card = document.getElementById(item.id);
-      if (input && card) {
-        if (input.checked) {
-          card.style.borderColor = item.border;
-          card.style.background = item.bg;
-        } else {
-          card.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-          card.style.background = 'rgba(255, 255, 255, 0.02)';
-        }
-      }
+    var soldierInput = document.getElementById('input_track_soldier');
+    var prelimInput = document.getElementById('input_track_prelim');
+    var issbInput = document.getElementById('input_track_issb');
+
+    var uiSoldier = document.getElementById('ui_rank_soldier');
+    var uiOfficer = document.getElementById('ui_rank_officer');
+
+    if(uiSoldier) { uiSoldier.style.borderColor = 'rgba(255,255,255,0.1)'; uiSoldier.style.background = 'rgba(255,255,255,0.02)'; }
+    if(uiOfficer) { uiOfficer.style.borderColor = 'rgba(255,255,255,0.1)'; uiOfficer.style.background = 'rgba(255,255,255,0.02)'; }
+
+    if (rank.value === 'soldier') {
+      soldierInput.checked = true;
+      prelimInput.checked = false;
+      issbInput.checked = false;
+      document.getElementById('officerTracksSection').style.display = 'none';
+      if(uiSoldier) { uiSoldier.style.borderColor = '#10b981'; uiSoldier.style.background = 'rgba(16, 185, 129, 0.08)'; }
+    } else {
+      soldierInput.checked = false;
+      document.getElementById('officerTracksSection').style.display = 'block';
+      if(uiOfficer) { uiOfficer.style.borderColor = '#60a5fa'; uiOfficer.style.background = 'rgba(59, 130, 246, 0.08)'; }
     }
-
-    updateComposedTargetWingAndSummary();
+    
+    onOfficerTrackChanged();
   }
 
-  function setMilitaryPreset(preset) {
+  function onOfficerTrackChanged() {
     var prelim = document.getElementById('input_track_prelim');
     var issb = document.getElementById('input_track_issb');
-    if (!prelim || !issb) return;
-
-    if (preset === 'prelim') {
-      prelim.checked = true;
-      issb.checked = false;
-    } else if (preset === 'issb') {
-      prelim.checked = false;
-      issb.checked = true;
-    } else if (preset === 'both') {
-      prelim.checked = true;
-      issb.checked = true;
-    }
-
-    onTrackCheckboxChanged();
-  }
-
-  function setPolicePreset(preset) {
-    var c = document.getElementById('input_track_constable');
-    var si = document.getElementById('input_track_si');
-    var asi = document.getElementById('input_track_asi');
-    if (!c || !si || !asi) return;
-
-    if (preset === 'si') {
-      si.checked = true;
-      asi.checked = false;
-      c.checked = false;
-    } else if (preset === 'asi') {
-      si.checked = false;
-      asi.checked = true;
-      c.checked = false;
-    } else if (preset === 'si_asi') {
-      si.checked = true;
-      asi.checked = true;
-      c.checked = false;
-    } else if (preset === 'constable') {
-      si.checked = false;
-      asi.checked = false;
-      c.checked = true;
-    } else if (preset === 'all') {
-      si.checked = true;
-      asi.checked = true;
-      c.checked = true;
-    }
-
-    onTrackCheckboxChanged();
-  }
-
-  function updateComposedTargetWingAndSummary() {
-    var selectedRadio = document.querySelector('input[name="branch_wing"]:checked');
-    var wing = selectedRadio ? selectedRadio.value : 'Army';
-    var summaryEl = document.getElementById('liveClearanceSummaryText');
-    var hiddenWing = document.getElementById('composedTargetWingHidden');
-
-    var composedTitle = wing;
-
-    if (wing === 'Police') {
-      var c = document.getElementById('input_track_constable') ? document.getElementById('input_track_constable').checked : false;
-      var si = document.getElementById('input_track_si') ? document.getElementById('input_track_si').checked : false;
-      var asi = document.getElementById('input_track_asi') ? document.getElementById('input_track_asi').checked : false;
-
-      var parts = [];
-      if (c) parts.push('Constable');
-      if (si) parts.push('Sub-Inspector (SI)');
-      if (asi) parts.push('Assistant Sub-Inspector (ASI)');
-
-      if (parts.length > 0) {
-        composedTitle = 'Police - ' + parts.join(', ');
-        if (summaryEl) {
-          summaryEl.innerHTML = '<span style="color: #34d399; font-weight: 700;"><i class="fa-solid fa-check"></i> Clearance:</span> Cadet is authorized for <strong>' + parts.join(', ') + '</strong> police examination tests.';
-        }
-      } else {
-        composedTitle = 'Police';
-        if (summaryEl) {
-          summaryEl.innerHTML = '<span style="color: #facc15; font-weight: 700;"><i class="fa-solid fa-triangle-exclamation"></i> Notice:</span> No police track selected yet. Please select Constable, SI, ASI or combinations.';
-        }
-      }
-    } else {
-      var prelim = document.getElementById('input_track_prelim') ? document.getElementById('input_track_prelim').checked : false;
-      var issb = document.getElementById('input_track_issb') ? document.getElementById('input_track_issb').checked : false;
-
-      if (prelim && issb) {
-        composedTitle = wing + ' - Prelim & ISSB';
-        if (summaryEl) {
-          summaryEl.innerHTML = '<span style="color: #34d399; font-weight: 700;"><i class="fa-solid fa-check-double"></i> Full Clearance:</span> Authorized for <strong style="color: #60a5fa;">' + wing + ' Preliminary Exams</strong> + <strong style="color: #facc15;">Tri-Services ISSB Exams</strong> across Army, Navy & Air Force!';
-        }
-      } else if (prelim) {
-        composedTitle = wing + ' - Preliminary';
-        if (summaryEl) {
-          summaryEl.innerHTML = '<span style="color: #60a5fa; font-weight: 700;"><i class="fa-solid fa-file-pen"></i> Branch Clearance:</span> Authorized for <strong style="color: #60a5fa;">' + wing + ' Preliminary Exams</strong> only.';
-        }
-      } else if (issb) {
-        composedTitle = wing + ' - ISSB';
-        if (summaryEl) {
-          summaryEl.innerHTML = '<span style="color: #facc15; font-weight: 700;"><i class="fa-solid fa-star"></i> Tri-Services Clearance:</span> Authorized for <strong style="color: #facc15;">All ISSB Exams</strong> across Army, Navy & Air Force!';
-        }
-      } else {
-        composedTitle = wing;
-        if (summaryEl) {
-          summaryEl.innerHTML = '<span style="color: #facc15; font-weight: 700;"><i class="fa-solid fa-triangle-exclamation"></i> Notice:</span> No category track selected yet. Please select Preliminary, ISSB, or both.';
-        }
-      }
-    }
-
-    if (hiddenWing) {
-      hiddenWing.value = composedTitle;
-    }
-  }
-
-  function autoSelectMatchingCourses() {
-    var selectedRadio = document.querySelector('input[name="branch_wing"]:checked');
-    var wing = selectedRadio ? selectedRadio.value.toLowerCase() : '';
     
-    var isPolice = wing === 'police';
-    var prelimChecked = document.getElementById('input_track_prelim') ? document.getElementById('input_track_prelim').checked : false;
-    var issbChecked = document.getElementById('input_track_issb') ? document.getElementById('input_track_issb').checked : false;
-    var cChecked = document.getElementById('input_track_constable') ? document.getElementById('input_track_constable').checked : false;
-    var siChecked = document.getElementById('input_track_si') ? document.getElementById('input_track_si').checked : false;
-    var asiChecked = document.getElementById('input_track_asi') ? document.getElementById('input_track_asi').checked : false;
+    var uiPrelim = document.getElementById('ui_track_prelim');
+    var uiIssb = document.getElementById('ui_track_issb');
 
-    var courseCards = document.querySelectorAll('.student-course-card');
-    var matchedCount = 0;
-
-    courseCards.forEach(function(card) {
-      var branch = (card.getAttribute('data-branch') || '').toLowerCase();
-      var track = (card.getAttribute('data-track') || '').toLowerCase();
-      var text = (card.innerText || '').toLowerCase();
-      var checkbox = card.querySelector('input[type="checkbox"]');
-      if (!checkbox) return;
-
-      var shouldSelect = false;
-
-      if (isPolice) {
-        if (branch.includes('police') || text.includes('police')) {
-          if (cChecked && (text.includes('constable') || track.includes('constable'))) {
-            shouldSelect = true;
-          }
-          if (siChecked && (text.includes('si') || text.includes('sub-inspector')) && !text.includes('assistant')) {
-            shouldSelect = true;
-          }
-          if (asiChecked && (text.includes('asi') || text.includes('assistant sub-inspector') || text.includes('assistant'))) {
-            shouldSelect = true;
-          }
-          if (!cChecked && !siChecked && !asiChecked) {
-            shouldSelect = true;
-          }
-        }
-      } else {
-        var branchMatch = false;
-        if (wing === 'navy' && (branch.includes('navy') || text.includes('navy'))) branchMatch = true;
-        else if (wing === 'army' && (branch.includes('army') || text.includes('army'))) branchMatch = true;
-        else if ((wing === 'air force' || wing === 'airforce' || wing === 'air_force') && (branch.includes('air') || text.includes('air') || text.includes('bafa'))) branchMatch = true;
-        else if (wing === 'general') branchMatch = true;
-
-        if (branchMatch && prelimChecked) {
-          if (text.includes('prelim') || track.includes('prelim') || !text.includes('issb')) {
-            shouldSelect = true;
-          }
-        }
-
-        if (issbChecked && (text.includes('issb') || track.includes('issb'))) {
-          shouldSelect = true;
-        }
-      }
-
-      if (shouldSelect) {
-        checkbox.checked = true;
-        matchedCount++;
-      }
-      toggleCourseCardStyle(checkbox, card.id);
-    });
-
-    var summaryEl = document.getElementById('liveClearanceSummaryText');
-    if (summaryEl) {
-      summaryEl.innerHTML = '<span style="color: #ff5757; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto-selected ' + matchedCount + ' matching course(s) below!</span>';
-      setTimeout(function() {
-        updateComposedTargetWingAndSummary();
-      }, 2500);
+    if(uiPrelim && prelim) {
+      uiPrelim.style.borderColor = prelim.checked ? '#3b82f6' : 'rgba(255,255,255,0.1)';
+      uiPrelim.style.background = prelim.checked ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255,255,255,0.02)';
     }
+
+    if(uiIssb && issb) {
+      uiIssb.style.borderColor = issb.checked ? '#eab308' : 'rgba(255,255,255,0.1)';
+      uiIssb.style.background = issb.checked ? 'rgba(234, 179, 8, 0.08)' : 'rgba(255,255,255,0.02)';
+    }
+  }
+
+  function onPoliceTrackChanged() {
+    var tracks = [
+      { id: 'input_track_constable', ui: 'ui_track_constable', color: '#818cf8', bg: 'rgba(129, 140, 248, 0.08)' },
+      { id: 'input_track_si', ui: 'ui_track_si', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.08)' },
+      { id: 'input_track_asi', ui: 'ui_track_asi', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.08)' }
+    ];
+    tracks.forEach(function(t) {
+      var input = document.getElementById(t.id);
+      var ui = document.getElementById(t.ui);
+      if(input && ui) {
+        ui.style.borderColor = input.checked ? t.color : 'rgba(255,255,255,0.1)';
+        ui.style.background = input.checked ? t.bg : 'rgba(255,255,255,0.02)';
+      }
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    var selectedRadio = document.querySelector('input[name="branch_wing"]:checked');
-    if (selectedRadio) {
-      onBranchWingChanged(selectedRadio.value);
-    } else {
-      updateComposedTargetWingAndSummary();
-    }
+    toggleMilitaryRank();
+    onOfficerTrackChanged();
+    onPoliceTrackChanged();
+    filterCourses('none');
   });
 
-  function checkDangerDelete() {
-    var expected = "{{ strtoupper(trim($currentId)) }}";
-    var typed = (document.getElementById('dangerConfirmInput').value || '').trim().toUpperCase();
-    var ack = document.getElementById('dangerAckCheckbox').checked;
-    var btn = document.getElementById('dangerDeleteBtn');
 
-    var isMatch = (typed === expected && typed.length > 0) || typed === 'DELETE';
+  function filterCourses(branch) {
+    // Filter course items
+    var courses = document.querySelectorAll('.course-item');
+    courses.forEach(function(course) {
+      if (branch === 'none') {
+        course.style.display = 'none';
+      } else if (branch === 'all' || course.getAttribute('data-branch') === branch) {
+        course.style.display = 'flex';
+      } else {
+        course.style.display = 'none';
+      }
+    });
+  }
 
-    if (isMatch && ack) {
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      btn.style.cursor = 'pointer';
-      btn.style.background = 'linear-gradient(135deg, #ef4444, #b91c1c)';
-      btn.style.boxShadow = '0 4px 14px rgba(239, 68, 68, 0.4)';
+  function toggleCourseCardStyleCompact(checkbox, cardId) {
+    var card = document.getElementById(cardId);
+    if (!card) return;
+    if (checkbox.checked) {
+      card.style.borderColor = '#ff5757';
+      card.style.background = 'rgba(255,87,87,0.08)';
     } else {
-      btn.disabled = true;
-      btn.style.opacity = '0.35';
-      btn.style.cursor = 'not-allowed';
-      btn.style.boxShadow = 'none';
+      card.style.borderColor = 'rgba(255,255,255,0.08)';
+      card.style.background = 'rgba(255,255,255,0.02)';
     }
   }
+
+
+  function switchPaymentCourse(cardId) {
+    var cards = document.querySelectorAll('.payment-course-card');
+    cards.forEach(function(card) {
+      if (card.id === cardId) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function togglePasswordVisibility(inputId, btn) {
+      var input = document.getElementById(inputId);
+      var icon = btn.querySelector('i');
+      if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
+          icon.style.color = '#ff5757';
+      } else {
+          input.type = 'password';
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+          icon.style.color = '#94a3b8';
+      }
+  }
+
+  function showTacticalNotification(message, isSuccess) {
+    if (typeof isSuccess === 'undefined') isSuccess = true;
+    var existingToast = document.getElementById('tactical_ajax_toast');
+    if (existingToast && existingToast.parentNode) {
+      existingToast.parentNode.removeChild(existingToast);
+    }
+
+    var toast = document.createElement('div');
+    toast.id = 'tactical_ajax_toast';
+    toast.style.position = 'fixed';
+    toast.style.bottom = '28px';
+    toast.style.right = '28px';
+    toast.style.zIndex = '999999';
+    toast.style.display = 'flex';
+    toast.style.alignItems = 'center';
+    toast.style.gap = '12px';
+    toast.style.padding = '14px 22px';
+    toast.style.borderRadius = '10px';
+    toast.style.fontSize = '13.5px';
+    toast.style.fontWeight = '700';
+    toast.style.boxShadow = '0 12px 30px rgba(0,0,0,0.6), 0 2px 10px rgba(0,0,0,0.4)';
+    toast.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(16px)';
+    toast.style.pointerEvents = 'none';
+
+    if (isSuccess) {
+      toast.style.background = '#0a101d';
+      toast.style.border = '1.5px solid #10b981';
+      toast.style.color = '#34d399';
+      toast.innerHTML = '<i class="fa-solid fa-circle-check" style="font-size: 18px; color: #10b981;"></i> <span>' + message + '</span>';
+    } else {
+      toast.style.background = '#0a101d';
+      toast.style.border = '1.5px solid #ef4444';
+      toast.style.color = '#f87171';
+      toast.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="font-size: 18px; color: #ef4444;"></i> <span>' + message + '</span>';
+    }
+
+    document.body.appendChild(toast);
+    setTimeout(function() {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    }, 20);
+
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(16px)';
+      setTimeout(function() {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 350);
+    }, 4500);
+  }
+
+  function submitAjaxSaveUpdate(event, btn) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    var form = document.getElementById('updateStudentForm');
+    if (!form) return;
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    var originalHtml = btn ? btn.innerHTML : '<i class="fa-solid fa-save" style="margin-right: 6px;"></i> Save Update';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Saving...';
+    }
+
+    var formData = new FormData(form);
+    formData.set('submit_action', 'save_update');
+
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    })
+    .then(function(response) {
+      return response.json().then(function(data) {
+        return { status: response.status, ok: response.ok, body: data };
+      }).catch(function() {
+        return { status: response.status, ok: response.ok, body: null };
+      });
+    })
+    .then(function(res) {
+      if (btn) {
+        btn.disabled = false;
+      }
+      if (res.ok && res.body && res.body.success) {
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-circle-check" style="margin-right: 6px; color: #34d399;"></i> Saved!';
+          setTimeout(function() {
+            btn.innerHTML = originalHtml;
+          }, 2500);
+        }
+
+        // Update password display if student password was updated or returned
+        if (res.body.plain_password) {
+          var pwInput = document.getElementById('cadet_current_password_input');
+          if (pwInput) {
+            pwInput.value = res.body.plain_password;
+          }
+          var np = document.getElementById('new_password_input');
+          var cp = document.getElementById('confirm_password_input');
+          if (np) np.value = '';
+          if (cp) cp.value = '';
+        }
+
+        // Update confirmation placeholder if ID was changed
+        if (res.body.login_id) {
+          var dangerConfirm = document.getElementById('dangerConfirmInput');
+          var dangerLabels = document.querySelectorAll('#dangerDeleteForm code');
+          if (dangerLabels && dangerLabels.length > 0) {
+            dangerLabels[0].textContent = res.body.login_id;
+          }
+        }
+
+        showTacticalNotification(res.body.message || 'Cadet details updated successfully!', true);
+      } else {
+        if (btn) {
+          btn.innerHTML = originalHtml;
+        }
+        var errorMsg = 'Failed to update cadet details.';
+        if (res.body && res.body.errors) {
+          var keys = Object.keys(res.body.errors);
+          if (keys.length > 0 && res.body.errors[keys[0]].length > 0) {
+            errorMsg = res.body.errors[keys[0]][0];
+          }
+        } else if (res.body && res.body.message) {
+          errorMsg = res.body.message;
+        }
+        showTacticalNotification(errorMsg, false);
+      }
+    })
+    .catch(function(err) {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+      showTacticalNotification('Network error while saving. Please check your connection.', false);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('updateStudentForm');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        if (document.getElementById('form_submit_action').value === 'save_update') {
+          e.preventDefault();
+          var activeBtn = document.activeElement;
+          if (!activeBtn || !activeBtn.classList || !activeBtn.classList.contains('btn-tactical')) {
+            activeBtn = form.querySelector('button[value="save_update"]');
+          }
+          submitAjaxSaveUpdate(e, activeBtn);
+        }
+      });
+    }
+  });
 </script>
 @endsection
