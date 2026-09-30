@@ -152,7 +152,7 @@
     @endphp
 
     {{-- Filter & Action Suite with Cascading Dropdowns --}}
-    <div class="content-panel classical-card" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px;">
+    <div class="content-panel classical-card" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; position: relative; z-index: 40;">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
         
         {{-- Left Side: Cascading Dropdowns --}}
@@ -258,7 +258,7 @@
     </div>
 
     {{-- Exam Cards Grid (Matching Online Exam Page Layout + Rich Admin Controls) --}}
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; position: relative; z-index: 10;">
       @forelse($exams as $exam)
         @php
           $isFuture = $exam->isScheduledFuture();

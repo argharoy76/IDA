@@ -6,6 +6,7 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Course;
 use App\Models\Exam;
+use App\Models\Student;
 use Illuminate\Support\Facades\Hash;
 
 class SystemLineupAndOfficerTwoExamTest extends TestCase
@@ -298,7 +299,7 @@ class SystemLineupAndOfficerTwoExamTest extends TestCase
     }
 
     /**
-     * Test 13: Create Exam page implements the cascading dropdown hierarchy (Branch -> Cadre -> Track) and presets.
+     * Test 13: Create Exam page implements the cascading dropdown hierarchy (Branch -> Post -> Exam Type) and clean UI without small font notes.
      */
     public function test_create_exam_displays_cascading_dropdown_hierarchy_and_presets(): void
     {
@@ -308,17 +309,29 @@ class SystemLineupAndOfficerTwoExamTest extends TestCase
         $response->assertSee('id="examBranchSelect"', false);
         $response->assertSee('id="cadreSelectContainer"', false);
         $response->assertSee('id="examCadreSelect"', false);
+        $response->assertSee('id="examTypeContainer"', false);
         $response->assertSee('id="examTargetTrackSelect"', false);
         $response->assertSee('id="finalTargetTrackInput"', false);
+        
+        // Post and Exam Type labels
+        $response->assertSee('2. Post *');
+        $response->assertSee('3. Exam Type *');
+        $response->assertDontSee('Officer Examination Stage');
+
         // Presets include Sailor and Soldier
         $response->assertSee('Navy Sailor');
         $response->assertSee('Army Soldier');
         $response->assertSee('Air Force Airman');
         $response->assertSee('color-scheme: dark !important;', false);
+
+        // Verification of removal of badge and explanatory small text
+        $response->assertDontSee('id="trackRuleBadge"', false);
+        $response->assertDontSee('Official examination title visible to candidates across all platforms.');
+        $response->assertDontSee('Select Officer or Non-Commissioned Post.');
     }
 
     /**
-     * Test 14: Edit Exam page implements the cascading dropdown hierarchy.
+     * Test 14: Edit Exam page implements the clean cascading dropdown hierarchy without small font notes.
      */
     public function test_edit_exam_displays_cascading_dropdown_hierarchy(): void
     {
@@ -342,8 +355,17 @@ class SystemLineupAndOfficerTwoExamTest extends TestCase
         $response->assertSee('id="examBranchSelect"', false);
         $response->assertSee('id="cadreSelectContainer"', false);
         $response->assertSee('id="examCadreSelect"', false);
+        $response->assertSee('id="examTypeContainer"', false);
         $response->assertSee('id="examTargetTrackSelect"', false);
         $response->assertSee('id="finalTargetTrackInput"', false);
+
+        // Post and Exam Type labels
+        $response->assertSee('2. Post *');
+        $response->assertSee('3. Exam Type *');
+        $response->assertDontSee('Officer Examination Stage');
+        $response->assertDontSee('id="trackRuleBadge"', false);
+        $response->assertDontSee('Official examination title visible to candidates across all platforms.');
+
         $response->assertSee('color-scheme: dark !important;', false);
     }
 
@@ -362,6 +384,232 @@ class SystemLineupAndOfficerTwoExamTest extends TestCase
         $response->assertSee('id="examSoldierTrackSelect"', false);
         $response->assertSee('quickEditExamSelect');
         $response->assertSee('color-scheme: dark !important;', false);
+    }
+
+    /**
+     * Test 16: Navy cadet has "Other ISSB Exams" option under Exam History and sees sister wings ISSB exams.
+     */
+    public function test_navy_cadet_has_other_issb_option_and_sees_sister_wings_exams(): void
+    {
+        $navyUser = User::factory()->create(['role' => 'academic_student']);
+        $navyCourse = Course::create([
+            'title' => 'Navy Officer Cadet Course ' . uniqid(),
+            'slug' => 'navy-cadet-' . uniqid(),
+            'course_code' => 'NAVY-CADET-' . rand(100, 999),
+            'branch' => 'navy',
+            'target_track' => 'prelim',
+            'fee' => 15000,
+            'admission_status' => 'open',
+        ]);
+        $navyStudent = Student::create([
+            'user_id' => $navyUser->id,
+            'current_course_id' => $navyCourse->id,
+            'target_wing' => 'Navy',
+            'student_id_code' => 'NAVY-STU-' . rand(1000, 9999),
+        ]);
+        $navyStudent->courses()->attach($navyCourse->id);
+
+        $armyIssbExam = Exam::create([
+            'title' => 'Army ISSB Special Intelligence Assessment ' . uniqid(),
+            'slug' => 'army-issb-' . uniqid(),
+            'branch' => 'army',
+            'category' => 'ISSB Masterclass',
+            'target_track' => 'issb',
+            'exam_type' => 'mcq',
+            'duration_minutes' => 30,
+            'total_marks' => 50,
+            'pass_marks' => 25,
+            'status' => 'open',
+            'is_paid_for_external' => true,
+        ]);
+
+        $response = $this->actingAs($navyUser)->get(route('cadet.exams.index'));
+        $response->assertStatus(200);
+        $response->assertSee('Exam History');
+        $response->assertSee('Other ISSB');
+
+        // Visit Army sector (not enrolled in Army): sees Army ISSB exam at top, and available Army courses to buy
+        $armyResponse = $this->actingAs($navyUser)->get(route('cadet.exams.index', ['branch' => 'army']));
+        $armyResponse->assertStatus(200);
+        $armyResponse->assertSee($armyIssbExam->title);
+        $armyResponse->assertSee('Ongoing Courses in Bangladesh Army');
+        $armyResponse->assertSee('Buy / Enroll');
+
+        // Visit Other ISSB view
+        $otherResponse = $this->actingAs($navyUser)->get(route('cadet.exams.index', ['view' => 'other_issb']));
+        $otherResponse->assertStatus(200);
+        $otherResponse->assertSee('Other Branches ISSB', false);
+        $otherResponse->assertSee($armyIssbExam->title);
+    }
+
+    /**
+     * Test 17: Navy cadet can conduct Army ISSB exam, and Army cadet can conduct Navy ISSB exam.
+     */
+    public function test_cross_branch_issb_exam_conduct_authorization(): void
+    {
+        $navyUser = User::factory()->create(['role' => 'academic_student']);
+        $navyCourse = Course::create([
+            'title' => 'Navy BNA Course ' . uniqid(),
+            'slug' => 'navy-bna-' . uniqid(),
+            'course_code' => 'NAVY-BNA-' . rand(100, 999),
+            'branch' => 'navy',
+            'target_track' => 'prelim',
+            'fee' => 15000,
+            'admission_status' => 'open',
+        ]);
+        $navyStudent = Student::create([
+            'user_id' => $navyUser->id,
+            'current_course_id' => $navyCourse->id,
+            'target_wing' => 'Navy',
+            'student_id_code' => 'NAVY-' . rand(1000, 9999),
+        ]);
+        $navyStudent->courses()->attach($navyCourse->id);
+
+        $armyIssbExam = Exam::create([
+            'title' => 'Bangladesh Army ISSB Test ' . uniqid(),
+            'slug' => 'army-issb-test-' . uniqid(),
+            'branch' => 'army',
+            'category' => 'ISSB Masterclass',
+            'target_track' => 'issb',
+            'exam_type' => 'mcq',
+            'duration_minutes' => 30,
+            'total_marks' => 50,
+            'pass_marks' => 25,
+            'status' => 'open',
+            'is_paid_for_external' => true,
+        ]);
+
+        $this->assertTrue($navyStudent->hasIssbPrivilege());
+        $this->assertTrue($armyIssbExam->canCandidateAccess($navyStudent, $navyUser));
+
+        // Navy student starts Army ISSB exam
+        $response = $this->actingAs($navyUser)->get(route('cadet.exams.start', $armyIssbExam->id));
+        $response->assertStatus(200);
+    }
+
+    /**
+     * Test 18: Police cadet does not have Other ISSB option and is denied access to military ISSB exams.
+     */
+    public function test_police_cadet_has_no_issb_access(): void
+    {
+        $policeUser = User::factory()->create(['role' => 'academic_student']);
+        $policeCourse = Course::create([
+            'title' => 'Police SI Training Course ' . uniqid(),
+            'slug' => 'police-si-' . uniqid(),
+            'course_code' => 'POLICE-SI-' . rand(100, 999),
+            'branch' => 'police',
+            'target_track' => 'si',
+            'fee' => 10000,
+            'admission_status' => 'open',
+        ]);
+        $policeStudent = Student::create([
+            'user_id' => $policeUser->id,
+            'current_course_id' => $policeCourse->id,
+            'target_wing' => 'Police',
+            'student_id_code' => 'POLICE-' . rand(1000, 9999),
+        ]);
+        $policeStudent->courses()->attach($policeCourse->id);
+
+        $armyIssbExam = Exam::create([
+            'title' => 'Army ISSB Confidential ' . uniqid(),
+            'slug' => 'army-issb-conf-' . uniqid(),
+            'branch' => 'army',
+            'category' => 'ISSB Masterclass',
+            'target_track' => 'issb',
+            'exam_type' => 'mcq',
+            'duration_minutes' => 30,
+            'total_marks' => 50,
+            'pass_marks' => 25,
+            'status' => 'open',
+            'is_paid_for_external' => true,
+        ]);
+
+        $this->assertFalse($policeStudent->hasIssbPrivilege());
+        $this->assertFalse($armyIssbExam->canCandidateAccess($policeStudent, $policeUser));
+
+        // Police portal should not show Other ISSB Exams option
+        $response = $this->actingAs($policeUser)->get(route('cadet.exams.index'));
+        $response->assertStatus(200);
+        $response->assertDontSee('btnOtherIssbOption');
+
+        // Trying to start Army ISSB exam must be blocked and redirected
+        $startResponse = $this->actingAs($policeUser)->get(route('cadet.exams.start', $armyIssbExam->id));
+        $startResponse->assertRedirect(route('cadet.exams.index', ['branch' => 'army']));
+        $startResponse->assertSessionHas('error');
+    }
+
+    /**
+     * Test 19: When admin unchecks ISSB Masterclass (revoking ISSB permission), cadet strictly loses ISSB access.
+     */
+    public function test_revoked_issb_permission_strictly_denies_issb_access_and_hides_exams(): void
+    {
+        $navyUser = User::factory()->create(['role' => 'academic_student']);
+        $navyCourse = Course::create([
+            'title' => 'Navy Officer Cadet Course ' . uniqid(),
+            'slug' => 'navy-officer-' . uniqid(),
+            'course_code' => 'NAVY-OFF-' . rand(100, 999),
+            'branch' => 'navy',
+            'target_track' => 'prelim',
+            'fee' => 15000,
+            'admission_status' => 'open',
+        ]);
+
+        // Explicitly set target_tracks to only ['prelim'] (Admin unchecked ISSB Masterclass)
+        $navyStudent = Student::create([
+            'user_id' => $navyUser->id,
+            'current_course_id' => $navyCourse->id,
+            'target_wing' => 'Navy - Preliminary',
+            'target_tracks' => ['prelim'],
+            'student_id_code' => 'NAVY-NOPRIV-' . rand(1000, 9999),
+        ]);
+        $navyStudent->courses()->attach($navyCourse->id);
+
+        $armyCourse = Course::create([
+            'title' => 'Bangladesh Army Officer Program ' . uniqid(),
+            'slug' => 'army-officer-' . uniqid(),
+            'course_code' => 'ARMY-OFF-' . rand(100, 999),
+            'branch' => 'army',
+            'fee' => 12000,
+            'admission_status' => 'open',
+        ]);
+
+        $armyIssbExam = Exam::create([
+            'title' => 'Army ISSB Special Intelligence Assessment ' . uniqid(),
+            'slug' => 'army-issb-spec-' . uniqid(),
+            'branch' => 'army',
+            'category' => 'ISSB Masterclass',
+            'target_track' => 'issb',
+            'exam_type' => 'mcq',
+            'duration_minutes' => 30,
+            'total_marks' => 50,
+            'pass_marks' => 25,
+            'status' => 'open',
+            'is_paid_for_external' => true,
+        ]);
+
+        // Authorization checks
+        $this->assertFalse($navyStudent->hasIssbPrivilege(), 'Cadet with explicit prelim-only track must not have ISSB privilege');
+        $this->assertFalse($navyStudent->hasIssbTrack(), 'Cadet with explicit prelim-only track must not have ISSB track');
+        $this->assertTrue($navyStudent->hasPrelimTrack('navy'), 'Cadet must have prelim track for their enrolled branch');
+        $this->assertFalse($armyIssbExam->canCandidateAccess($navyStudent, $navyUser), 'Cadet without ISSB privilege must not access Army ISSB exam');
+
+        // Cadet portal index: Other ISSB tab should NOT appear
+        $response = $this->actingAs($navyUser)->get(route('cadet.exams.index'));
+        $response->assertStatus(200);
+        $response->assertDontSee('Other ISSB');
+
+        // Visiting Army sector: cadet is not enrolled in Army and has NO ISSB privilege.
+        // Therefore, Army ISSB exam must NOT appear, and available courses to buy must appear.
+        $armySectorResponse = $this->actingAs($navyUser)->get(route('cadet.exams.index', ['branch' => 'army']));
+        $armySectorResponse->assertStatus(200);
+        $armySectorResponse->assertDontSee($armyIssbExam->title);
+        $armySectorResponse->assertSee('Ongoing Courses in Bangladesh Army');
+        $armySectorResponse->assertSee('Buy / Enroll');
+
+        // Attempting to directly start the Army ISSB exam should be blocked and redirected
+        $startResponse = $this->actingAs($navyUser)->get(route('cadet.exams.start', $armyIssbExam->id));
+        $startResponse->assertRedirect(route('cadet.exams.index', ['branch' => 'army']));
+        $startResponse->assertSessionHas('error');
     }
 }
 

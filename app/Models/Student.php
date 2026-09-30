@@ -143,19 +143,45 @@ class Student extends Model
     /**
      * Get array of all assigned program / category tracks (e.g. ['prelim', 'issb'], ['si', 'asi'], ['constable']).
      */
-    public function getTargetTracks(): array
+    /**
+     * Get explicitly assigned tracks from the target_tracks column if set by administrator.
+     */
+    public function getExplicitTracksArray(): array
     {
-        $tracks = [];
-
-        // 1. From explicit target_tracks field
-        if (!empty($this->target_tracks)) {
-            $raw = is_array($this->target_tracks) ? $this->target_tracks : json_decode($this->target_tracks, true);
-            if (is_array($raw)) {
-                $tracks = array_merge($tracks, $raw);
-            } elseif (is_string($this->target_tracks)) {
-                $tracks = array_merge($tracks, array_map('trim', explode(',', $this->target_tracks)));
+        $raw = $this->target_tracks;
+        if (empty($raw)) {
+            return [];
+        }
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                $raw = $decoded;
+            } else {
+                $raw = explode(',', $raw);
             }
         }
+        if (is_array($raw)) {
+            return array_values(array_unique(array_filter(array_map('strtolower', array_map('trim', $raw)))));
+        }
+        return [];
+    }
+
+    public function hasExplicitTracks(): bool
+    {
+        return !empty($this->getExplicitTracksArray());
+    }
+
+    /**
+     * Get array of all assigned program / category tracks (e.g. ['prelim', 'issb'], ['si', 'asi'], ['constable']).
+     */
+    public function getTargetTracks(): array
+    {
+        $explicitTracks = $this->getExplicitTracksArray();
+        if (!empty($explicitTracks)) {
+            return $explicitTracks;
+        }
+
+        $tracks = [];
 
         // 2. From target_wing string
         if (!empty($this->target_wing)) {
@@ -211,6 +237,11 @@ class Student extends Model
             return false;
         }
 
+        $explicitTracks = $this->getExplicitTracksArray();
+        if (!empty($explicitTracks)) {
+            return in_array('soldier', $explicitTracks, true);
+        }
+
         $tracks = $this->getTargetTracks();
         if (!empty($tracks)) {
             if (in_array('soldier', $tracks, true)) {
@@ -235,6 +266,11 @@ class Student extends Model
             return false;
         }
 
+        $explicitTracks = $this->getExplicitTracksArray();
+        if (!empty($explicitTracks)) {
+            return in_array('prelim', $explicitTracks, true);
+        }
+
         $tracks = $this->getTargetTracks();
         // If cadet has designated tracks
         if (!empty($tracks)) {
@@ -253,51 +289,71 @@ class Student extends Model
     /**
      * Check if cadet is authorized for ISSB exams across all branches.
      * Rule: Every student that has ISSB courses, or ISSB track, or military courses can conduct ISSB exams!
+     * If administrator has explicitly configured target_tracks, that explicit setting is authoritative.
      */
     public function hasIssbTrack(): bool
     {
-        // 1. Explicitly assigned ISSB track in target_tracks column
-        $explicitTracks = [];
-        if (!empty($this->target_tracks)) {
-            $raw = is_array($this->target_tracks) ? $this->target_tracks : json_decode($this->target_tracks, true);
-            if (is_array($raw)) {
-                $explicitTracks = $raw;
-            } elseif (is_string($this->target_tracks)) {
-                $explicitTracks = array_map('trim', explode(',', $this->target_tracks));
-            }
+        $explicitTracks = $this->getExplicitTracksArray();
+        if (!empty($explicitTracks)) {
+            return in_array('issb', $explicitTracks, true);
         }
 
-        if (in_array('issb', $explicitTracks, true)) {
+        // Direct enrolled course with ISSB in title, track, or category
+        if ($this->hasIssbCourse()) {
             return true;
         }
 
-        // 2. Direct enrolled course with ISSB in title, track, or category
-        $courses = $this->courses;
-        if ($courses->isEmpty() && $this->currentCourse) {
-            $courses = collect([$this->currentCourse]);
-        }
-        foreach ($courses as $c) {
-            $text = strtolower(($c->title ?? '') . ' ' . ($c->category ?? '') . ' ' . ($c->program_track ?? ''));
-            if (str_contains($text, 'issb')) {
-                return true;
-            }
-        }
-
-        // 3. Cadets with any military course (Army, Navy, Air Force)
+        // Cadets with any military course (Army, Navy, Air Force)
         if ($this->hasMilitaryCourse()) {
-            // New Rule: If they are strictly enrolled in the 'soldier' track, they do not get automatic ISSB access.
-            if (in_array('soldier', $explicitTracks, true) && !in_array('issb', $explicitTracks, true) && !in_array('prelim', $explicitTracks, true)) {
-                return false;
-            }
             return true;
         }
 
-        // 4. Check if target_wing includes ISSB
+        // Check if target_wing includes ISSB
         if (!empty($this->target_wing) && str_contains(strtolower($this->target_wing), 'issb')) {
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Check if student is directly enrolled in any course categorized or titled as ISSB.
+     */
+    public function hasIssbCourse(): bool
+    {
+        $courses = $this->courses;
+        if ($courses->isEmpty() && $this->currentCourse) {
+            $courses = collect([$this->currentCourse]);
+        }
+        foreach ($courses as $c) {
+            $text = strtolower(($c->title ?? '') . ' ' . ($c->category ?? '') . ' ' . ($c->program_track ?? '') . ' ' . ($c->target_wing ?? ''));
+            if (str_contains($text, 'issb')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if cadet has universal Tri-Services ISSB privilege.
+     * Military cadets (Army, Navy, Air Force) and enrolled ISSB students have full privilege.
+     * If administrator has explicitly configured target_tracks, that explicit setting is the single source of truth.
+     * Police-only students do NOT have ISSB privilege.
+     */
+    public function hasIssbPrivilege(): bool
+    {
+        $explicitTracks = $this->getExplicitTracksArray();
+        if (!empty($explicitTracks)) {
+            return in_array('issb', $explicitTracks, true);
+        }
+
+        $branches = $this->getEnrolledBranches();
+        $isPoliceOnly = !empty($branches) && count($branches) === 1 && in_array('police', $branches, true);
+        if ($isPoliceOnly && !$this->hasMilitaryCourse() && !$this->hasIssbCourse()) {
+            return false;
+        }
+
+        return $this->hasMilitaryCourse() || $this->hasIssbTrack() || $this->hasIssbCourse();
     }
 
     /**
@@ -310,8 +366,15 @@ class Student extends Model
         }
 
         $track = strtolower(trim($track));
-        $tracks = $this->getTargetTracks();
+        $explicitTracks = $this->getExplicitTracksArray();
+        if (!empty($explicitTracks)) {
+            $validPolice = array_intersect(['constable', 'si', 'asi'], $explicitTracks);
+            if (!empty($validPolice)) {
+                return in_array($track, $validPolice, true);
+            }
+        }
 
+        $tracks = $this->getTargetTracks();
         $policeTracks = array_intersect(['constable', 'si', 'asi'], $tracks);
         if (!empty($policeTracks)) {
             return in_array($track, $policeTracks, true);

@@ -68,21 +68,24 @@ class Course extends Model
     public function scopeForBranch($query, string $branch)
     {
         return $query->where(function ($q) use ($branch) {
+            $q->where('branch', $branch);
             if ($branch === 'army') {
-                $q->where('category', 'like', '%army%')
+                $q->orWhere('category', 'like', '%army%')
                   ->orWhere('title', 'like', '%army%')
                   ->orWhere('title', 'like', '%bma%');
             } elseif ($branch === 'navy') {
-                $q->where('category', 'like', '%navy%')
+                $q->orWhere('category', 'like', '%navy%')
                   ->orWhere('title', 'like', '%navy%')
                   ->orWhere('title', 'like', '%bns%')
                   ->orWhere('title', 'like', '%bna%');
             } elseif ($branch === 'air_force' || $branch === 'airforce') {
-                $q->where('category', 'like', '%air%')
+                $q->orWhere('branch', 'air_force')
+                  ->orWhere('branch', 'airforce')
+                  ->orWhere('category', 'like', '%air%')
                   ->orWhere('title', 'like', '%air%')
                   ->orWhere('title', 'like', '%bafa%');
             } elseif ($branch === 'police') {
-                $q->where('category', 'like', '%police%')
+                $q->orWhere('category', 'like', '%police%')
                   ->orWhere('title', 'like', '%police%');
             }
         });

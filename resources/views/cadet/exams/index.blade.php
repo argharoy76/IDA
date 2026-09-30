@@ -152,14 +152,59 @@
           <span style="font-size: 9.5px; opacity: 0.8; background: rgba(255,255,255,0.15); padding: 1px 6px; border-radius: 999px;">Courses</span>
         @endif
       </a>
+
+      @if(!empty($hasIssbPrivilege))
+        <a href="{{ route('cadet.exams.index', ['view' => 'other_issb']) }}" class="badge {{ !empty($isOtherIssbView) ? 'badge-gold' : 'badge-navy' }}" style="text-decoration: none; padding: 7px 13px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; {{ !empty($isOtherIssbView) ? 'background: #eab308; color: #000000; font-weight: 800;' : 'color: #facc15; border: 1px solid rgba(250, 204, 21, 0.35);' }}">
+          <i class="fa-solid fa-star"></i> Other ISSB
+          @if(isset($otherIssbCount) && $otherIssbCount > 0)
+            <span style="font-size: 9.5px; background: rgba(0,0,0,0.25); color: inherit; padding: 1px 6px; border-radius: 999px; font-weight: 800;">{{ $otherIssbCount }}</span>
+          @endif
+        </a>
+      @endif
     </div>
 
-    <div>
+    {{-- Right Actions: Exam History --}}
+    <div style="display: flex; align-items: center; gap: 6px;">
       <a href="{{ route('cadet.exams.history') }}" class="btn-tactical btn-tactical-outline" style="padding: 7px 14px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: #ffffff; border-color: rgba(255,255,255,0.25);">
         <i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-gold);"></i> Exam History
       </a>
     </div>
   </div>
+
+
+  @if(!empty($isOtherIssbView))
+    <!-- Tri-Services Cross-Branch ISSB Banner -->
+    <div class="tactical-card" style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.16) 0%, rgba(202, 138, 4, 0.06) 100%); border: 1.5px solid rgba(234, 179, 8, 0.4); padding: 20px 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 50px; height: 50px; border-radius: 14px; background: #eab308; color: #000000; display: grid; place-items: center; font-size: 24px; box-shadow: 0 4px 14px rgba(234, 179, 8, 0.45); flex-shrink: 0;">
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap;">
+              <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; background: rgba(234, 179, 8, 0.25); color: #facc15; padding: 2px 8px; border-radius: 6px;">
+                Tri-Services ISSB Clearance
+              </span>
+              <span style="font-size: 11px; font-weight: 700; color: #94a3b8;">
+                Sister Wings Universal Access
+              </span>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin: 0 0 3px 0;">
+              Other Branches ISSB Course &amp; IQ Test Exams
+            </h3>
+            <p style="margin: 0; font-size: 12.5px; color: #cbd5e1; line-height: 1.45; max-width: 820px;">
+              As an enrolled cadet in Bangladesh Defence, you are authorized to conduct all ISSB Masterclasses, Verbal/Non-Verbal Intelligence tests, and Word Association Tests (WAT) across sister military wings (Army, Navy, and Air Force).
+            </p>
+          </div>
+        </div>
+        <div>
+          <a href="{{ route('cadet.exams.index') }}" class="btn-tactical btn-tactical-outline" style="padding: 8px 15px; font-size: 12px; color: #ffffff; text-decoration: none; border-color: rgba(255,255,255,0.25); display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrow-left"></i> My Enrolled Wing
+          </a>
+        </div>
+      </div>
+    </div>
+  @endif
 
   @if(session('exam_submission_summary') || session('success'))
     @php
@@ -263,12 +308,19 @@
     </div>
   @endif
 
-  @if($isEnrolledInSelectedBranch)
-    <!-- Available Assessment Exams Grid -->
+  @if($exams->isNotEmpty())
+    <!-- Available Assessment Exams Grid (Shown at Top) -->
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
         <h3 style="font-size: 16px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: var(--accent-gold);">
-          <i class="fa-solid fa-crosshairs"></i> Available Assessment Modules
+          <i class="fa-solid fa-crosshairs"></i>
+          @if(!empty($isOtherIssbView))
+            Other Branches ISSB & IQ Assessment Modules ({{ $exams->count() }})
+          @elseif(!empty($selectedTrack))
+            Available {{ ucfirst($selectedTrack) }} Modules ({{ $exams->count() }})
+          @else
+            Available Assessment Modules ({{ $exams->count() }})
+          @endif
         </h3>
         @if(!$selectedBranch)
           <span style="font-size: 11.5px; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;">
@@ -278,7 +330,7 @@
       </div>
 
       <div class="cadet-exams-grid">
-      @forelse($exams as $exam)
+      @foreach($exams as $exam)
         @php
           $isEnded = $exam->isEnded();
           $isFuture = !$isEnded && $exam->isScheduledFuture();
@@ -318,43 +370,43 @@
 
           <div style="position: relative; z-index: 1;">
             {{-- Top Row: Exam Name (Left) & Condition Status (Right) --}}
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px;">
               {{-- Top Left: Exam Name & Branch Badge (No IQ MCQ) --}}
-              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                <span style="background: rgba(255,255,255,0.24); color: #ffffff; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; border: 1px solid rgba(255,255,255,0.38); box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: inline-flex; align-items: center; gap: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
+                <span style="background: rgba(255,255,255,0.24); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; border: 1px solid rgba(255,255,255,0.38); box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: inline-flex; align-items: center; gap: 5px; text-shadow: 0 1px 2px rgba(0,0,0,0.2); white-space: nowrap;">
                   <i class="fa-solid {{ $exam->branchIcon() }}"></i> {{ $exam->branchLabel() }}
                 </span>
                 @if($exam->isIssb())
-                  <span style="background: rgba(254, 240, 138, 0.28); color: #fef08a; padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; border: 1px solid rgba(254, 240, 138, 0.45); display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                  <span style="background: rgba(254, 240, 138, 0.28); color: #fef08a; padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; border: 1px solid rgba(254, 240, 138, 0.45); display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); white-space: nowrap;">
                     <i class="fa-solid fa-star"></i> ISSB Masterclass
                   </span>
                 @elseif($exam->isPrelim())
-                  <span style="background: rgba(255,255,255,0.18); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; gap: 4px;">
+                  <span style="background: rgba(255,255,255,0.18); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
                     <i class="fa-solid fa-shield"></i> Prelim
                   </span>
                 @elseif($exam->isPolice())
-                  <span style="background: rgba(255,255,255,0.18); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; gap: 4px;">
+                  <span style="background: rgba(255,255,255,0.18); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
                     <i class="fa-solid fa-handcuffs"></i> {{ $exam->trackLabel() }}
                   </span>
                 @endif
               </div>
 
               {{-- Top Right: Condition (LIVE / SCHEDULED / ENDED) --}}
-              <span id="cadet-badge-{{ $exam->id }}">
+              <div id="cadet-badge-{{ $exam->id }}" style="flex-shrink: 0; white-space: nowrap; margin-left: auto;">
                 @if($isEnded)
-                  <span style="background: rgba(239,68,68,0.35); color: #ffffff; border: 1.5px solid rgba(255,255,255,0.45); padding: 4px 11px; border-radius: 999px; font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.18);">
+                  <span style="background: rgba(239,68,68,0.35); color: #ffffff; border: 1.5px solid rgba(255,255,255,0.45); padding: 4px 11px; border-radius: 999px; font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.18); white-space: nowrap; flex-shrink: 0;">
                     <i class="fa-solid fa-circle-xmark"></i> ENDED
                   </span>
                 @elseif($isFuture)
-                  <span style="background: rgba(245,158,11,0.35); color: #ffffff; border: 1.5px solid rgba(255,255,255,0.45); padding: 4px 11px; border-radius: 999px; font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.18);">
+                  <span style="background: rgba(245,158,11,0.35); color: #ffffff; border: 1.5px solid rgba(255,255,255,0.45); padding: 4px 11px; border-radius: 999px; font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.18); white-space: nowrap; flex-shrink: 0;">
                     <i class="fa-regular fa-clock"></i> SCHEDULED
                   </span>
                 @else
-                  <span style="background: rgba(16,185,129,0.3); color: #ffffff; border: 1.5px solid rgba(255,255,255,0.45); padding: 4px 11px; border-radius: 999px; font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.18);">
-                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; display: inline-block;"></span> LIVE
+                  <span style="background: rgba(16,185,129,0.3); color: #ffffff; border: 1.5px solid rgba(255,255,255,0.45); padding: 4px 11px; border-radius: 999px; font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.18); white-space: nowrap; flex-shrink: 0;">
+                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; display: inline-block; flex-shrink: 0;"></span> LIVE
                   </span>
                 @endif
-              </span>
+              </div>
             </div>
 
             {{-- Title of the Exam --}}
@@ -471,14 +523,26 @@
             @endif
           </div>
         </div>
-      @empty
-        <div style="grid-column: 1 / -1; text-align: center; padding: 48px; color: var(--text-muted);" class="tactical-card">
-          No assessment exams currently configured for this sector.
-        </div>
-      @endforelse
+      @endforeach
     </div>
   </div>
-  @else
+  @elseif($isEnrolledInSelectedBranch || empty($selectedBranch))
+    <div style="width: 100%; text-align: center; padding: 48px 24px; color: var(--text-muted); margin-bottom: 24px;" class="tactical-card">
+      @if(!empty($isOtherIssbView))
+        <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(234, 179, 8, 0.15); color: #facc15; display: grid; place-items: center; font-size: 24px; margin: 0 auto 14px;">
+          <i class="fa-solid fa-star"></i>
+        </div>
+        <div style="font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 6px;">No Other Wings ISSB Exams Available Right Now</div>
+        <div style="font-size: 13px; color: #94a3b8; max-width: 520px; margin: 0 auto; line-height: 1.5;">All upcoming ISSB Masterclasses, Word Association Tests, and Intelligence Assessments created for sister wings will be immediately available here.</div>
+      @else
+        <i class="fa-solid fa-folder-open" style="font-size: 26px; color: #64748b; margin-bottom: 12px; display: inline-block;"></i>
+        <div style="font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">No assessment exams found</div>
+        <div style="font-size: 13px; color: #94a3b8;">There are currently no active exams matching this sector or track filter.</div>
+      @endif
+    </div>
+  @endif
+
+  @if(!$isEnrolledInSelectedBranch && $selectedBranch && $selectedBranch !== 'other_issb')
     @php
       $branchMeta = [
         'army' => [
@@ -534,7 +598,7 @@
       ];
     @endphp
 
-    <div>
+    <div style="{{ $exams->isNotEmpty() ? 'margin-top: 36px; padding-top: 24px; border-top: 1.5px dashed rgba(255, 255, 255, 0.15);' : '' }}">
       <!-- Sector Info Notice Banner -->
       <div class="tactical-card" style="padding: 24px; border-left: 5px solid {{ $meta['color'] }}; background: #ffffff; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06); border-radius: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
@@ -658,7 +722,7 @@
                 <i class="fa-solid fa-graduation-cap"></i> View Course
               </a>
               <a href="{{ route('contact') }}" style="flex: 1; text-align: center; background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 11px 14px; border-radius: 12px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
-                <i class="fa-solid fa-headset"></i> Enroll / Inquire
+                <i class="fa-solid fa-bag-shopping"></i> Buy / Enroll
               </a>
             </div>
 
@@ -712,7 +776,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         const badge = document.getElementById('cadet-badge-' + examId);
         if (badge) {
-          badge.innerHTML = '<span style="background: rgba(16,185,129,0.3); color: #ffffff; border: 1.5px solid rgba(255,255,255,0.45); padding: 4px 11px; border-radius: 999px; font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.18);"><span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; display: inline-block;"></span> LIVE</span>';
+          badge.innerHTML = '<span style="background: rgba(16,185,129,0.3); color: #ffffff; border: 1.5px solid rgba(255,255,255,0.45); padding: 4px 11px; border-radius: 999px; font-size: 10.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.18); white-space: nowrap; flex-shrink: 0;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; display: inline-block; flex-shrink: 0;"></span> LIVE</span>';
         }
         const btnContainer = document.getElementById('cadet-btn-container-' + examId);
         if (btnContainer) {

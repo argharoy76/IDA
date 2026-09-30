@@ -651,9 +651,11 @@ class IdaEcosystemTest extends TestCase
             cms_clear_cache();
         }
 
-        // 1. Initial state: default 3D emblem renders
+        // 1. Initial state: official default logo renders (3D SVG crest is completely absent)
         $initHome = $this->get('/');
-        $initHome->assertStatus(200)->assertSee('brand-crest-3d-svg');
+        $initHome->assertStatus(200);
+        $initHome->assertDontSee('brand-crest-3d-svg');
+        $initHome->assertSee('images/logo.png');
 
         // 2. Upload official academy logo via backend
         $fakeLogo = \Illuminate\Http\UploadedFile::fake()->create('ida_official_logo.png', 100, 'image/png');
@@ -666,21 +668,24 @@ class IdaEcosystemTest extends TestCase
         $this->assertNotEmpty($activeLogo);
         $this->assertStringContainsString('site_logo_', $activeLogo);
 
-        // 3. Verify public pages render the uploaded image asset instead of the default SVG crest
+        // 3. Verify public pages render the uploaded image asset
         $homeWithLogo = $this->get('/');
         $homeWithLogo->assertStatus(200);
         $homeWithLogo->assertSee($activeLogo);
+        $homeWithLogo->assertDontSee('brand-crest-3d-svg');
 
-        // 4. Remove custom logo and restore default 3D emblem
+        // 4. Remove custom logo and restore default official logo
         $removeRes = $this->actingAs($admin)->post('/admin/cms/settings', [
             'remove_site_logo' => 1,
         ]);
         $removeRes->assertSessionHas('success');
         $this->assertEmpty(cms('site_logo'));
 
-        // 5. Verify default 3D emblem is restored
+        // 5. Verify default official logo is restored and 3D SVG is not present
         $restoredHome = $this->get('/');
-        $restoredHome->assertStatus(200)->assertSee('brand-crest-3d-svg');
+        $restoredHome->assertStatus(200);
+        $restoredHome->assertDontSee('brand-crest-3d-svg');
+        $restoredHome->assertSee('images/logo.png');
 
         // Restore previous logo if present
         if ($savedLogo) {

@@ -91,6 +91,9 @@ class Exam extends Model
         if ($this->target_track === 'soldier') {
             return true;
         }
+        if (in_array($this->target_track, ['prelim', 'issb', 'constable', 'si', 'asi'], true)) {
+            return false;
+        }
         $text = strtolower(($this->target_track ?? '') . ' ' . $this->category . ' ' . $this->title);
         return str_contains($text, 'soldier') || str_contains($text, 'sainik') || str_contains($text, 'sailor') || str_contains($text, 'airman');
     }
@@ -100,17 +103,32 @@ class Exam extends Model
         if ($this->target_track === 'prelim') {
             return true;
         }
+        if (in_array($this->target_track, ['issb', 'soldier', 'constable', 'si', 'asi'], true)) {
+            return false;
+        }
         $text = strtolower(($this->target_track ?? '') . ' ' . $this->category . ' ' . $this->title);
         return str_contains($text, 'prelim');
     }
 
     public function isIssb(): bool
     {
+        if ($this->branch === 'police') {
+            return false;
+        }
         if ($this->target_track === 'issb') {
             return true;
         }
-        $text = strtolower(($this->target_track ?? '') . ' ' . $this->category . ' ' . $this->title . ' ' . ($this->exam_type ?? ''));
-        return str_contains($text, 'issb') || str_contains($text, 'word_association') || str_contains($text, 'wat');
+        if (in_array($this->target_track, ['prelim', 'soldier', 'constable', 'si', 'asi'], true)) {
+            return false;
+        }
+        $text = strtolower(($this->target_track ?? '') . ' ' . ($this->category ?? '') . ' ' . ($this->title ?? '') . ' ' . ($this->exam_type ?? ''));
+        return str_contains($text, 'issb') 
+            || str_contains($text, 'word_association') 
+            || str_contains($text, 'wat')
+            || str_contains($text, 'verbal iq')
+            || str_contains($text, 'non-verbal')
+            || str_contains($text, 'intelligence')
+            || str_contains($text, 'matrix');
     }
 
     public function isPolice(): bool
@@ -136,7 +154,7 @@ class Exam extends Model
      * Rules:
      * - Admins / Instructors always have access.
      * - Free exams (access_type == 'free') are accessible to all candidates.
-     * - ISSB Exams: If cadet has ANY military course (Army, Navy, OR Air Force), they can conduct ANY ISSB exam!
+     * - ISSB Exams: If cadet has ANY military course (Army, Navy, OR Air Force) or enrolled ISSB course, they can conduct ANY ISSB exam across branches!
      * - Preliminary Exams: Cadet MUST have the matching branch course (Army for Army Prelim, Navy for Navy Prelim, Air Force for AF Prelim).
      * - Police Exams: Cadet MUST have a Police course (or matching Police track course).
      */
@@ -167,9 +185,9 @@ class Exam extends Model
         }
 
         // Rule 1: ISSB Exams (Cross-branch Tri-Services privilege)
-        // If student has ANY of the three courses (Army, Navy, or Air Force) or ISSB category, they can conduct ANY ISSB exam!
+        // If student has ANY of the three military courses (Army, Navy, or Air Force) or enrolled ISSB course, they can conduct ANY ISSB exam!
         if ($this->isIssb()) {
-            return $student->hasIssbTrack();
+            return $student->hasIssbPrivilege();
         }
 
         // Rule 2: Preliminary Exams

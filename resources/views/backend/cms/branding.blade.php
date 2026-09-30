@@ -42,7 +42,7 @@
         </div>
         <span class="badge {{ $hasCustomLogo ? 'badge-emerald' : 'badge-gold' }}" style="font-size: 11px; padding: 6px 12px;">
           <i class="fa-solid {{ $hasCustomLogo ? 'fa-circle-check' : 'fa-certificate' }}"></i>
-          {{ $hasCustomLogo ? 'Custom Logo Active Sitewide' : 'Default 3D Insignia Active' }}
+          {{ $hasCustomLogo ? 'Custom Uploaded Logo Active' : 'Official Academy Logo Active' }}
         </span>
       </div>
 
@@ -63,17 +63,17 @@
           </div>
 
           <div style="font-size: 12px; color: #e2e8f0; font-weight: 600; margin-bottom: 12px;">
-            {{ $hasCustomLogo ? basename($activeLogo) : 'Prestige 3D Sovereign Cadet Emblem (Default)' }}
+            {{ $hasCustomLogo ? basename($activeLogo) : 'Official Academy Logo (Permanent Default)' }}
           </div>
 
           @if($hasCustomLogo)
             <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #ef4444; cursor: pointer; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 14px; border-radius: 6px; transition: all 0.2s ease;">
-              <input type="checkbox" name="remove_site_logo" value="1" onchange="if(this.checked){ alert('Logo will be removed and default 3D crest restored upon clicking Save.'); }">
-              <span><i class="fa-solid fa-trash-can"></i> Remove Logo & Restore Default 3D Insignia</span>
+              <input type="checkbox" name="remove_site_logo" value="1" onchange="if(this.checked){ alert('Custom logo will be removed and official academy logo restored upon clicking Save.'); }">
+              <span><i class="fa-solid fa-rotate-left"></i> Reset to Default Official Logo</span>
             </label>
           @else
             <span style="font-size: 11.5px; color: #94a3b8;">
-              <i class="fa-solid fa-info-circle" style="color: var(--accent-gold);"></i> Upload a file below to replace this default emblem with your custom logo.
+              <i class="fa-solid fa-circle-check" style="color: var(--brand-emerald);"></i> The official academy logo is active. You can upload a new version below at any time.
             </span>
           @endif
         </div>

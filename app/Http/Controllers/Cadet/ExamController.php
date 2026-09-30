@@ -39,33 +39,127 @@ class ExamController extends Controller
             $enrolledBranches = $student->getEnrolledBranches();
         }
 
-        // Selected branch tab (e.g. null for 'All Branches', or 'army', 'navy', 'air_force', 'police')
+        $hasIssbPrivilege = $user->isAdmin() || ($student && $student->hasIssbPrivilege());
+
+        // Compute sister military wings for "Other ISSB Exams"
+        if ($user->isAdmin()) {
+            $otherBranches = ['army', 'navy', 'air_force'];
+        } else {
+            $otherBranches = array_values(array_diff(['army', 'navy', 'air_force'], $enrolledBranches));
+            if (empty($otherBranches)) {
+                $otherBranches = ['army', 'navy', 'air_force'];
+            }
+        }
+
+        // Standardized ISSB / Intelligence test matcher
+        $issbCondition = function ($q) {
+            $q->where(function ($sub) {
+                $sub->where('target_track', 'issb')
+                    ->orWhere(function ($fallback) {
+                        $fallback->where(function ($notOther) {
+                            $notOther->whereNull('target_track')
+                                     ->orWhere('target_track', '')
+                                     ->orWhereNotIn('target_track', ['prelim', 'soldier', 'constable', 'si', 'asi']);
+                        })
+                        ->where(function ($textQ) {
+                            $textQ->where('category', 'like', '%issb%')
+                                  ->orWhere('title', 'like', '%issb%')
+                                  ->orWhere('title', 'like', '%iq%')
+                                  ->orWhere('title', 'like', '%intelligence%')
+                                  ->orWhere('title', 'like', '%verbal%')
+                                  ->orWhere('title', 'like', '%wat%')
+                                  ->orWhere('category', 'like', '%iq%')
+                                  ->orWhere('category', 'like', '%intelligence%');
+                        });
+                    });
+            });
+        };
+
+        // Count available Other ISSB exams for badge indicator
+        $otherIssbCount = 0;
+        if ($hasIssbPrivilege) {
+            $otherIssbCount = Exam::where('is_paid_for_external', true)
+                ->whereIn('status', ['open', 'scheduled', 'closed'])
+                ->whereIn('branch', $otherBranches)
+                ->where($issbCondition)
+                ->count();
+        }
+
         $selectedBranch = $request->query('branch');
+        $selectedTrack = $request->query('track');
+        $isOtherIssbView = ($request->query('view') === 'other_issb' || $request->query('tab') === 'other_issb' || $selectedBranch === 'other_issb');
         $isEnrolledInSelectedBranch = true;
         $ongoingCourses = collect();
 
-        if ($selectedBranch) {
-            $isMilitarySector = in_array($selectedBranch, ['army', 'navy', 'air_force'], true);
-            $hasMilitaryCourse = $student ? $student->hasMilitaryCourse() : false;
+        if ($isOtherIssbView) {
+            if (!$hasIssbPrivilege) {
+                return redirect()->route('cadet.exams.index')
+                    ->with('error', 'ISSB and Military Intelligence assessments are restricted to cadets enrolled in Army, Navy, or Air Force service courses.');
+            }
 
-            // If cadet is not enrolled in the selected branch tab, show ongoing courses to enroll
-            if (!in_array($selectedBranch, $enrolledBranches) && !$user->isAdmin()) {
-                // Not enrolled in this branch: show ongoing courses for this branch
-                $isEnrolledInSelectedBranch = false;
-                $ongoingCourses = Course::forBranch($selectedBranch)
-                    ->where('admission_status', 'open')
-                    ->get();
-                if ($ongoingCourses->isEmpty()) {
-                    $ongoingCourses = Course::forBranch($selectedBranch)->get();
+            $exams = Exam::where('is_paid_for_external', true)
+                ->whereIn('status', ['open', 'scheduled', 'closed'])
+                ->whereIn('branch', $otherBranches)
+                ->where($issbCondition)
+                ->orderBy('schedule_start', 'asc')
+                ->get();
+
+            $selectedBranch = 'other_issb';
+            $isEnrolledInSelectedBranch = true;
+            $selectedTrack = 'issb';
+        } elseif ($selectedBranch) {
+            $isMilitarySector = in_array($selectedBranch, ['army', 'navy', 'air_force'], true);
+            $isEnrolledInBranch = in_array($selectedBranch, $enrolledBranches) || $user->isAdmin();
+
+            if (!$isEnrolledInBranch && !$user->isAdmin()) {
+                // If cadet has cross-branch Tri-Services ISSB privilege, allow conducting this branch's ISSB exams
+                if ($isMilitarySector && $hasIssbPrivilege) {
+                    $issbExamsOfBranch = Exam::where('is_paid_for_external', true)
+                        ->whereIn('status', ['open', 'scheduled', 'closed'])
+                        ->where('branch', $selectedBranch)
+                        ->where($issbCondition)
+                        ->orderBy('schedule_start', 'asc')
+                        ->get();
+
+                    $exams = $issbExamsOfBranch;
+                } else {
+                    $exams = collect();
                 }
-                $exams = collect();
+
+                $isEnrolledInSelectedBranch = false;
+                $ongoingCourses = Course::forBranch($selectedBranch)->get();
+                if ($ongoingCourses->isEmpty()) {
+                    $ongoingCourses = Course::where('category', 'like', "%{$selectedBranch}%")->get();
+                }
             } else {
-                // Enrolled or has cross-branch ISSB privilege: show exams for this branch
-                $exams = Exam::where('is_paid_for_external', true)
+                // Enrolled in this branch: show exams with optional track filtering
+                $branchQuery = Exam::where('is_paid_for_external', true)
                     ->whereIn('status', ['open', 'scheduled', 'closed'])
-                    ->where('branch', $selectedBranch)
-                    ->orderBy('schedule_start', 'asc')
-                    ->get();
+                    ->where('branch', $selectedBranch);
+
+                if ($selectedTrack === 'issb') {
+                    $branchQuery->where($issbCondition);
+                } elseif ($selectedTrack === 'prelim') {
+                    $branchQuery->where(function ($q) {
+                        $q->where('target_track', 'prelim')
+                          ->orWhere('category', 'like', '%prelim%')
+                          ->orWhere('title', 'like', '%prelim%');
+                    });
+                } elseif ($selectedTrack === 'soldier') {
+                    $branchQuery->where(function ($q) {
+                        $q->where('target_track', 'soldier')
+                          ->orWhere('category', 'like', '%soldier%')
+                          ->orWhere('category', 'like', '%sailor%')
+                          ->orWhere('category', 'like', '%airman%');
+                    });
+                } elseif (in_array($selectedTrack, ['constable', 'si', 'asi'], true)) {
+                    $branchQuery->where(function ($q) use ($selectedTrack) {
+                        $q->where('target_track', $selectedTrack)
+                          ->orWhere('category', 'like', "%{$selectedTrack}%");
+                    });
+                }
+
+                $exams = $branchQuery->orderBy('schedule_start', 'asc')->get();
             }
         } else {
             // "All Branches" or "All Exams"
@@ -73,26 +167,36 @@ class ExamController extends Controller
                 ->whereIn('status', ['open', 'scheduled', 'closed']);
 
             if (!$user->isAdmin() && !empty($enrolledBranches)) {
-                $query->where(function ($q) use ($enrolledBranches, $student) {
+                $query->where(function ($q) use ($enrolledBranches, $hasIssbPrivilege, $issbCondition) {
                     $q->whereIn('branch', $enrolledBranches)
                       ->orWhereNull('branch')
                       ->orWhere('branch', '')
                       ->orWhere('branch', 'general');
 
-                    // If student has ANY military course (Army, Navy, or Air Force), include all ISSB exams!
-                    if ($student && $student->hasMilitaryCourse()) {
-                        $hasTargetTrack = \Illuminate\Support\Facades\Schema::hasColumn('exams', 'target_track');
-                        $q->orWhere(function ($issbQ) use ($hasTargetTrack) {
-                            if ($hasTargetTrack) {
-                                $issbQ->where('target_track', 'issb')
-                                      ->orWhere('category', 'like', '%issb%')
-                                      ->orWhere('title', 'like', '%issb%');
-                            } else {
-                                $issbQ->where('category', 'like', '%issb%')
-                                      ->orWhere('title', 'like', '%issb%');
-                            }
+                    // If student has ANY military course, include all Tri-Services ISSB exams!
+                    if ($hasIssbPrivilege) {
+                        $q->orWhere(function ($issbQ) use ($issbCondition) {
+                            $issbQ->whereIn('branch', ['army', 'navy', 'air_force'])
+                                  ->where($issbCondition);
                         });
                     }
+                });
+            }
+
+            if ($selectedTrack === 'issb') {
+                $query->where($issbCondition);
+            } elseif ($selectedTrack === 'prelim') {
+                $query->where(function ($q) {
+                    $q->where('target_track', 'prelim')
+                      ->orWhere('category', 'like', '%prelim%')
+                      ->orWhere('title', 'like', '%prelim%');
+                });
+            } elseif ($selectedTrack === 'soldier') {
+                $query->where(function ($q) {
+                    $q->where('target_track', 'soldier')
+                      ->orWhere('category', 'like', '%soldier%')
+                      ->orWhere('category', 'like', '%sailor%')
+                      ->orWhere('category', 'like', '%airman%');
                 });
             }
 
@@ -118,7 +222,11 @@ class ExamController extends Controller
             'selectedBranch',
             'isEnrolledInSelectedBranch',
             'ongoingCourses',
-            'userAttempts'
+            'userAttempts',
+            'hasIssbPrivilege',
+            'isOtherIssbView',
+            'otherIssbCount',
+            'selectedTrack'
         ));
     }
 

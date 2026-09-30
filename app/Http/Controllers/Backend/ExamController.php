@@ -928,7 +928,7 @@ class ExamController extends Controller
     public function edit($id)
     {
         $exam = Exam::with(['questions', 'watWords'])->findOrFail($id);
-        return view('backend.exams.edit', compact('exam'));
+        return view('backend.exam_management.edit', compact('exam'));
     }
 
     public function update(Request $request, $id)

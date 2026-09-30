@@ -59,7 +59,7 @@
         <div style="display: flex; align-items: center; gap: 8px;">
           <strong style="color: #ffffff; font-size: 13.5px;">Academy Logo</strong>
           <span class="badge {{ $hasCustomLogo ? 'badge-emerald' : 'badge-gold' }}" style="font-size: 10px; padding: 3px 8px;">
-            {{ $hasCustomLogo ? 'Custom Logo Active' : 'Default Emblem' }}
+            {{ $hasCustomLogo ? 'Custom Logo Active' : 'Official Logo Active' }}
           </span>
         </div>
         <span style="font-size: 12px; color: #94a3b8;">

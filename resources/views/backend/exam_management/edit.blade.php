@@ -92,7 +92,6 @@
         <div>
           <label class="ida-label">Assessment Title *</label>
           <input type="text" name="title" value="{{ old('title', $exam->title) }}" required placeholder="e.g. 2026 ISSB Verbal Intelligence Assessment" class="form-tactical" style="width: 100%; font-size: 14.5px; font-weight: 700; padding: 11px 16px;">
-          <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Official examination title visible to candidates across all platforms.</small>
         </div>
 
         {{-- Cascading Dropdown Hierarchy for Assessment Identity & Access Control --}}
@@ -106,43 +105,35 @@
               <option value="army" {{ old('branch', $exam->branch) === 'army' ? 'selected' : '' }}>Bangladesh Army</option>
               <option value="air_force" {{ old('branch', $exam->branch) === 'air_force' ? 'selected' : '' }}>Bangladesh Air Force</option>
             </select>
-            <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Branch authority governing this module.</small>
           </div>
 
-          {{-- Dropdown 2: Cadre / Post (Military: Officer vs Sailor/Soldier/Airman) --}}
+          {{-- Dropdown 2: Post (Officer Cadet vs Navy Sailor / Soldier Cadet / Airman Cadet) --}}
           <div id="cadreSelectContainer" style="display: block;">
-            <label class="ida-label" id="cadreSelectLabel">2. Cadre / Post *</label>
+            <label class="ida-label" id="cadreSelectLabel">2. Post *</label>
             <select id="examCadreSelect" class="form-tactical ida-cascading-select ida-track-select" style="width: 100%; padding: 11px 16px;">
-              <option value="officer">Officer Cadre</option>
-              <option value="soldier" id="soldierCadreOption">Sailor Cadre</option>
+              <option value="officer">Officer Cadet</option>
+              <option value="soldier" id="soldierCadreOption">Navy Sailor</option>
             </select>
-            <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Select Officer or Non-Commissioned Post.</small>
           </div>
 
-          {{-- Dropdown 3: Target Stage / Track --}}
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px;">
-              <label class="ida-label" style="margin: 0;" id="trackSelectLabel">3. Target Stage / Track *</label>
-              <span id="trackRuleBadge" style="font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(255,87,87,0.15); color: #ff8585;">Track Rule</span>
-            </div>
+          {{-- Dropdown 3: Exam Type (Preliminary vs ISSB for Officer; Hidden for Soldier) --}}
+          <div id="examTypeContainer" style="display: block;">
+            <label class="ida-label" id="trackSelectLabel">3. Exam Type *</label>
             <select id="examTargetTrackSelect" class="form-tactical ida-cascading-select ida-track-select" style="width: 100%; padding: 11px 16px;">
-              <!-- Dynamically populated based on branch + cadre -->
+              <option value="prelim" {{ old('target_track', $exam->target_track ?? 'prelim') === 'prelim' ? 'selected' : '' }}>Preliminary</option>
+              <option value="issb" {{ old('target_track', $exam->target_track ?? 'prelim') === 'issb' ? 'selected' : '' }}>ISSB</option>
             </select>
             <input type="hidden" name="target_track" id="finalTargetTrackInput" value="{{ old('target_track', $exam->target_track ?? 'prelim') }}">
-            <small id="trackEligibilityHint" style="color: #94a3b8; font-size: 11.5px; margin-top: 4px; display: block; line-height: 1.4;">
-              Candidate eligibility rules for this stage.
-            </small>
           </div>
 
           {{-- Dropdown 4: Access Type --}}
           <div>
-            <label class="ida-label">4. Access Type *</label>
+            <label class="ida-label" id="accessTypeLabel">4. Access Type *</label>
             <select name="access_type" class="form-tactical ida-cascading-select ida-track-select" required style="width: 100%; padding: 11px 16px;">
               <option value="free" {{ old('access_type', $exam->access_type ?? ($exam->is_paid_for_external ? 'paid' : 'free')) === 'free' ? 'selected' : '' }}>Free Exam</option>
               <option value="paid" {{ in_array(old('access_type', $exam->access_type ?? ($exam->is_paid_for_external ? 'paid' : 'free')), ['paid', 'cadet']) ? 'selected' : '' }}>Cadet Exam</option>
               <option value="both" {{ old('access_type', $exam->access_type ?? ($exam->is_paid_for_external ? 'paid' : 'free')) === 'both' ? 'selected' : '' }}>Both</option>
             </select>
-            <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Select candidate eligibility: Free Exam, Cadet Exam, or Both.</small>
           </div>
         </div>
 
@@ -272,7 +263,7 @@
     </div>
 
     <!-- SECTION 4: QUESTION BANK & ADD QUESTIONS -->
-    <div id="section-questions-management" class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+    <div id="section-questions-management" class="content-panel" style="background: #181c26; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 26px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); position: relative; z-index: 10;">
       <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 16px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h3 style="font-size: 16px; font-weight: 800; margin: 0; color: #ffffff; display: flex; align-items: center; gap: 10px;">
           <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; display: grid; place-items: center; font-size: 15px;">
@@ -1719,57 +1710,41 @@ Ans: A`;
       .replace(/'/g, '&#039;');
   }
 
-  const branchTracks = {
-    navy: [
-      { value: 'prelim', label: 'Navy Preliminary Examination (Officer Exam 1)', hint: '⚓ Exclusive: Only cadets enrolled in Bangladesh Navy course can conduct this prelim exam.', badge: 'Navy Prelim (Officer 1)' },
-      { value: 'issb', label: 'ISSB Special Masterclass (Officer Exam 2 - Universal Tri-Services)', hint: '🌟 Tri-Services Clearance: Every student with an ISSB course or ANY military course (Navy, Army, Air Force) can conduct this exam!', badge: 'ISSB Universal (Officer 2)' },
-      { value: 'soldier', label: 'Sailor (Navy Non-Commissioned)', hint: 'Exclusive: Only cadets enrolled in Bangladesh Navy Sailor track.', badge: 'Navy Sailor' },
-      { value: 'general', label: 'General Program', hint: 'Open to enrolled Bangladesh Navy candidates.', badge: 'Navy General' }
-    ],
   const hierarchyConfig = {
     navy: {
-      soldierLabel: 'Sailor Cadre (Navy Sailor)',
+      soldierLabel: 'Navy Sailor',
+      soldierCategory: 'Navy Sailor Recruitment Test',
       cadres: {
         officer: [
-          { value: 'prelim', label: 'Preliminary Examination (Officer 1)', hint: '⚓ Exclusive: Restricted to cadets enrolled in Bangladesh Navy Officer track.', badge: 'Navy Prelim (Officer 1)', defaultCategory: 'Navy Preliminary IQ & Academic' },
-          { value: 'issb', label: 'ISSB Masterclass (Officer 2 - Tri-Services)', hint: '🌟 Tri-Services Clearance: Universal assessment across Navy, Army, and Air Force Officer Cadets!', badge: 'ISSB Universal (Officer 2)', defaultCategory: 'Navy ISSB Masterclass' }
-        ],
-        soldier: [
-          { value: 'soldier', label: 'Sailor Recruitment Examination (Navy Sailor)', hint: '⚓ Exclusive: Restricted to candidates enrolled in Bangladesh Navy Sailor track.', badge: 'Navy Sailor', defaultCategory: 'Navy Sailor Recruitment Test' },
-          { value: 'issb', label: 'ISSB Masterclass (Navy Sailor Post)', hint: '🌟 Tri-Services Clearance: Universal assessment across military candidates.', badge: 'Navy Sailor ISSB', defaultCategory: 'Navy Sailor ISSB Masterclass' }
+          { value: 'prelim', label: 'Preliminary', defaultCategory: 'Navy Preliminary IQ & Academic' },
+          { value: 'issb', label: 'ISSB', defaultCategory: 'Navy ISSB Masterclass' }
         ]
       }
     },
     police: {
       ranks: [
-        { value: 'constable', label: 'Police Constable / Preliminary Recruitment Test', hint: '👮 Exclusive: Open to cadets enrolled in the Police Constable track.', badge: 'Police Constable', defaultCategory: 'Police Constable Recruitment Test' },
-        { value: 'si', label: 'Police Sub-Inspector (SI) Recruitment Test', hint: '🔍 Exclusive: Open to cadets enrolled in the Sub-Inspector (SI) track.', badge: 'Sub-Inspector SI', defaultCategory: 'Police Sub-Inspector (SI) Test' },
-        { value: 'asi', label: 'Police Assistant Sub-Inspector (ASI) Test', hint: '🛡️ Exclusive: Open to cadets enrolled in the Assistant Sub-Inspector (ASI) track.', badge: 'Assistant SI ASI', defaultCategory: 'Police Assistant Sub-Inspector (ASI) Test' }
+        { value: 'constable', label: 'Constable', defaultCategory: 'Police Constable Recruitment Test' },
+        { value: 'si', label: 'Sub-Inspector (SI)', defaultCategory: 'Police Sub-Inspector (SI) Test' },
+        { value: 'asi', label: 'Assistant Sub-Inspector (ASI)', defaultCategory: 'Police Assistant Sub-Inspector (ASI) Test' }
       ]
     },
     army: {
-      soldierLabel: 'Soldier / Sainik Cadre (Army Soldier)',
+      soldierLabel: 'Soldier Cadet',
+      soldierCategory: 'Army Soldier Recruitment Test',
       cadres: {
         officer: [
-          { value: 'prelim', label: 'Preliminary Examination (Officer 1)', hint: '🪖 Exclusive: Restricted to cadets enrolled in Bangladesh Army Officer track.', badge: 'Army Prelim (Officer 1)', defaultCategory: 'Army Preliminary IQ & Academic' },
-          { value: 'issb', label: 'ISSB Masterclass (Officer 2 - Tri-Services)', hint: '🌟 Tri-Services Clearance: Universal assessment across Navy, Army, and Air Force Officer Cadets!', badge: 'ISSB Universal (Officer 2)', defaultCategory: 'Army ISSB Masterclass' }
-        ],
-        soldier: [
-          { value: 'soldier', label: 'Soldier / Sainik Recruitment Examination (Army Soldier)', hint: '🪖 Exclusive: Restricted to candidates enrolled in Bangladesh Army Soldier track.', badge: 'Army Soldier', defaultCategory: 'Army Soldier Recruitment Test' },
-          { value: 'issb', label: 'ISSB Masterclass (Army Soldier Post)', hint: '🌟 Tri-Services Clearance: Universal assessment across military candidates.', badge: 'Army Soldier ISSB', defaultCategory: 'Army Soldier ISSB Masterclass' }
+          { value: 'prelim', label: 'Preliminary', defaultCategory: 'Army Preliminary IQ & Academic' },
+          { value: 'issb', label: 'ISSB', defaultCategory: 'Army ISSB Masterclass' }
         ]
       }
     },
     air_force: {
-      soldierLabel: 'Airman Cadre (Air Force Airman)',
+      soldierLabel: 'Airman Cadet',
+      soldierCategory: 'Air Force Airman Recruitment Test',
       cadres: {
         officer: [
-          { value: 'prelim', label: 'Preliminary Examination (Officer 1)', hint: '✈️ Exclusive: Restricted to cadets enrolled in Bangladesh Air Force Officer track.', badge: 'Air Force Prelim (Officer 1)', defaultCategory: 'Air Force Preliminary IQ & Academic' },
-          { value: 'issb', label: 'ISSB Masterclass (Officer 2 - Tri-Services)', hint: '🌟 Tri-Services Clearance: Universal assessment across Navy, Army, and Air Force Officer Cadets!', badge: 'ISSB Universal (Officer 2)', defaultCategory: 'Air Force ISSB Masterclass' }
-        ],
-        soldier: [
-          { value: 'soldier', label: 'Airman Recruitment Examination (Air Force Airman)', hint: '✈️ Exclusive: Restricted to candidates enrolled in Bangladesh Air Force Airman track.', badge: 'Air Force Airman', defaultCategory: 'Air Force Airman Recruitment Test' },
-          { value: 'issb', label: 'ISSB Masterclass (Air Force Airman Post)', hint: '🌟 Tri-Services Clearance: Universal assessment across military candidates.', badge: 'Air Force Airman ISSB', defaultCategory: 'Air Force Airman ISSB Masterclass' }
+          { value: 'prelim', label: 'Preliminary', defaultCategory: 'Air Force Preliminary IQ & Academic' },
+          { value: 'issb', label: 'ISSB', defaultCategory: 'Air Force Airman ISSB Masterclass' }
         ]
       }
     }
@@ -1781,12 +1756,12 @@ Ans: A`;
     const cadreEl = document.getElementById('examCadreSelect');
     const cadreLabel = document.getElementById('cadreSelectLabel');
     const soldierOption = document.getElementById('soldierCadreOption');
+    const examTypeContainer = document.getElementById('examTypeContainer');
     const trackEl = document.getElementById('examTargetTrackSelect');
     const trackLabel = document.getElementById('trackSelectLabel');
+    const accessTypeLabel = document.getElementById('accessTypeLabel');
     const hiddenTrackInput = document.getElementById('finalTargetTrackInput');
     const hiddenCatInput = document.getElementById('examCategoryInput');
-    const hintEl = document.getElementById('trackEligibilityHint');
-    const badgeEl = document.getElementById('trackRuleBadge');
 
     if (!branchEl || !trackEl) return;
 
@@ -1798,14 +1773,22 @@ Ans: A`;
 
     if (branch === 'police') {
       if (cadreContainer) cadreContainer.style.display = 'none';
-      if (trackLabel) trackLabel.textContent = '2. Police Rank / Track *';
+      if (examTypeContainer) examTypeContainer.style.display = 'block';
+      if (trackLabel) trackLabel.textContent = '2. Exam Type *';
+      if (accessTypeLabel) accessTypeLabel.textContent = '3. Access Type *';
       activeTracks = hierarchyConfig.police.ranks;
       const validVal = activeTracks.some(t => t.value === targetTrack) ? targetTrack : (activeTracks.some(t => t.value === trackEl.value) ? trackEl.value : 'si');
       trackEl.innerHTML = activeTracks.map(t => `<option value="${t.value}" ${t.value === validVal ? 'selected' : ''}>${t.label}</option>`).join('');
       if (hiddenTrackInput) hiddenTrackInput.value = validVal;
+      const matched = activeTracks.find(t => t.value === validVal);
+      if (matched && hiddenCatInput && matched.defaultCategory) {
+        if (!hiddenCatInput.value || hiddenCatInput.value === 'Preliminary Examination' || hiddenCatInput.value === 'Verbal IQ') {
+          hiddenCatInput.value = matched.defaultCategory;
+        }
+      }
     } else {
       if (cadreContainer) cadreContainer.style.display = 'block';
-      if (cadreLabel) cadreLabel.textContent = '2. Cadre / Post *';
+      if (cadreLabel) cadreLabel.textContent = '2. Post *';
       const wingConf = hierarchyConfig[branch] || hierarchyConfig.navy;
       if (soldierOption) soldierOption.textContent = wingConf.soldierLabel;
 
@@ -1813,44 +1796,29 @@ Ans: A`;
       if (cadreEl) cadreEl.value = activeCadre;
 
       if (activeCadre === 'soldier') {
-        const postName = (branch === 'navy') ? 'Sailor' : ((branch === 'air_force') ? 'Airman' : 'Soldier');
-        if (trackLabel) trackLabel.textContent = '3. ' + postName + ' Examination Track *';
-        activeTracks = wingConf.cadres.soldier;
-      } else {
-        if (trackLabel) trackLabel.textContent = '3. Officer Examination Stage *';
-        activeTracks = wingConf.cadres.officer;
-      }
-
-      const defaultTrackVal = (activeCadre === 'soldier') ? 'soldier' : 'prelim';
-      const validVal = activeTracks.some(t => t.value === targetTrack) ? targetTrack : (activeTracks.some(t => t.value === trackEl.value) ? trackEl.value : defaultTrackVal);
-      trackEl.innerHTML = activeTracks.map(t => `<option value="${t.value}" ${t.value === validVal ? 'selected' : ''}>${t.label}</option>`).join('');
-      if (hiddenTrackInput) hiddenTrackInput.value = validVal;
-    }
-
-    const currentTrackVal = hiddenTrackInput ? hiddenTrackInput.value : trackEl.value;
-    const matched = activeTracks.find(t => t.value === currentTrackVal) || activeTracks[0];
-    if (matched) {
-      if (hintEl) hintEl.textContent = matched.hint;
-      if (badgeEl) {
-        badgeEl.textContent = matched.badge;
-        if (matched.value === 'issb') {
-          badgeEl.style.background = 'rgba(234, 179, 8, 0.2)';
-          badgeEl.style.color = '#facc15';
-        } else if (matched.value === 'prelim') {
-          badgeEl.style.background = 'rgba(59, 130, 246, 0.2)';
-          badgeEl.style.color = '#60a5fa';
-        } else if (['constable', 'si', 'asi'].includes(matched.value)) {
-          badgeEl.style.background = 'rgba(168, 85, 247, 0.2)';
-          badgeEl.style.color = '#c084fc';
-        } else {
-          badgeEl.style.background = 'rgba(255, 87, 87, 0.15)';
-          badgeEl.style.color = '#ff8585';
+        // Soldier/Sailor/Airman: Exam Type disappears! ISSB is strictly for Officer.
+        if (examTypeContainer) examTypeContainer.style.display = 'none';
+        if (accessTypeLabel) accessTypeLabel.textContent = '3. Access Type *';
+        if (hiddenTrackInput) hiddenTrackInput.value = 'soldier';
+        if (hiddenCatInput && wingConf.soldierCategory) {
+          if (!hiddenCatInput.value || hiddenCatInput.value === 'Preliminary Examination' || hiddenCatInput.value === 'Verbal IQ') {
+            hiddenCatInput.value = wingConf.soldierCategory;
+          }
         }
-      }
-      if (hiddenCatInput && matched.defaultCategory) {
-        // If current value is empty or generic, fill it
-        if (!hiddenCatInput.value || hiddenCatInput.value === 'Preliminary Examination' || hiddenCatInput.value === 'Verbal IQ') {
-          hiddenCatInput.value = matched.defaultCategory;
+      } else {
+        // Officer: Exam Type is visible with Preliminary and ISSB
+        if (examTypeContainer) examTypeContainer.style.display = 'block';
+        if (trackLabel) trackLabel.textContent = '3. Exam Type *';
+        if (accessTypeLabel) accessTypeLabel.textContent = '4. Access Type *';
+        activeTracks = wingConf.cadres.officer;
+        const validVal = (targetTrack === 'issb' || (targetTrack !== 'soldier' && trackEl.value === 'issb')) ? 'issb' : 'prelim';
+        trackEl.innerHTML = activeTracks.map(t => `<option value="${t.value}" ${t.value === validVal ? 'selected' : ''}>${t.label}</option>`).join('');
+        if (hiddenTrackInput) hiddenTrackInput.value = validVal;
+        const matched = activeTracks.find(t => t.value === validVal) || activeTracks[0];
+        if (matched && hiddenCatInput && matched.defaultCategory) {
+          if (!hiddenCatInput.value || hiddenCatInput.value === 'Preliminary Examination' || hiddenCatInput.value === 'Verbal IQ') {
+            hiddenCatInput.value = matched.defaultCategory;
+          }
         }
       }
     }
@@ -1892,7 +1860,11 @@ Ans: A`;
     const branchEl = document.getElementById('examBranchSelect');
     const initialBranch = branchEl ? branchEl.value : '{{ $exam->branch ?? "navy" }}';
     const initialTrack = "{{ old('target_track', $exam->target_track ?? 'prelim') }}";
-    const initialCadre = (initialTrack === 'soldier') ? 'soldier' : 'officer';
+    const initialCategory = "{{ old('category', $exam->category ?? '') }}".toLowerCase();
+    let initialCadre = 'officer';
+    if (initialTrack === 'soldier' || initialCategory.includes('sailor') || initialCategory.includes('soldier') || initialCategory.includes('airman')) {
+      initialCadre = 'soldier';
+    }
 
     if (branchEl) {
       branchEl.addEventListener('change', function() {

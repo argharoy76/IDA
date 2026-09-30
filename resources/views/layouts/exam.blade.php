@@ -375,8 +375,19 @@
       <!-- Brand & Exam Title -->
       <div class="exam-brand-area">
         <a href="{{ route('online_tests') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none;" title="Back to Online Tests">
-          @if(cms('site_logo'))
-            <img src="{{ asset(cms('site_logo')) }}" alt="IDA" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px;">
+          @php
+            $examLogoPath = cms('site_logo') ?: cms('site_crest');
+            $resolvedExamLogo = null;
+            if ($examLogoPath && (str_starts_with($examLogoPath, 'http') || file_exists(public_path(ltrim($examLogoPath, '/'))))) {
+                $resolvedExamLogo = str_starts_with($examLogoPath, 'http') ? $examLogoPath : asset(ltrim($examLogoPath, '/'));
+            } elseif (file_exists(public_path('images/logo.png'))) {
+                $resolvedExamLogo = asset('images/logo.png');
+            } elseif (file_exists(public_path('images/logo.jpeg'))) {
+                $resolvedExamLogo = asset('images/logo.jpeg');
+            }
+          @endphp
+          @if($resolvedExamLogo)
+            <img src="{{ $resolvedExamLogo }}" alt="IDA" style="height: 38px; width: auto; object-fit: contain; border-radius: 6px;">
           @else
             <div style="width: 38px; height: 38px; background: #059669; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px;">
               <i class="fa-solid fa-shield-halved"></i>
